@@ -1,0 +1,26 @@
+{
+    "manifest_version": 2,
+    "name": "test_asdf",
+    "version": "1.0",
+
+    "permissions": [
+        "contextMenus",
+        "storage"
+    ],
+    
+    "background": {
+        "scripts": ["background-script.js"]
+    },
+
+    "web_accessible_resources": [
+        "dict/JMdict.json"
+    ],
+
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file:///*"],
+            "js": ["texthook.js"],
+            "all_frames": true
+        }
+    ]
+}
