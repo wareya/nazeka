@@ -1,3 +1,5 @@
+// Copyright 2017; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
 'use strict';
 
 // We use JMdict converted to JSON. It's like 32MB so we don't want to load it for every tab.
