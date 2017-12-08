@@ -3,6 +3,7 @@
 /*
  * TODO:
  * 
+ * ! Binding spans etc. together when grabbing text from the 
  * ! Toggle button
  * ! Compare katakana to hiragana equally
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
@@ -10,11 +11,12 @@
  * - Definition priority handling (prefer words with any commonness tags, shorter deconjugations, expressions, non-archaic/non-obscure words, high frequencies)
  * - Settings
  * - VNstats frequency data
+ * - Load deconjugation rules from an advanced setting, with a reset button
  * ? List definitions of shorter text strings if they're not pure kana (in addition to main definitions)
  * 
  */
 
-// ~~~~ interesting stuff happens a few hundred lines down at lookup_word(), get past the DOM-writing-related stuff ~~~~
+// ~~~~ interesting stuff happens a few hundred lines down at stdrule_deconjugate(), get past the DOM-writing-related stuff ~~~~
 
 'use strict';
 
