@@ -52,7 +52,7 @@ function display_div (middle, x, y, time)
         other[0].replaceChild(middle, other[0].firstChild);
         
         let styletext = "max-width: 600px; position: absolute; top: " + (y+5) + "px; left: " + (x+5) + "px;";
-        styletext += "background-color: white; border-radius: 3px; border: 1px solid white;";
+        styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
         other[0].style = styletext;
         
         other[0].style.visibility = "visible";
@@ -62,7 +62,7 @@ function display_div (middle, x, y, time)
         let outer = document.createElement("div");
         outer.className = div_class;
         let styletext = "max-width: 600px; position: absolute; top: " + (y+5) + "px; left: " + (x+5) + "px;";
-        styletext += "background-color: white; border-radius: 3px; border: 1px solid white;";
+        styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
         outer.style = styletext;
         
         outer.appendChild(middle);
