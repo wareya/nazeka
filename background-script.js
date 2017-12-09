@@ -8,63 +8,61 @@
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
 // Seriously.
 
-let text = "";
+let dict = undefined;
+let lookup_kan = {};
+let lookup_kana = {};
 
-function listener()
+function builddict()
 {
     if (this.readyState === 4)
     {
         if (this.status === 200)
-            text = this.responseText;
+        {
+            dict = JSON.parse(this.responseText);
+            
+            // Build map of spellings to dictionary entry.
+
+
+            for (let i = 0; i < dict.length; i++)
+            {
+                let entry = dict[i];
+                if (entry.k_ele != undefined) for (let j = 0; j < entry.k_ele.length; j++)
+                {
+                    let s = entry.k_ele[j];
+                    if (lookup_kan[s.keb] == undefined)
+                        lookup_kan[s.keb] = [i];
+                    else
+                        lookup_kan[s.keb].push(i);
+                }
+                for (let j = 0; j < entry.r_ele.length; j++)
+                {
+                    let s = entry.r_ele[j];
+                    if (lookup_kana[s.reb] == undefined)
+                        lookup_kana[s.reb] = [i];
+                    else
+                        lookup_kana[s.reb].push(i);
+                }
+            }
+            for (let i = 0; i < 5; i++)
+            {
+                console.log(dict[i]);
+            }
+            console.log("built lookup tables");
+            console.log("size:");
+            console.log(Object.keys(lookup_kan).length);
+            console.log(Object.keys(lookup_kana).length);
+            console.log("dict size:");
+            console.log(dict.length);
+        }
         else
             console.error(xhr.statusText);
     }
 }
-
 let req = new XMLHttpRequest();
-req.addEventListener("load", listener);
+req.addEventListener("load", builddict);
 // FIXME: apparently this has to be in an async function now.
-req.open("GET", browser.extension.getURL("dict/JMdict.json"), false);
+req.open("GET", browser.extension.getURL("dict/JMdict.json"));
 req.send();
-
-let dict = JSON.parse(text);
-text = "";
-
-// Build map of spellings to dictionary entry.
-
-let lookup_kan = {};
-let lookup_kana = {};
-
-for (let i = 0; i < dict.length; i++)
-{
-    let entry = dict[i];
-    if (entry.k_ele != undefined) for (let j = 0; j < entry.k_ele.length; j++)
-    {
-        let s = entry.k_ele[j];
-        if (lookup_kan[s.keb] == undefined)
-            lookup_kan[s.keb] = [i];
-        else
-            lookup_kan[s.keb].push(i);
-    }
-    for (let j = 0; j < entry.r_ele.length; j++)
-    {
-        let s = entry.r_ele[j];
-        if (lookup_kana[s.reb] == undefined)
-            lookup_kana[s.reb] = [i];
-        else
-            lookup_kana[s.reb].push(i);
-    }
-}
-for (let i = 0; i < 5; i++)
-{
-    console.log(dict[i]);
-}
-console.log("built lookup tables");
-console.log("size:");
-console.log(Object.keys(lookup_kan).length);
-console.log(Object.keys(lookup_kana).length);
-console.log("dict size:");
-console.log(dict.length);
 
 // In JMdict, part-of-speech tags are XML entities.
 // We processed JMdict's XML with entity processing disabled so we can just use the bare tags (e.g. "v1", not "ichidan verb").

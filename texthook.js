@@ -92,6 +92,8 @@ function build_div (text, result)
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
+        if(term.deconj.size > 0)
+            text = term.deconj.values().next().value.text;
         //print_object(term);
         let temptag = "<span class=nazeka_word>";
         let found_kanji = true;
@@ -234,6 +236,21 @@ function build_div (text, result)
         if(!found_kanji)
         {
             temptag += text;
+            if(term.deconj)
+            {
+                for(let form of term.deconj)
+                {
+                    if(form.process.length > 0)
+                        temptag += "～";
+                    for(let f = 0; f < form.process.length; f++)
+                    {
+                        let info = form.process[f];
+                        temptag += info;
+                        if(f+1 < form.process.length)
+                            temptag += "―";
+                    }
+                }
+            }
             
             // list alternatives
             let alternatives = [];
@@ -350,13 +367,14 @@ function build_div (text, result)
 // deconjugation rules
 let rules = [];
 
+// TODO: load rules from an underlay
 rules.push({type: "stdrule", dec_end:"る", con_end:"た", dec_tag:"v1", con_tag:"stem_past", detail:"past"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"て", dec_tag:"v1", con_tag:"stem_te", detail:"te form"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"ない", dec_tag:"v1", con_tag:"negative", detail:"negative form"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"らない", dec_tag:"v5r", con_tag:"negative", detail:"negative form"});
+rules.push({type: "stdrule", dec_end:"る", con_end:"ない", dec_tag:"v1", con_tag:"negative", detail:"negative"});
+rules.push({type: "stdrule", dec_end:"る", con_end:"らない", dec_tag:"v5r", con_tag:"negative", detail:"negative"});
+rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"aux", detail:"past"});
 
 // return deconjugated form if stdrule applies to form, return otherwise
-// TODO: load rules from an underlay
 function stdrule_deconjugate(my_form, my_rule)
 {
     // can't deconjugate nothingness
@@ -399,6 +417,17 @@ function stdrule_deconjugate(my_form, my_rule)
     
     return newform;
 };
+function rewriterule_deconjugate(my_form, my_rule)
+{
+    if(my_form.text != my_rule.con_end)
+        return;
+    return stdrule_deconjugate(my_form, my_rule);
+};
+
+let rule_functions = {
+stdrule: stdrule_deconjugate,
+rewriterule: rewriterule_deconjugate,
+};
 
 Set.prototype.union = function(setB)
 {
@@ -430,7 +459,7 @@ function deconjugate(mytext)
             {
                 let rule = rules[i];
                 
-                let newform = stdrule_deconjugate(form, rule);
+                let newform = rule_functions[rule.type](form, rule);
                 
                 if(newform != undefined && !processed.has(newform) && !novel.has(newform) && !new_novel.has(newform))
                     new_novel.add(newform);
