@@ -619,7 +619,7 @@ lookup_timer = setTimeout(lookup_loop, lookup_rate);
 function lookup_enqueue(text, x, y, x2, y2)
 {
     lookup_queue = [[text, x, y, x2, y2]];
-    if(!lookup_timer || lookup_last_time+lookup_rate*100)
+    if(!lookup_timer || lookup_last_time+lookup_rate*100 < Date.now())
     {
         if(lookup_timer)
             clearTimeout(lookup_timer);
@@ -689,6 +689,7 @@ window.addEventListener("mousemove", (event)=>
         //print_object(textNode.parentNode);
         let rect = textNode.parentNode.getBoundingClientRect();
         let fud = 5;
+        // FIXME: Doesn't work to reject in all cases
         let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
         if(!hit)
         {
