@@ -81,8 +81,8 @@ function exists_div()
 
 function build_div (text, result)
 {
-    console.log("Displaying:");
-    print_object(result);
+    //console.log("Displaying:");
+    //print_object(result);
     let middle = document.createElement("div");
     let temp = document.createElement("div");
     //temp.innerHTML += "Looked up " + text + "<br>";
@@ -200,7 +200,7 @@ function build_div (text, result)
                 // don't list spellings if restricted to kana we didn't look up
                 for(let j = 0; j < term.k_ele.length; j++)
                 {
-                    if(term.k_ele[j].keb != term.k_ele[which].keb)
+                    if(term.k_ele[j].keb != kanji_text)
                     {
                         let k = term.k_ele[j];
                         let invalid = !looked_up_kanji && k.restr;
@@ -210,7 +210,7 @@ function build_div (text, result)
                                 if(k.restr[l] == text)
                                     invalid = false;
                         }
-                        if(!looked_up_kanji && r_restr !== [] && r_restr.indexOf(k.keb) < 0)
+                        if(!looked_up_kanji && r_restr !== [] && r_restr.length > 0 && r_restr.indexOf(k.keb) < 0)
                             invalid = true;
                         if(!invalid)
                             alternatives.push(term.k_ele[j]);
@@ -585,10 +585,12 @@ let lookup_timer = undefined;
 let lookup_queue = [];
 let lookup_rate = 8;
 
-var lookup_loop_cancel = false;
+let lookup_loop_cancel = false;
+let lookup_last_time = Date.now();
 
 async function lookup_loop()
 {
+    lookup_last_time = Date.now();
     let t_start = Date.now();
     if(lookup_queue.length > 0)
     {
@@ -605,17 +607,24 @@ async function lookup_loop()
     if(lookup_loop_cancel)
     {
         lookup_loop_cancel = false;
+        lookup_timer = undefined;
         return;
     }
     else
-        setTimeout(lookup_loop, t_to_wait);
+        lookup_timer = setTimeout(lookup_loop, t_to_wait);
 }
 
-setTimeout(lookup_loop, lookup_rate);
+lookup_timer = setTimeout(lookup_loop, lookup_rate);
 
 function lookup_enqueue(text, x, y, x2, y2)
 {
     lookup_queue = [[text, x, y, x2, y2]];
+    if(!lookup_timer || lookup_last_time+lookup_rate*100)
+    {
+        if(lookup_timer)
+            clearTimeout(lookup_timer);
+        lookup_timer = setTimeout(lookup_loop, lookup_rate);
+    }
 }
 
 function lookup_cancel()
