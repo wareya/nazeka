@@ -46,7 +46,7 @@ function delete_div ()
 function display_div (middle, x, y, time)
 {
     middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
-    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC;";
+    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px;";
     
     let other = document.body.getElementsByClassName(div_class);
     if(other.length > 0)
@@ -89,7 +89,7 @@ function build_div (text, result)
     {
         let term = result[i];
         //print_object(term);
-        let temptag = "<span class=word>";
+        let temptag = "<span class=nazeka_word>";
         let found_kanji = true;
         if(term.k_ele)
         {
@@ -269,7 +269,7 @@ function build_div (text, result)
             //temp.innerHTML += "<span class=num>" + (j+1) + ".</span> ";
             if(sense.pos)
             {
-                let temptag = "<span class=pos>(";
+                let temptag = "<span class=nazeka_pos>(";
                 let parts = [];
                 for(let l = 0; l < sense.pos.length; l++)
                     parts.push(sense.pos[l]);
@@ -284,17 +284,17 @@ function build_div (text, result)
             if(compact)
             {
                 if(goodsenses.length > 1)
-                    temp.innerHTML += " <span class=num>(" + (j+1) + ")</span> ";
+                    temp.innerHTML += " <span class=nazeka_num>(" + (j+1) + ")</span> ";
             }
             else
             {
-                temp.innerHTML += "<span class=num>" + (j+1) + ".</span> ";
+                temp.innerHTML += "<span class=nazeka_num>" + (j+1) + ".</span> ";
             }
             if(sense.inf)
                 temp.innerHTML += "<i>(" + sense.inf + ")</i> ";
             if(sense.misc)
             {
-                let temptag = "<span class=misc>(";
+                let temptag = "<span class=nazeka_misc>(";
                 let parts = [];
                 for(let l = 0; l < sense.misc.length; l++)
                     parts.push(sense.misc[l].substring(1, sense.misc[l].length-1));
