@@ -4,13 +4,14 @@
  * TODO:
  * 
  * ! Toggle button
- * ! Compare katakana to hiragana equally
+ * ! Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
  * ! Different CSS for different parts of definitions
  * - Definition priority handling (prefer words with any commonness tags, shorter deconjugations, expressions, non-archaic/non-obscure words, high frequencies)
  * - Settings
  * - VNstats frequency data
  * - Load deconjugation rules from an advanced setting, with a reset button
+ * - Work with text input fields
  * ? List definitions of shorter text strings if they're not pure kana (in addition to main definitions)
  * 
  */
