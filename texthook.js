@@ -80,10 +80,14 @@ function exists_div()
 
 function build_div (text, result)
 {
+    console.log("Displaying:");
+    print_object(result);
     let middle = document.createElement("div");
     let temp = document.createElement("div");
     //temp.innerHTML += "Looked up " + text + "<br>";
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
+    // FIXME: A bunch of code here depends on the literal text used to run the search instead of the text with which the search succeeded.
+    // The search can convert between hiragana and katakana to find a valid match, so we should know what text it actually used.
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
@@ -103,6 +107,17 @@ function build_div (text, result)
             }
             if(!looked_up_kanji)
             {
+                let whichkana = 0;
+                while(whichkana < term.r_ele.length && term.r_ele[whichkana].reb != text) whichkana += 1;
+                if(whichkana >= term.r_ele.length)
+                    whichkana = 0;
+                
+                whichkana = term.r_ele[whichkana];
+                
+                let r_restr = [];
+                if(whichkana.restr && whichkana.restr.length > 0)
+                    r_restr = whichkana.restr;
+                
                 for(let j = 0; j < term.k_ele.length; j++)
                 {
                     if(term.k_ele[j].restr)
@@ -111,15 +126,23 @@ function build_div (text, result)
                         {
                             if(term.k_ele[j].restr[l] == text)
                             {
-                                found_kanji = true;
-                                break;
+                                if(!r_restr || r_restr.indexOf(term.k_ele[j].keb) > -1)
+                                {
+                                    which = j;
+                                    found_kanji = true;
+                                    break;
+                                }
                             }
                         }
                     }
                     else
                     {
-                        found_kanji = true;
-                        break;
+                        if(!r_restr || r_restr.indexOf(term.k_ele[j].keb) > -1)
+                        {
+                            which = j;
+                            found_kanji = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -127,7 +150,8 @@ function build_div (text, result)
                 found_kanji = true;
             if(found_kanji)
             {
-                temptag += term.k_ele[which].keb;
+                let kanji_text = term.k_ele[which].keb;
+                temptag += kanji_text;
                 
                 // list readings
                 let readings = [];
@@ -135,12 +159,12 @@ function build_div (text, result)
                 for(let j = 0; j < term.r_ele.length; j++)
                 {
                     let r = term.r_ele[j];
-                    let invalid = false;
-                    if(looked_up_kanji && r.restr)
+                    let invalid = r.restr != undefined;
+                    if(r.restr)
                     {
                         for(let l = 0; l < r.restr.length; l++)
-                            if(r.restr[l] != text)
-                                invalid = true;
+                            if(r.restr[l] == kanji_text)
+                                invalid = false;
                     }
                     if(!invalid)
                         readings.push(term.r_ele[j]);
@@ -645,6 +669,7 @@ window.addEventListener("mousemove", (event)=>
         //console.log("found text");
         let text = textNode.textContent.substring(offset, textNode.textContent.length);
         
+        // grab text from later and surrounding DOM nodes
         let current_node = textNode;
         while(text.length < max_search_len)
         {

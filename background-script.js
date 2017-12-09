@@ -107,24 +107,51 @@ function getfromdict(indexes)
     return ret;
 }
 
-function search(text)
+function replace_hira_with_kata(text)
+{
+    let newtext = "";
+    for(let i = 0; i < text.length; i++)
+    {
+        let codepoint = text.codePointAt(i);
+        if(codepoint >= 0x3040 && codepoint <= 0x309F)
+            codepoint += (0x30A0 - 0x3040);
+        newtext += String.fromCodePoint(codepoint);
+    }
+    return newtext;
+}
+
+function replace_kata_with_hira(text)
+{
+    let newtext = "";
+    for(let i = 0; i < text.length; i++)
+    {
+        let codepoint = text.codePointAt(i);
+        if(codepoint >= 0x30A0 && codepoint <= 0x30FF)
+            codepoint -= (0x30A0 - 0x3040);
+        newtext += String.fromCodePoint(codepoint);
+    }
+    return newtext;
+}
+
+function search_inner(text)
 {
     if (lookup_kan[text])
-    {
-        //console.log("search successful (kanji)");
         return getfromdict(lookup_kan[text]);
-    }
     else if (lookup_kana[text])
-    {
-        //console.log("search successful (kana)");
         return getfromdict(lookup_kana[text]);
-    }
     else
-    {
-        //console.log("search failed");
-        //console.log(text);
         return;
-    }
+}
+
+function search(text)
+{
+    let ret = undefined;
+    ret = search_inner(text);
+    if(ret) return ret;
+    ret = search_inner(replace_hira_with_kata(text));
+    if(ret) return ret;
+    ret = search_inner(replace_kata_with_hira(text));
+    if(ret) return ret;
 }
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
