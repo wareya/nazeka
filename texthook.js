@@ -3,7 +3,7 @@
 /*
  * TODO:
  * 
- * ! Binding spans etc. together when grabbing text from the 
+ * ! Binding spans etc. together when grabbing text from the page
  * ! Toggle button
  * ! Compare katakana to hiragana equally
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
