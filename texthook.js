@@ -105,16 +105,16 @@ function build_div (text, result)
                 which = 0;
                 looked_up_kanji = false;
             }
+            let whichkana = 0;
+            let r_restr = [];
             if(!looked_up_kanji)
             {
-                let whichkana = 0;
                 while(whichkana < term.r_ele.length && term.r_ele[whichkana].reb != text) whichkana += 1;
                 if(whichkana >= term.r_ele.length)
                     whichkana = 0;
                 
                 whichkana = term.r_ele[whichkana];
                 
-                let r_restr = [];
                 if(whichkana.restr && whichkana.restr.length > 0)
                     r_restr = whichkana.restr;
                 
@@ -202,13 +202,15 @@ function build_div (text, result)
                     if(term.k_ele[j].keb != term.k_ele[which].keb)
                     {
                         let k = term.k_ele[j];
-                        let invalid = false;
+                        let invalid = !looked_up_kanji && k.restr;
                         if(!looked_up_kanji && k.restr)
                         {
                             for(let l = 0; l < k.restr.length; l++)
-                                if(k.restr[l] != text)
-                                    invalid = true;
+                                if(k.restr[l] == text)
+                                    invalid = false;
                         }
+                        if(!looked_up_kanji && r_restr !== [] && r_restr.indexOf(k.keb) < 0)
+                            invalid = true;
                         if(!invalid)
                             alternatives.push(term.k_ele[j]);
                     }
@@ -652,6 +654,23 @@ window.addEventListener("mousemove", (event)=>
         let range = document.caretRangeFromPoint(event.clientX+seach_x_offset, event.clientY);
         textNode = range.startContainer;
         offset = range.startOffset;
+    }
+    
+    // try without the offset
+    if (textNode.nodeType != 3)
+    {
+        if (document.caretPositionFromPoint)
+        {
+            let range = document.caretPositionFromPoint(event.clientX, event.clientY);
+            textNode = range.offsetNode;
+            offset = range.offset;
+        }
+        else if (document.caretRangeFromPoint)
+        {
+            let range = document.caretRangeFromPoint(event.clientX, event.clientY);
+            textNode = range.startContainer;
+            offset = range.startOffset;
+        }
     }
     // if there was text, use it
     if (textNode.nodeType == 3)
