@@ -3,7 +3,6 @@
 /*
  * TODO:
  * 
- * ! Binding spans etc. together when grabbing text from the page
  * ! Toggle button
  * ! Compare katakana to hiragana equally
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
@@ -645,6 +644,50 @@ window.addEventListener("mousemove", (event)=>
         }
         //console.log("found text");
         let text = textNode.textContent.substring(offset, textNode.textContent.length);
+        
+        let current_node = textNode;
+        while(text.length < max_search_len)
+        {
+            if(current_node == undefined) break;
+            try
+            {
+                let display = getComputedStyle(current_node).display;
+                if(display != "inline" && display != "ruby")
+                    break;
+            } catch(err) {}
+            
+            let parent = current_node.parentNode;
+            if(parent == undefined) break;
+            let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
+            if(i < 0) break;
+            i++;
+            while(i < current_node.parentNode.childNodes.length)
+            {
+                let next_node = current_node.parentNode.childNodes[i];
+                let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
+                
+                if(tagname == "rt" || tagname == "rp")
+                    continue;
+                // next_node might not be an Element
+                try
+                {
+                    let display = getComputedStyle(next_node).display;
+                    if(display == "ruby")
+                        continue;
+                    if(display == "inline")
+                        text += next_node.textContent;
+                }
+                catch(err)
+                {
+                    text += next_node.textContent;
+                }
+                i++;
+            }
+            if(text.length < max_search_len)
+                current_node = current_node.parentNode;
+            
+        }
+        
         text = text.trim();
         //print_object(text);
         text = text.substring(0, Math.min(text.length, max_search_len));
