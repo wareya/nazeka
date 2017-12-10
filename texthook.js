@@ -3,12 +3,11 @@
 /*
  * TODO:
  * 
- * ! Toggle button
- * ! Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
  * ! Different CSS for different parts of definitions
+ * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * - Definition priority handling (prefer words with any commonness tags, shorter deconjugations, expressions, non-archaic/non-obscure words, high frequencies)
- * - Settings
+ * - More configurability
  * - VNstats frequency data
  * - Load deconjugation rules from an advanced setting, with a reset button
  * - Work with text input fields
@@ -26,7 +25,10 @@ function print_object(message)
     console.log(message);
 }
 
-let compact = true;
+let settings = {
+enabled: false,
+compact: true,
+};
 
 let last_time_display = Date.now();
 
@@ -46,7 +48,7 @@ function delete_div ()
 function display_div (middle, x, y, time)
 {
     middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
-    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px;";
+    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
     
     let other = document.body.getElementsByClassName(div_class);
     if(other.length > 0)
@@ -318,13 +320,13 @@ function build_div (text, result)
                     parts.push(sense.pos[l]);
                 temptag += parts.join(", ");
                 temptag += ")</span>";
-                if(compact)
+                if(settings.compact)
                     temptag += " ";
                 else
                     temptag  += "<br>";
                 temp.innerHTML += temptag;
             }
-            if(compact)
+            if(settings.compact)
             {
                 if(goodsenses.length > 1)
                     temp.innerHTML += " <span class=nazeka_num>(" + (j+1) + ")</span> ";
@@ -347,7 +349,7 @@ function build_div (text, result)
                 temp.innerHTML += temptag;
             }
             temp.innerHTML += sense.gloss.join("; ");
-            if(compact)
+            if(settings.compact)
             {
                 if(sense.gloss.length > 1 || j+1 != goodsenses.length)
                     temp.innerHTML += "; ";
@@ -357,7 +359,7 @@ function build_div (text, result)
                 temp.innerHTML += "<br>";
             }
         }
-        if(compact)
+        if(settings.compact)
             temp.innerHTML += "<br>";
     }
     middle.appendChild(temp);
@@ -662,14 +664,43 @@ function lookup_cancel()
     delete_div();
 }
 
+let settings_reload_rate = 200;
+let settings_reloader = undefined;
+async function settings_reload()
+{
+    try
+    {
+        settings.enabled = (await browser.storage.local.get("enabled")).enabled;
+        if(settings.enabled == undefined)
+            settings.enabled = false;
+        settings.compact = (await browser.storage.local.get("compact")).compact;
+        if(settings.compact == undefined)
+            settings.compact = true;
+        //console.log("set settings");
+        //console.log(settings.enabled);
+        //console.log(settings.compact);
+    }
+    catch(error)
+    {
+        console.log("failed to set settings, maybe not stored yet?");
+    } // not stored yet, probably
+    
+    settings_reloader = setTimeout(settings_reload, settings_reload_rate);
+}
+
+settings_reloader = setTimeout(settings_reload, settings_reload_rate);
+
+
 let max_search_len = 25;
 let time_of_last = Date.now();
 let throttle = 8;
 
-var seach_x_offset = -3;
+let seach_x_offset = -3;
 
 window.addEventListener("mousemove", (event)=>
 {
+    if(!settings.enabled) return;
+    
     if(Date.now() - time_of_last < throttle)
     {
         //console.log("too soon, returning");
@@ -696,7 +727,7 @@ window.addEventListener("mousemove", (event)=>
     }
     
     // try without the offset
-    if (textNode.nodeType != 3)
+    if (textNode == undefined || textNode.nodeType != 3)
     {
         if (document.caretPositionFromPoint)
         {
@@ -712,7 +743,7 @@ window.addEventListener("mousemove", (event)=>
         }
     }
     // if there was text, use it
-    if (textNode.nodeType == 3)
+    if (textNode && textNode.nodeType == 3)
     {
         //print_object(textNode);
         //print_object(textNode.parentNode);

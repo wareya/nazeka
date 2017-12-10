@@ -3,8 +3,8 @@
 'use strict';
 
 // We use JMdict converted to JSON. It's like 32MB so we don't want to load it for every tab.
-// So we need to use a backgroudn script and send messages to it from the content script.
-// Unfortunately webextensions don't have an easy way to load files even from in extension.
+// So we need to use a background script and send messages to it from the content script.
+// Unfortunately webextensions don't have an easy way to load files, even from in the extension.
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
 // Seriously.
 
@@ -152,17 +152,58 @@ function search(text)
     if(ret) return ret;
 }
 
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request, sender, sendResponse) =>
+{
     if (request.type == 'search')
     {
-        //console.log("running search");
         sendResponse(search(request.text));
     }
     else
     {
-        //console.log("unhandled request");
-        //return;
         return;
     }
 });
+
+async function update_icon(enabled)
+{
+    if(enabled)
+    {
+        browser.browserAction.setIcon({path:{
+            "16": "enabled16.png",
+            "32": "enabled32.png",
+            "512": "enabled512.png"
+        }},)
+    }
+    else
+    {
+        browser.browserAction.setIcon({path:{
+            "16": "action16.png",
+            "32": "action32.png",
+            "512": "action512.png"
+        }},)
+    }
+}
+
+async function toggle_enabled()
+{
+    let enabled = (await browser.storage.local.get("enabled")).enabled;
+    if(enabled == undefined)
+        enabled = false;
+    enabled = !enabled;
+    browser.storage.local.set({enabled: enabled});
+    update_icon(enabled);
+}
+
+async function init_icon()
+{
+    browser.browserAction.onClicked.addListener(toggle_enabled);
+    let enabled = (await browser.storage.local.get("enabled")).enabled;
+    if(enabled == undefined)
+        enabled = false;
+    update_icon(enabled);
+}
+
+init_icon();
+
+
 
