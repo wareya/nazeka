@@ -181,11 +181,13 @@ function build_div (text, result)
                     {
                         if(form.process.length > 0)
                             temptag += "～";
-                        for(let f = 0; f < form.process.length; f++)
+                        for(let f = form.process.length-1; f >= 0; f--)
                         {
                             let info = form.process[f];
+                            if(info.startsWith("(") && info.endsWith(")") && f != 0)
+                                continue;
                             temptag += info;
-                            if(f+1 < form.process.length)
+                            if(f > 0)
                                 temptag += "―";
                         }
                     }
@@ -370,11 +372,13 @@ function build_div (text, result)
 let rules = [];
 
 // TODO: load rules from an underlay
-rules.push({type: "stdrule", dec_end:"る", con_end:"た", dec_tag:"v1", con_tag:"stem_past", detail:"past"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"て", dec_tag:"v1", con_tag:"stem_te", detail:"te form"});
+rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"た", dec_tag:"v1", con_tag:"stem_past", detail:"past"});
+rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"て", dec_tag:"v1", con_tag:"stem_te", detail:"te form"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"ない", dec_tag:"v1", con_tag:"negative", detail:"negative"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"らない", dec_tag:"v5r", con_tag:"negative", detail:"negative"});
-rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"aux", detail:"past"});
+rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem_past", detail:"past"});
+rules.push({type: "stdrule", dec_end:"る", con_end:"っ", dec_tag:"v5r", con_tag:"stem_ren_less", detail:"(unstressed infinitive)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
 
 // return deconjugated form if stdrule applies to form, return otherwise
 function stdrule_deconjugate(my_form, my_rule)
@@ -392,8 +396,13 @@ function stdrule_deconjugate(my_form, my_rule)
     if(my_form.tags.length > my_form.original_text.length+6)
         return;
     // tag doesn't match
-    if(my_form.tags.length > 0 && my_form.tags[my_form.tags.length-1] != my_rule.dec_tag)
+    if(my_form.tags.length > 0 && my_form.tags[my_form.tags.length-1] != my_rule.con_tag)
+    {
+        console.log("Returning from deconjugation: tag doesn't match");
+        console.log(my_form);
+        console.log(my_rule);
         return;
+    }
     
     let newtext = my_form.text.substring(0, my_form.text.length-my_rule.con_end.length)+my_rule.dec_end;
     
@@ -425,10 +434,24 @@ function rewriterule_deconjugate(my_form, my_rule)
         return;
     return stdrule_deconjugate(my_form, my_rule);
 };
+function onlyfinalrule_deconjugate(my_form, my_rule)
+{
+    if(my_form.tags.length != 0)
+        return;
+    return stdrule_deconjugate(my_form, my_rule);
+};
+function neverfinalrule_deconjugate(my_form, my_rule)
+{
+    if(my_form.tags.length == 0)
+        return;
+    return stdrule_deconjugate(my_form, my_rule);
+};
 
 let rule_functions = {
 stdrule: stdrule_deconjugate,
 rewriterule: rewriterule_deconjugate,
+onlyfinalrule: onlyfinalrule_deconjugate,
+neverfinalrule: neverfinalrule_deconjugate,
 };
 
 Set.prototype.union = function(setB)
