@@ -372,6 +372,9 @@ function build_div (text, result)
 let rules = [];
 
 // TODO: load rules from an underlay
+
+// core verb stems for typical verb types
+
 rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"た", dec_tag:"v1", con_tag:"stem_past", detail:"past"});
 rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"て", dec_tag:"v1", con_tag:"stem_te", detail:"te form"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"ない", dec_tag:"v1", con_tag:"negative", detail:"negative"});
@@ -380,8 +383,22 @@ rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:
 rules.push({type: "stdrule", dec_end:"る", con_end:"っ", dec_tag:"v5r", con_tag:"stem_ren_less", detail:"(unstressed infinitive)"});
 rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
 
+rules.push({type: "stdrule"
+, dec_end:
+["く","す","つ","う","る","ぐ","ぶ","ぬ","む","る","う","く"]
+, con_end:
+["け","せ","て","え","れ","げ","べ","ね","め","れ","え","け"]
+, dec_tag:
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
+, con_tag:"stem_e", detail:"(izenkei)"});
+
+rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem_e", con_tag:"v1", detail:"potential"});
+
+rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_ren", con_tag:"v1", detail:"too much"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem_te", con_tag:"adj_i", detail:"polite request"});
+
 // return deconjugated form if stdrule applies to form, return otherwise
-function stdrule_deconjugate(my_form, my_rule)
+function stdrule_deconjugate_inner(my_form, my_rule)
 {
     // can't deconjugate nothingness
     if(my_form.text == "")
@@ -398,9 +415,12 @@ function stdrule_deconjugate(my_form, my_rule)
     // tag doesn't match
     if(my_form.tags.length > 0 && my_form.tags[my_form.tags.length-1] != my_rule.con_tag)
     {
-        console.log("Returning from deconjugation: tag doesn't match");
-        console.log(my_form);
-        console.log(my_rule);
+        if(false)//my_rule.detail=="potential")
+        {
+            console.log("Returning from deconjugation: tag doesn't match");
+            console.log(my_form);
+            console.log(my_rule);
+        }
         return;
     }
     
@@ -411,7 +431,7 @@ function stdrule_deconjugate(my_form, my_rule)
     newform.text = newtext;
     newform.original_text = my_form.original_text;
     newform.tags = my_form.tags.slice();
-    newform.seentext = new Set([my_form.seentext]);
+    newform.seentext = new Set([...my_form.seentext]);
     newform.process = my_form.process.slice();
     
     newform.text = newtext;
@@ -423,10 +443,54 @@ function stdrule_deconjugate(my_form, my_rule)
     newform.tags.push(my_rule.dec_tag);
     
     if(newform.seentext.size == 0)
-        newform.seentext.add(my_form);
+        newform.seentext.add(my_form.text);
     newform.seentext.add(newtext);
     
     return newform;
+};
+function stdrule_deconjugate(my_form, my_rule)
+{
+    let array = undefined;
+    // pick the first one that is an array
+    // FIXME: use minimum length for safety reasons? assert all arrays equal length?
+    if(Array.isArray(my_rule.dec_end))
+        array = my_rule.dec_end;
+    else if(Array.isArray(my_rule.con_end))
+        array = my_rule.con_end;
+    else if(Array.isArray(my_rule.dec_tag))
+        array = my_rule.dec_tag;
+    else if(Array.isArray(my_rule.con_tag))
+        array = my_rule.con_tag;
+    
+    if(array == undefined)
+        return stdrule_deconjugate_inner(my_form, my_rule);
+    else
+    {
+        let collection = new Set();
+        for(let i = 0; i < array.length; i++)
+        {
+            let virtual_rule = {};
+            virtual_rule.type = my_rule.type;
+            
+            let index_or_value = function (variable, index)
+            {
+                if(Array.isArray(variable))
+                    return variable[index];
+                else
+                    return variable;
+            }
+            
+            virtual_rule.dec_end = index_or_value(my_rule.dec_end, i);
+            virtual_rule.con_end = index_or_value(my_rule.con_end, i);
+            virtual_rule.dec_tag = index_or_value(my_rule.dec_tag, i);
+            virtual_rule.con_tag = index_or_value(my_rule.con_tag, i);
+            virtual_rule.detail = my_rule.detail;
+            
+            let ret = stdrule_deconjugate_inner(my_form, virtual_rule);
+            if(ret) collection.add(ret);
+        }
+        return collection;
+    }
 };
 function rewriterule_deconjugate(my_form, my_rule)
 {
@@ -486,7 +550,15 @@ function deconjugate(mytext)
                 
                 let newform = rule_functions[rule.type](form, rule);
                 
-                if(newform != undefined && !processed.has(newform) && !novel.has(newform) && !new_novel.has(newform))
+                if(newform != undefined && newform.constructor === Set)
+                {
+                    for(let myform of newform)
+                    {
+                        if(myform != undefined && !processed.has(myform) && !novel.has(myform) && !new_novel.has(myform))
+                            new_novel.add(myform);
+                    }
+                }
+                else if(newform != undefined && !processed.has(newform) && !novel.has(newform) && !new_novel.has(newform))
                     new_novel.add(newform);
             }
         }
@@ -739,14 +811,20 @@ window.addEventListener("mousemove", (event)=>
     if (document.caretPositionFromPoint)
     {
         let range = document.caretPositionFromPoint(event.clientX+seach_x_offset, event.clientY);
-        textNode = range.offsetNode;
-        offset = range.offset;
+        if(range)
+        {
+            textNode = range.offsetNode;
+            offset = range.offset;
+        }
     }
     else if (document.caretRangeFromPoint)
     {
         let range = document.caretRangeFromPoint(event.clientX+seach_x_offset, event.clientY);
-        textNode = range.startContainer;
-        offset = range.startOffset;
+        if(range)
+        {
+            textNode = range.startContainer;
+            offset = range.startOffset;
+        }
     }
     
     // try without the offset
@@ -755,14 +833,20 @@ window.addEventListener("mousemove", (event)=>
         if (document.caretPositionFromPoint)
         {
             let range = document.caretPositionFromPoint(event.clientX, event.clientY);
-            textNode = range.offsetNode;
-            offset = range.offset;
+            if(range)
+            {
+                textNode = range.offsetNode;
+                offset = range.offset;
+            }
         }
         else if (document.caretRangeFromPoint)
         {
             let range = document.caretRangeFromPoint(event.clientX, event.clientY);
-            textNode = range.startContainer;
-            offset = range.startOffset;
+            if(range)
+            {
+                textNode = range.startContainer;
+                offset = range.startOffset;
+            }
         }
     }
     // if there was text, use it
