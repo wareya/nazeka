@@ -546,9 +546,9 @@ rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_ren"
 rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem_te", con_tag:"adj_i", detail:"polite request"});
 
 
-//rules.push({type: "stdrule", dec_end:"い", con_end:"", dec_tag:"adj_i", con_tag:"stem_adj_base", detail:"(stem)"});
+rules.push({type: "stdrule", dec_end:"い", con_end:"", dec_tag:"adj_i", con_tag:"stem_adj_base", detail:"(stem)"});
 rules.push({type: "contextrule", contextrule:"adjspecial", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
-rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
+//rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
 
 // FIXME implement un-deconjugation to show the actual reading of the deconjugated word - this is what furigana rules are for
 
