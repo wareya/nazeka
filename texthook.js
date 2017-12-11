@@ -594,17 +594,16 @@ rules.push({type: "stdrule", dec_end:"", con_end:"れば", dec_tag:"stem_ke", co
 // non-analytical forms
 ////////////////////
 
+//passive and potential
 rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem_e", con_tag:"v1", detail:"potential"});
-
 // note: ichidan (i.e. v1) verbs cannot conjugate to stem_a
 rules.push({type: "stdrule", dec_end:"", con_end:"れる", dec_tag:"stem_a", con_tag:"v1", detail:"passive"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"られる", dec_tag:"v1", con_tag:"v1", detail:"passive/potential"});
 
+// causative
 rules.push({type: "stdrule", dec_end:"", con_end:"せる", dec_tag:"stem_a", con_tag:"v1", detail:"causative"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"させる", dec_tag:"v1", con_tag:"v1", detail:"causative"});
 rules.push({type: "contextrule", contextrule: "saspecial", dec_end:"", con_end:"す", dec_tag:"stem_a", con_tag:"v5s", detail:"short causative"});
-
-// causative
 
 ////////////////////
 // te-based forms
@@ -644,9 +643,6 @@ rules.push({type: "contextrule", contextrule:"adjspecial", dec_end:"", con_end:"
 
 rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_ren", con_tag:"v1", detail:"too much"});
 
-// core verb stems for typical verb types
-
-
 ////////////////////
 // transparent contractions
 ////////////////////
@@ -666,6 +662,7 @@ rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"ん", dec_tag:"v5r", 
 rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"ん", dec_tag:"v5aru", con_tag:"uninflectable", detail:"slurred"});
 rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"ん", dec_tag:"vk", con_tag:"uninflectable", detail:"slurred"}); // FIXME: ?
 
+// TODO: a bunch of missing contractions, vk, vs_i, v5aru, v4r, 
 
 
 
