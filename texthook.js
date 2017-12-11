@@ -489,6 +489,15 @@ rules.push({type: "stdrule"
 , dec_tag:
 ["v5k","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v5u_s","v5k_s"]
 , con_tag:"stem_ren", detail:"(infinitive)"});
+// ones that need the te trap
+rules.push({type: "contextrule", contextrule:"tetrap"
+, dec_end:
+["す","る"]
+, con_end:
+["し",""]
+, dec_tag:
+["v5s","v1"]
+, con_tag:"stem_ren", detail:"(infinitive)"});
 // FIXME add the su and ichidan ones, need to add ContextRuleTeTrap
 
 // stem for negatives proper
@@ -511,6 +520,7 @@ rules.push({type: "stdrule"
 ["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
 , con_tag:"form_volition", detail:"volitional"});
 
+// past and te form
 // rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren", con_tag:"stem_past", detail:"past"}); // unusual but real but don't necessarily want it yet
 rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
 rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem_ren_less_v", con_tag:"stem_past", detail:"past"});
@@ -518,10 +528,29 @@ rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem_ren_less_v
 rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem_ren_less", con_tag:"stem_te", detail:"(te form)"});
 rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem_ren_less_v", con_tag:"stem_te", detail:"(te form)"});
 
+// contractable auxiliary forms
+rules.push({type: "stdrule", dec_end:"", con_end:"しまう", dec_tag:"stem_te", con_tag:"v5u", detail:"completely"});
+rules.push({type: "stdrule", dec_end:"てしまう", con_end:"ちゃう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"でしまう", con_end:"じゃう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"てしまう", con_end:"ちまう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"でしまう", con_end:"じまう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
+
+rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem_te", con_tag:"uninflectable", detail:"topic"});
+rules.push({type: "stdrule", dec_end:"ては", con_end:"ちゃ", dec_tag:"stem_te", con_tag:"uninflectable", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"では", con_end:"じゃ", dec_tag:"stem_te", con_tag:"uninflectable", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem_te_defective", con_tag:"uninflectable", detail:"topic"});
+
 rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem_e", con_tag:"v1", detail:"potential"});
 
 rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_ren", con_tag:"v1", detail:"too much"});
 rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem_te", con_tag:"adj_i", detail:"polite request"});
+
+
+//rules.push({type: "stdrule", dec_end:"い", con_end:"", dec_tag:"adj_i", con_tag:"stem_adj_base", detail:"(stem)"});
+rules.push({type: "contextrule", contextrule:"adjspecial", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
+rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
+
+// FIXME implement un-deconjugation to show the actual reading of the deconjugated word - this is what furigana rules are for
 
 // return deconjugated form if stdrule applies to form, return otherwise
 function stdrule_deconjugate_inner(my_form, my_rule)
@@ -636,12 +665,42 @@ function neverfinalrule_deconjugate(my_form, my_rule)
         return;
     return stdrule_deconjugate(my_form, my_rule);
 };
+function contextrule_deconjugate(my_form, my_rule)
+{
+    if(!context_functions[my_rule.contextrule](my_form, my_rule))
+        return;
+    return stdrule_deconjugate(my_form, my_rule);
+};
 
 let rule_functions = {
 stdrule: stdrule_deconjugate,
 rewriterule: rewriterule_deconjugate,
 onlyfinalrule: onlyfinalrule_deconjugate,
 neverfinalrule: neverfinalrule_deconjugate,
+contextrule: contextrule_deconjugate,
+};
+
+function adjspecial_check(my_form, my_rule)
+{
+    if(my_form.tags.length < 2) return true;
+    let my_tag = my_form.tags[my_form.tags.length-2];
+    if(my_tag == "stem_adj_base")
+        return false;
+    return true;
+};
+
+function tetrap_check(my_form, my_rule)
+{
+    if(my_form.tags.length < 2) return true;
+    let my_tag = my_form.tags[my_form.tags.length-2];
+    if(my_tag == "stem_te")
+        return false;
+    return true;
+};
+
+let context_functions = {
+adjspecial: adjspecial_check,
+tetrap: tetrap_check,
 };
 
 Set.prototype.union = function(setB)
