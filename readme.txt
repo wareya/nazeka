@@ -1,6 +1,6 @@
 Nazeka is a rikai replacement.
 
-*Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have. It doesn't even have an "off" button.*
+*Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have, and hasn't been tested enough to identify performance problems.*
 
 This is my first nontrivial javascript work and there are probably a lot of obvious peeves to have with the code.
 
