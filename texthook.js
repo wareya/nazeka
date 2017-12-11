@@ -4,7 +4,6 @@
  * TODO:
  * 
  * ! Port all of Spark Reader's deconjugation rules https://github.com/wareya/Spark-Reader/blob/master/preferences/underlay https://github.com/wareya/Spark-Reader/tree/master/src/language/deconjugator
- * ! Different CSS for different parts of definitions
  * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * - Definition priority handling (prefer words with any commonness tags, shorter deconjugations, expressions, non-archaic/non-obscure words, high frequencies)
  * - More configurability
@@ -81,12 +80,31 @@ function exists_div()
     return (other.length > 0 && other[0].style.visibility != "hidden");
 }
 
+
+// In JMdict, part-of-speech tags are XML entities.
+// We processed JMdict's XML with entity processing disabled so we can just use the bare tags (e.g. "v1", not "ichidan verb").
+// This left the entity syntax &this; behind so we want to cut it off when we return results.
+function clip(str)
+{
+    if(str == undefined)
+        return;
+    if(str.length <= 2)
+        return "";
+    return str.substring(1, str.length-1);
+}
+
+// FIXME: redundant garbage, find a way to deduplicate a lot of the logical parts of this
 function build_div (text, result)
 {
     //console.log("Displaying:");
     //print_object(result);
     let middle = document.createElement("div");
     let temp = document.createElement("div");
+    temp.innerHTML +=
+"<style>\
+.nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
+.nazeka_main_reb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
+</style>";
     //temp.innerHTML += "Looked up " + text + "<br>";
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     // FIXME: A bunch of code here depends on the literal text used to run the search instead of the text with which the search succeeded.
@@ -156,7 +174,10 @@ function build_div (text, result)
             if(found_kanji)
             {
                 let kanji_text = term.k_ele[which].keb;
+                temptag += "<span class=nazeka_main_keb>"
                 temptag += kanji_text;
+                temptag += "</span>"
+                // FIXME: show inf for located keb
                 
                 // list readings
                 let readings = [];
@@ -196,6 +217,15 @@ function build_div (text, result)
                 for(let j = 0; j < readings.length; j++)
                 {
                     temptag += readings[j].reb;
+                    if(readings[j].inf)
+                    {
+                        for(let info of readings[j].inf)
+                        {
+                            temptag += " <span class=nazeka_reb_inf>(";
+                            temptag += clip(info);
+                            temptag += ")</span>";
+                        }
+                    }
                     if(j+1 != readings.length)
                         temptag += "・";
                 }
@@ -228,6 +258,15 @@ function build_div (text, result)
                 for(let j = 0; j < alternatives.length; j++)
                 {
                     temptag += alternatives[j].keb;
+                    if(alternatives[j].inf)
+                    {
+                        for(let info of alternatives[j].inf)
+                        {
+                            temptag += " <span class=nazeka_keb_inf>(";
+                            temptag += clip(info);
+                            temptag += ")</span>";
+                        }
+                    }
                     if(j+1 < alternatives.length)
                         temptag += ", ";
                 }
@@ -239,18 +278,23 @@ function build_div (text, result)
             found_kanji = false;
         if(!found_kanji)
         {
+            temptag += "<span class=nazeka_main_reb>"
             temptag += text;
+            temptag += "</span>"
+            // FIXME: show inf for located reb
             if(term.deconj)
             {
                 for(let form of term.deconj)
                 {
                     if(form.process.length > 0)
                         temptag += "～";
-                    for(let f = 0; f < form.process.length; f++)
+                    for(let f = form.process.length-1; f >= 0; f--)
                     {
                         let info = form.process[f];
+                        if(info.startsWith("(") && info.endsWith(")") && f != 0)
+                            continue;
                         temptag += info;
-                        if(f+1 < form.process.length)
+                        if(f > 0)
                             temptag += "―";
                     }
                 }
@@ -268,6 +312,15 @@ function build_div (text, result)
             for(let j = 0; j < alternatives.length; j++)
             {
                 temptag += alternatives[j].reb;
+                if(alternatives[j].inf)
+                {
+                    for(let info of alternatives[j].inf)
+                    {
+                        temptag += " <span class=nazeka_reb_inf>(";
+                        temptag += clip(info);
+                        temptag += ")</span>";
+                    }
+                }
                 if(j+1 < alternatives.length)
                     temptag += ", ";
             }
@@ -373,17 +426,13 @@ let rules = [];
 
 // TODO: load rules from an underlay
 
+
+rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem_past", detail:"past"});
+
 // core verb stems for typical verb types
 
-rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"た", dec_tag:"v1", con_tag:"stem_past", detail:"past"});
-rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"て", dec_tag:"v1", con_tag:"stem_te", detail:"te form"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"ない", dec_tag:"v1", con_tag:"negative", detail:"negative"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"らない", dec_tag:"v5r", con_tag:"negative", detail:"negative"});
-rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem_past", detail:"past"});
-rules.push({type: "stdrule", dec_end:"る", con_end:"っ", dec_tag:"v5r", con_tag:"stem_ren_less", detail:"(unstressed infinitive)"});
-rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
-
-rules.push({type: "stdrule"
+// "e" stem used for potential and ba
+rules.push({type: "neverfinalrule"
 , dec_end:
 ["く","す","つ","う","る","ぐ","ぶ","ぬ","む","る","う","く"]
 , con_end:
@@ -391,6 +440,83 @@ rules.push({type: "stdrule"
 , dec_tag:
 ["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
 , con_tag:"stem_e", detail:"(izenkei)"});
+
+// true imperative
+rules.push({type: "onlyfinalrule"
+, dec_end:
+["く","す","つ","う","る","ぐ","ぶ","ぬ","む","る","る","う","く"]
+, con_end:
+["け","せ","て","え","れ","げ","べ","ね","め","ろ","よ","え","け"] // ichidan has two imperatives FIXME: don't let potential conjugate to よ
+, dec_tag:
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v1","v5u_s","v5k_s"]
+, con_tag:"uninflectable", detail:"imperative"});
+
+// ~a stem
+rules.push({type: "neverfinalrule"
+, dec_end:
+["く","す","つ","う","る","ぐ","ぶ","ぬ","む","う","く"]
+, con_end:
+["か","せ","て","わ","ら","が","ば","な","ま","わ","か"]
+, dec_tag:
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v5u_s","v5k_s"]
+, con_tag:"stem_a", detail:"('a' stem)"});
+
+// unvoiced past stems
+rules.push({type: "neverfinalrule"
+, dec_end:
+["く","す","つ","う","る","る","う","く"]
+, con_end:
+["い","し","っ","っ","っ","","う","っ"]
+, dec_tag:
+["v5k","v5s","v5t","v5u","v5r","v1","v5u_s","v5k_s"]
+, con_tag:"stem_ren_less", detail:"(unstressed infinitive)"});
+// voiced past stems
+rules.push({type: "neverfinalrule"
+, dec_end:
+["ぐ","ぶ","ぬ","む"]
+, con_end:
+["い","ん","ん","ん"]
+, dec_tag:
+["v5g","v5b","v5n","v5m"]
+, con_tag:"stem_ren_less_v", detail:"(unstressed infinitive)"});
+
+// infinitives (ren'youkei) that are different than the corresponding past stem
+rules.push({type: "stdrule"
+, dec_end:
+["く","つ","う","る","ぐ","ぶ","ぬ","む","う","く"]
+, con_end:
+["き","ち","い","り","ぎ","び","に","み","い","き"]
+, dec_tag:
+["v5k","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v5u_s","v5k_s"]
+, con_tag:"stem_ren", detail:"(infinitive)"});
+// FIXME add the su and ichidan ones, need to add ContextRuleTeTrap
+
+// stem for negatives proper
+rules.push({type: "neverfinalrule"
+, dec_end:
+["","る"]
+, con_end:
+["",""]
+, dec_tag:
+["stem_a","v1"]
+, con_tag:"stem_mizenkei", detail:"(mizenkei)"});
+
+// ~a stem
+rules.push({type: "stdrule"
+, dec_end:
+["く","す","つ","う","る","ぐ","ぶ","ぬ","む","る","う","く"]
+, con_end:
+["こう","そう","とう","おう","ろう","ごう","ぼう","のう","もう","よう","おう","こう"]
+, dec_tag:
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
+, con_tag:"form_volition", detail:"volitional"});
+
+// rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren", con_tag:"stem_past", detail:"past"}); // unusual but real but don't necessarily want it yet
+rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
+rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem_ren_less_v", con_tag:"stem_past", detail:"past"});
+//rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem_ren", con_tag:"stem_te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
+rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem_ren_less", con_tag:"stem_te", detail:"(te form)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem_ren_less_v", con_tag:"stem_te", detail:"(te form)"});
 
 rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem_e", con_tag:"v1", detail:"potential"});
 
