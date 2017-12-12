@@ -455,6 +455,9 @@ async function settings_reload()
         settings.length = (await browser.storage.local.get("length")).length;
         if(!settings.length)
             settings.length = 25;
+            
+        if(!settings.enabled && exists_div())
+            delete_div();
         //console.log("set settings");
         //console.log(settings.enabled);
         //console.log(settings.compact);
