@@ -27,7 +27,7 @@ function update(text)
     let newnode = document.createElement("p");
     newnode.textContent = text;
     
-    target.insertBefore(newnode, document.querySelector("#helptext"));
+    target.insertBefore(newnode, document.body.firstChild);
 }
 
 let text_previous = "";
