@@ -45,15 +45,29 @@ function delete_div ()
 
 function display_div (middle, x, y, time)
 {
+    let find_root = window;
+    let newx = x;
+    let newy = y;
+    while(find_root.parent && find_root.parent != find_root)
+    {
+        let rect = find_root.frameElement.getBoundingClientRect();
+        find_root = find_root.parent;
+        let sx = find_root.scrollX;
+        let sy = find_root.scrollY;
+        newx += (rect.x + sx);
+        newy += (rect.y + sy);
+    }
+    let mydoc = find_root.document;
+    
     middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
     middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
     
-    let other = document.body.getElementsByClassName(div_class);
+    let other = mydoc.body.getElementsByClassName(div_class);
     if(other.length > 0)
     {
         other[0].replaceChild(middle, other[0].firstChild);
         
-        let styletext = "max-width: 600px; position: absolute; top: " + (y+5) + "px; left: " + (x+5) + "px;";
+        let styletext = "max-width: 600px; position: absolute; top: " + (newy+5) + "px; left: " + (newx+5) + "px;";
         styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
         other[0].style = styletext;
         
@@ -61,20 +75,25 @@ function display_div (middle, x, y, time)
     }
     else
     {
-        let outer = document.createElement("div");
+        let outer = mydoc.createElement("div");
         outer.className = div_class;
-        let styletext = "max-width: 600px; position: absolute; top: " + (y+5) + "px; left: " + (x+5) + "px;";
+        let styletext = "max-width: 600px; position: absolute; top: " + (newy+5) + "px; left: " + (newx+5) + "px;";
         styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
         outer.style = styletext;
         
         outer.appendChild(middle);
         
-        document.body.appendChild(outer);
+        mydoc.body.appendChild(outer);
     }
 }
 
 function exists_div()
 {
+    let find_root = window;
+    while(find_root.parent && find_root.parent != find_root)
+        find_root = find_root.parent;
+    let mydoc = find_root.document;
+    
     let other = document.body.getElementsByClassName(div_class);
     return (other.length > 0 && other[0].style.visibility != "hidden");
 }
