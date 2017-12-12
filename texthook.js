@@ -25,6 +25,7 @@ function print_object(message)
 let settings = {
 enabled: false,
 compact: true,
+length: 25,
 };
 
 let last_time_display = Date.now();
@@ -432,6 +433,9 @@ async function settings_reload()
         settings.compact = (await browser.storage.local.get("compact")).compact;
         if(settings.compact == undefined)
             settings.compact = true;
+        settings.length = (await browser.storage.local.get("length")).length;
+        if(settings.length == undefined)
+            settings.length = true;
         //console.log("set settings");
         //console.log(settings.enabled);
         //console.log(settings.compact);
@@ -506,7 +510,6 @@ function lookup_cancel()
     delete_div();
 }
 
-let max_search_len = 25;
 let time_of_last = Date.now();
 let throttle = 8;
 
@@ -588,7 +591,7 @@ window.addEventListener("mousemove", (event)=>
         
         // grab text from later and surrounding DOM nodes
         let current_node = textNode;
-        while(text.length < max_search_len)
+        while(text.length < settings.length)
         {
             if(current_node == undefined) break;
             try
@@ -625,14 +628,14 @@ window.addEventListener("mousemove", (event)=>
                 }
                 i++;
             }
-            if(text.length < max_search_len)
+            if(text.length < settings.length)
                 current_node = current_node.parentNode;
             
         }
         
         text = text.trim();
         //print_object(text);
-        text = text.substring(0, Math.min(text.length, max_search_len));
+        text = text.substring(0, Math.min(text.length, settings.length));
         
         //if(text != "")
             //lookup_indirect(text, event.clientX, event.clientY, time_of_last);

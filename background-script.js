@@ -299,6 +299,7 @@ rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ぬ", dec_tag:"stem-mize
 rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem-ku", con_tag:"adj-i", detail:"negative"});
 
 // special negative inflections where the intermediate stage (e.g. 赤くある) is not a synthetic phrase like the end result (e.g. 赤くありません) is
+// FIXME: don't allow conjugating ～ない to this?
 rules.push({type: "stdrule", dec_end:"", con_end:"ありません", dec_tag:"stem-ku", con_tag:"uninflectable", detail:"formal negative"});
 rules.push({type: "stdrule", dec_end:"", con_end:"ありませんでした", dec_tag:"stem-ku", con_tag:"uninflectable", detail:"formal negative past"});
 
@@ -316,11 +317,11 @@ rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ましょう", dec_tag:"
 ////////////////////
 
 rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たら", dec_tag:"stem-ren-less", con_tag:"uninflectable", detail:"conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だた", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったり", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だら", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったら", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"conditional"});
 rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たらば", dec_tag:"stem-ren-less", con_tag:"uninflectable", detail:"formal conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だたば", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"formal conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったりば", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"formal conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だらば", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"formal conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったらば", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"formal conditional"});
 
 rules.push({type: "stdrule", dec_end:"", con_end:"ば", dec_tag:"stem-e", con_tag:"uninflectable", detail:"provisional conditional"});
 rules.push({type: "stdrule", dec_end:"", con_end:"れば", dec_tag:"stem-ke", con_tag:"uninflectable", detail:"provisional conditional"});
