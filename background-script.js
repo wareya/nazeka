@@ -22,7 +22,6 @@ function builddict()
             
             // Build map of spellings to dictionary entry.
 
-
             for (let i = 0; i < dict.length; i++)
             {
                 let entry = dict[i];
@@ -168,8 +167,8 @@ rules.push({type: "neverfinalrule"
 , con_end:
 ["け","せ","て","え","れ","れ","げ","べ","ね","め","れ","え","け"]
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
-, con_tag:"stem_e", detail:"(izenkei)"});
+["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v5u-s","v5k-s"]
+, con_tag:"stem-e", detail:"(izenkei)"});
 
 // true imperative
 rules.push({type: "onlyfinalrule"
@@ -178,7 +177,7 @@ rules.push({type: "onlyfinalrule"
 , con_end:
 ["け","せ","て","え","れ","れ","げ","べ","ね","め","ろ","よ","え","け"] // ichidan has two imperatives FIXME: don't let potential conjugate to よ
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v1","v5u_s","v5k_s"]
+["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v1","v5u-s","v5k-s"]
 , con_tag:"uninflectable", detail:"imperative"});
 
 // ~a stem
@@ -188,8 +187,8 @@ rules.push({type: "neverfinalrule"
 , con_end:
 ["か","せ","て","わ","ら","が","ば","な","ま","わ","か"]
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v5u_s","v5k_s"] // TODO: support あらへん, あらぬ, etc
-, con_tag:"stem_a", detail:"('a' stem)"});
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v5u-s","v5k-s"] // TODO: support あらへん, あらぬ, etc
+, con_tag:"stem-a", detail:"('a' stem)"});
 
 // unvoiced past stems
 rules.push({type: "neverfinalrule"
@@ -198,8 +197,8 @@ rules.push({type: "neverfinalrule"
 , con_end:
 ["い","し","っ","っ","っ","っ","","う","っ"]
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5r-i","v1","v5u_s","v5k_s"]
-, con_tag:"stem_ren_less", detail:"(unstressed infinitive)"});
+["v5k","v5s","v5t","v5u","v5r","v5r-i","v1","v5u-s","v5k-s"]
+, con_tag:"stem-ren-less", detail:"(unstressed infinitive)"});
 // voiced past stems
 rules.push({type: "neverfinalrule"
 , dec_end:
@@ -208,7 +207,7 @@ rules.push({type: "neverfinalrule"
 ["い","ん","ん","ん"]
 , dec_tag:
 ["v5g","v5b","v5n","v5m"]
-, con_tag:"stem_ren_less_v", detail:"(unstressed infinitive)"});
+, con_tag:"stem-ren-less-v", detail:"(unstressed infinitive)"});
 
 // infinitives (ren'youkei) that are different than the corresponding past stem
 rules.push({type: "stdrule"
@@ -217,8 +216,8 @@ rules.push({type: "stdrule"
 , con_end:
 ["き","ち","い","り","り","ぎ","び","に","み","い","き"]
 , dec_tag:
-["v5k","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v5u_s","v5k_s"]
-, con_tag:"stem_ren", detail:"(infinitive)"});
+["v5k","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v5u-s","v5k-s"]
+, con_tag:"stem-ren", detail:"(infinitive)"});
 // ones that need the te trap
 rules.push({type: "contextrule", contextrule:"tetrap"
 , dec_end:
@@ -227,7 +226,7 @@ rules.push({type: "contextrule", contextrule:"tetrap"
 ["し",""]
 , dec_tag:
 ["v5s","v1"]
-, con_tag:"stem_ren", detail:"(infinitive)"});
+, con_tag:"stem-ren", detail:"(infinitive)"});
 
 // stem for negatives proper
 rules.push({type: "neverfinalrule"
@@ -236,8 +235,8 @@ rules.push({type: "neverfinalrule"
 , con_end:
 ["",""]
 , dec_tag:
-["stem_a","v1"]
-, con_tag:"stem_mizenkei", detail:"(mizenkei)"});
+["stem-a","v1"]
+, con_tag:"stem-mizenkei", detail:"(mizenkei)"});
 
 // ~a stem
 rules.push({type: "stdrule"
@@ -246,133 +245,138 @@ rules.push({type: "stdrule"
 , con_end:
 ["こう","そう","とう","おう","ろう","ろう","ごう","ぼう","のう","もう","よう","おう","こう"]
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v5u_s","v5k_s"]
-, con_tag:"form_volition", detail:"volitional"});
+["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v5u-s","v5k-s"]
+, con_tag:"form-volition", detail:"volitional"});
 
 ////////////////////
 // adjective stems
 ////////////////////
 
-rules.push({type: "stdrule", dec_end:"い", con_end:"く", dec_tag:"adj_i", con_tag:"stem_ku", detail:"(adverbial stem)"});
-rules.push({type: "stdrule", dec_end:"い", con_end:"か", dec_tag:"adj_i", con_tag:"stek_ka", detail:"(ka stem)"});
-rules.push({type: "stdrule", dec_end:"い", con_end:"け", dec_tag:"adj_i", con_tag:"stek_ke", detail:"(ke stem)"});
-rules.push({type: "stdrule", dec_end:"い", con_end:"", dec_tag:"adj_i", con_tag:"stem_adj_base", detail:"(stem)"});
+rules.push({type: "stdrule", dec_end:"い", con_end:"く", dec_tag:"adj-i", con_tag:"stem-ku", detail:"(adverbial stem)"});
+rules.push({type: "stdrule", dec_end:"い", con_end:"か", dec_tag:"adj-i", con_tag:"stem-ka", detail:"(ka stem)"});
+rules.push({type: "stdrule", dec_end:"い", con_end:"け", dec_tag:"adj-i", con_tag:"stem-ke", detail:"(ke stem)"});
+rules.push({type: "stdrule", dec_end:"い", con_end:"", dec_tag:"adj-i", con_tag:"stem-adj-base", detail:"(stem)"});
 
 // TODO move these
 // Forms based on the bare adjective stem
-rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_adj_base", con_tag:"v1", detail:"excess"});
-rules.push({type: "stdrule", dec_end:"", con_end:"そう", dec_tag:"stem_adj_base", con_tag:"adj_na", detail:"seemingness"});
-rules.push({type: "stdrule", dec_end:"", con_end:"がる", dec_tag:"stem_adj_base", con_tag:"v5r", detail:"garu"});
-rules.push({type: "stdrule", dec_end:"", con_end:"さ", dec_tag:"stem_adj_base", con_tag:"n", detail:"noun form"});
+rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem-adj-base", con_tag:"v1", detail:"excess"});
+rules.push({type: "stdrule", dec_end:"", con_end:"そう", dec_tag:"stem-adj-base", con_tag:"adj-na", detail:"seemingness"});
+rules.push({type: "stdrule", dec_end:"", con_end:"がる", dec_tag:"stem-adj-base", con_tag:"v5r", detail:"garu"});
+rules.push({type: "stdrule", dec_end:"", con_end:"さ", dec_tag:"stem-adj-base", con_tag:"n", detail:"noun form"});
 
 ////////////////////
 // common forms
 ////////////////////
 
-// rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren", con_tag:"stem_past", detail:"past"}); // unusual but real but don't necessarily want it yet
-rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem_ren_less", con_tag:"stem_past", detail:"past"});
-rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem_ren_less_v", con_tag:"stem_past", detail:"past"});
-//rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem_ren", con_tag:"stem_te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
+// rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem-ren", con_tag:"stem-past", detail:"past"}); // unusual but real but don't necessarily want it yet
+rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem-ren-less", con_tag:"stem-past", detail:"past"});
+rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem-ren-less-v", con_tag:"stem-past", detail:"past"});
+//rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren", con_tag:"stem-te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
 
 // we want some te forms to only apply to verbs, not adjectives
 // FIXME: need a way to not break ～ないでください, ~ないでいく, etc
-rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem_ren_less", con_tag:"stem_te_verbal", detail:"(te form)"});
-rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem_ren_less_v", con_tag:"stem_te_verbal", detail:"(te form)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren-less", con_tag:"stem-te-verbal", detail:"(te form)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem-ren-less-v", con_tag:"stem-te-verbal", detail:"(te form)"});
 // tag alias
-rules.push({type: "stdrule", dec_end:"", con_end:"", dec_tag:"stem_te_verbal", con_tag:"stem_te", detail:""});
+rules.push({type: "stdrule", dec_end:"", con_end:"", dec_tag:"stem-te-verbal", con_tag:"stem-te", detail:""});
 // now the te form for adjectives
 // adjectives have two te forms, one of which is not used synthetically
-rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"adj_i", con_tag:"stem_te", detail:"(te form)"});
-rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem_ku", con_tag:"stem_te_defective", detail:"(te form)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"adj-i", con_tag:"stem-te", detail:"(te form)"});
+rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem-ku", con_tag:"stem-te-defective", detail:"(te form)"});
 
 // doesn't have anywhere else to go
-rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem_past", detail:"past"});
+rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem-past", detail:"past"});
 // TODO: add te form of です? or would it be too confusing to have?
 // e.g. it would let people find "でしている" in "自分でしている" as です instead of で + conjugated する
 
 // negatives
-rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem_mizenkei", con_tag:"adj_i", detail:"negative"});
-rules.push({type: "stdrule", dec_end:"", con_end:"ん", dec_tag:"stem_a", con_tag:"adj_i", detail:"slurred negative"}); // causes problems with ichidan verbs but they can't conjugate to stem_a
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ず", dec_tag:"stem_mizenkei", con_tag:"uninflectable", detail:"adverbial negative"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ずに", dec_tag:"stem_mizenkei", con_tag:"uninflectable", detail:"without doing so"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ぬ", dec_tag:"stem_mizenkei", con_tag:"uninflectable", detail:"archaic negative"});
+rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem-mizenkei", con_tag:"adj-i", detail:"negative"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ん", dec_tag:"stem-a", con_tag:"adj-i", detail:"slurred negative"}); // causes problems with ichidan verbs but they can't conjugate to stem-a
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ず", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"adverbial negative"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ずに", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"without doing so"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ぬ", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"archaic negative"});
 
-rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem_ku", con_tag:"adj_i", detail:"negative"});
+rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem-ku", con_tag:"adj-i", detail:"negative"});
+
+// special negative inflections where the intermediate stage (e.g. 赤くある) is not a synthetic phrase like the end result (e.g. 赤くありません) is
+rules.push({type: "stdrule", dec_end:"", con_end:"ありません", dec_tag:"stem-ku", con_tag:"uninflectable", detail:"formal negative"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ありませんでした", dec_tag:"stem-ku", con_tag:"uninflectable", detail:"formal negative past"});
+
 
 // masu and its conjugations (allowing it to conjugate recursively causes problems because its grammar is unlike typical declarative verbs)
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ます", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"polite"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ません", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"negative polite"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ました", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"past polite"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"まして", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"te polite"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ませんでした", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"past negative polite"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ましょう", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"polite volitional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ます", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"polite"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ません", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"negative polite"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ました", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"past polite"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"まして", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"te polite"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ませんでした", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"past negative polite"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ましょう", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"polite volitional"});
 
 ////////////////////
 // conditional forms
 ////////////////////
 
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たら", dec_tag:"stem_ren_less", con_tag:"uninflectable", detail:"conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だた", dec_tag:"stem_ren_less_v", con_tag:"uninflectable", detail:"conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったり", dec_tag:"stem_ka", con_tag:"uninflectable", detail:"conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たらば", dec_tag:"stem_ren_less", con_tag:"uninflectable", detail:"formal conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だたば", dec_tag:"stem_ren_less_v", con_tag:"uninflectable", detail:"formal conditional"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったりば", dec_tag:"stem_ka", con_tag:"uninflectable", detail:"formal conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たら", dec_tag:"stem-ren-less", con_tag:"uninflectable", detail:"conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だた", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったり", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たらば", dec_tag:"stem-ren-less", con_tag:"uninflectable", detail:"formal conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だたば", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"formal conditional"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったりば", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"formal conditional"});
 
-rules.push({type: "stdrule", dec_end:"", con_end:"ば", dec_tag:"stem_e", con_tag:"uninflectable", detail:"provisional conditional"});
-rules.push({type: "stdrule", dec_end:"", con_end:"れば", dec_tag:"stem_ke", con_tag:"uninflectable", detail:"provisional conditional"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ば", dec_tag:"stem-e", con_tag:"uninflectable", detail:"provisional conditional"});
+rules.push({type: "stdrule", dec_end:"", con_end:"れば", dec_tag:"stem-ke", con_tag:"uninflectable", detail:"provisional conditional"});
 
 ////////////////////
 // non-analytical forms
 ////////////////////
 
 //passive and potential
-rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem_e", con_tag:"v1", detail:"potential"}); // FIXME don't allow to attach to the short causative
-// note: ichidan (i.e. v1) verbs cannot conjugate to stem_a
-rules.push({type: "stdrule", dec_end:"", con_end:"れる", dec_tag:"stem_a", con_tag:"v1", detail:"passive"});
+rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem-e", con_tag:"v1", detail:"potential"}); // FIXME don't allow to attach to the short causative
+// note: ichidan (i.e. v1) verbs cannot conjugate to stem-a
+rules.push({type: "stdrule", dec_end:"", con_end:"れる", dec_tag:"stem-a", con_tag:"v1", detail:"passive"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"られる", dec_tag:"v1", con_tag:"v1", detail:"passive/potential"});
 
 // causative
-rules.push({type: "stdrule", dec_end:"", con_end:"せる", dec_tag:"stem_a", con_tag:"v1", detail:"causative"});
+rules.push({type: "stdrule", dec_end:"", con_end:"せる", dec_tag:"stem-a", con_tag:"v1", detail:"causative"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"させる", dec_tag:"v1", con_tag:"v1", detail:"causative"});
-rules.push({type: "contextrule", contextrule: "saspecial", dec_end:"", con_end:"す", dec_tag:"stem_a", con_tag:"v5s", detail:"short causative"});
+rules.push({type: "contextrule", contextrule: "saspecial", dec_end:"", con_end:"す", dec_tag:"stem-a", con_tag:"v5s", detail:"short causative"});
 
 ////////////////////
 // te-based forms
 ////////////////////
 
 // mere te auxiliaries
-rules.push({type: "stdrule", dec_end:"", con_end:"しまう", dec_tag:"stem_te", con_tag:"v5u", detail:"completely/end up/perfect"});
+rules.push({type: "stdrule", dec_end:"", con_end:"しまう", dec_tag:"stem-te", con_tag:"v5u", detail:"completely/end up/perfect"});
 // personal te auxiliaries
-rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem_te", con_tag:"adj_i", detail:"polite request"});
-rules.push({type: "stdrule", dec_end:"", con_end:"あげる", dec_tag:"stem_te", con_tag:"v5r", detail:"do for someone"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem-te", con_tag:"adj-i", detail:"polite request"});
+rules.push({type: "stdrule", dec_end:"", con_end:"あげる", dec_tag:"stem-te", con_tag:"v5r", detail:"do for someone"});
 // garmmatical aspect forms
-rules.push({type: "stdrule", dec_end:"", con_end:"いる", dec_tag:"stem_te", con_tag:"v1", detail:"teiru"});
-rules.push({type: "stdrule", dec_end:"", con_end:"おる", dec_tag:"stem_te", con_tag:"v5r", detail:"teoru"});
-rules.push({type: "stdrule", dec_end:"", con_end:"ある", dec_tag:"stem_te", con_tag:"v5r_i", detail:"tearu"});
-rules.push({type: "stdrule", dec_end:"", con_end:"いく", dec_tag:"stem_te", con_tag:"v5k_s", detail:"teiku"});
-rules.push({type: "stdrule", dec_end:"", con_end:"くる", dec_tag:"stem_te", con_tag:"vk", detail:"tekuru"});
-rules.push({type: "stdrule", dec_end:"", con_end:"おく", dec_tag:"stem_te", con_tag:"v5k", detail:"for now"});
+rules.push({type: "stdrule", dec_end:"", con_end:"いる", dec_tag:"stem-te", con_tag:"v1", detail:"teiru"});
+rules.push({type: "stdrule", dec_end:"", con_end:"おる", dec_tag:"stem-te", con_tag:"v5r", detail:"teoru"});
+rules.push({type: "stdrule", dec_end:"", con_end:"ある", dec_tag:"stem-te", con_tag:"v5r-i", detail:"tearu"});
+rules.push({type: "stdrule", dec_end:"", con_end:"いく", dec_tag:"stem-te", con_tag:"v5k-s", detail:"teiku"});
+rules.push({type: "stdrule", dec_end:"", con_end:"くる", dec_tag:"stem-te", con_tag:"vk", detail:"tekuru"});
+rules.push({type: "stdrule", dec_end:"", con_end:"おく", dec_tag:"stem-te", con_tag:"v5k", detail:"for now"});
 // nonverbal functions of the te form
-rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem_te", con_tag:"uninflectable", detail:"topic"});
-rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem_te_defective", con_tag:"uninflectable", detail:"topic"});
+rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem-te", con_tag:"uninflectable", detail:"topic"});
+rules.push({type: "stdrule", dec_end:"", con_end:"は", dec_tag:"stem-te-defective", con_tag:"uninflectable", detail:"topic"});
 // TODO: ても too?
 
 ////////////////////
 // ren'youkei based forms
 ////////////////////
 
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"なさい", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"kind request"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"な", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"casual kind request"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"なさい", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"kind request"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"な", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"casual kind request"});
 
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ながら", dec_tag:"stem_ren", con_tag:"uninflectable", detail:"while"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ながら", dec_tag:"stem-ren", con_tag:"uninflectable", detail:"while"});
 
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たり", dec_tag:"stem_ren_less", con_tag:"uninflectable", detail:"tari"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だり", dec_tag:"stem_ren_less_v", con_tag:"uninflectable", detail:"tari"});
-rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったり", dec_tag:"stem_ka", con_tag:"uninflectable", detail:"tari"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"たり", dec_tag:"stem-ren-less", con_tag:"uninflectable", detail:"tari"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"だり", dec_tag:"stem-ren-less-v", con_tag:"uninflectable", detail:"tari"});
+rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ったり", dec_tag:"stem-ka", con_tag:"uninflectable", detail:"tari"});
 
-rules.push({type: "contextrule", contextrule:"adjspecial", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
+rules.push({type: "contextrule", contextrule:"adjspecial", dec_end:"", con_end:"たい", dec_tag:"stem-ren", con_tag:"adj-i", detail:"want"});
 
-rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem_ren", con_tag:"v1", detail:"too much"});
+rules.push({type: "stdrule", dec_end:"", con_end:"すぎる", dec_tag:"stem-ren", con_tag:"v1", detail:"too much"});
 
 ////////////////////
 // transparent contractions
@@ -382,8 +386,8 @@ rules.push({type: "stdrule", dec_end:"でしまう", con_end:"じゃう", dec_ta
 rules.push({type: "stdrule", dec_end:"てしまう", con_end:"ちまう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
 rules.push({type: "stdrule", dec_end:"でしまう", con_end:"じまう", dec_tag:"v5u", con_tag:"v5u", detail:"(contraction)"});
 
-rules.push({type: "stdrule", dec_end:"ては", con_end:"ちゃ", dec_tag:"stem_te", con_tag:"uninflectable", detail:"(contraction)"});
-rules.push({type: "stdrule", dec_end:"では", con_end:"じゃ", dec_tag:"stem_te", con_tag:"uninflectable", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"ては", con_end:"ちゃ", dec_tag:"stem-te", con_tag:"uninflectable", detail:"(contraction)"});
+rules.push({type: "stdrule", dec_end:"では", con_end:"じゃ", dec_tag:"stem-te", con_tag:"uninflectable", detail:"(contraction)"});
 
 rules.push({type: "onlyfinalrule", dec_end:"ければ", con_end:"きゃ", dec_tag:"uninflectable", con_tag:"uninflectable", detail:"(contraction)"});
 
@@ -395,7 +399,7 @@ rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"ん", dec_tag:"vk", c
 
 // TODO: a bunch of missing contractions, vk, vs_i, v5aru, v4r, 
 
-//rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem_ren", con_tag:"adj_i", detail:"want"});
+//rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem-ren", con_tag:"adj-i", detail:"want"});
 
 // FIXME implement un-deconjugation to show the actual reading of the deconjugated word - this is what furigana rules are for
 
@@ -531,7 +535,7 @@ function adjspecial_check(my_form, my_rule)
 {
     if(my_form.tags.length != 2) return true;
     let my_tag = my_form.tags[my_form.tags.length-2];
-    if(my_tag == "stem_adj_base")
+    if(my_tag == "stem-adj-base")
         return false;
     return true;
 };
@@ -539,7 +543,7 @@ function tetrap_check(my_form, my_rule)
 {
     if(my_form.tags.length < 2) return true;
     let my_tag = my_form.tags[my_form.tags.length-2];
-    if(my_tag == "stem_te")
+    if(my_tag == "stem-te")
         return false;
     return true;
 };
