@@ -32,9 +32,9 @@
     "browser_action": {
         "browser_style": false,
         "default_icon": {
-            "16": "action16.png",
-            "32": "action32.png",
-            "512": "action512.png"
+            "16": "img/action16.png",
+            "32": "img/action32.png",
+            "512": "img/action512.png"
         },
         "default_title": "Nazeka (disabled)",
         "default_area": "navbar"

@@ -752,17 +752,17 @@ async function update_icon(enabled)
     if(enabled)
     {
         browser.browserAction.setIcon({path:{
-            "16": "enabled16.png",
-            "32": "enabled32.png",
-            "512": "enabled512.png"
+            "16": "img/enabled16.png",
+            "32": "img/enabled32.png",
+            "512": "img/enabled512.png"
         }},)
     }
     else
     {
         browser.browserAction.setIcon({path:{
-            "16": "action16.png",
-            "32": "action32.png",
-            "512": "action512.png"
+            "16": "img/action16.png",
+            "32": "img/action32.png",
+            "512": "img/action512.png"
         }},)
     }
 }
