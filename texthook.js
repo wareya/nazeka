@@ -434,8 +434,8 @@ async function settings_reload()
         if(settings.compact == undefined)
             settings.compact = true;
         settings.length = (await browser.storage.local.get("length")).length;
-        if(settings.length == undefined)
-            settings.length = true;
+        if(!settings.length)
+            settings.length = 25;
         //console.log("set settings");
         //console.log(settings.enabled);
         //console.log(settings.compact);
