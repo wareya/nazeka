@@ -272,6 +272,7 @@ rules.push({type: "stdrule", dec_end:"", con_end:"さ", dec_tag:"stem-adj-base",
 rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem-ren-less", con_tag:"stem-past", detail:"past"});
 rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem-ren-less-v", con_tag:"stem-past", detail:"past"});
 //rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren", con_tag:"stem-te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
+rules.push({type: "stdrule", dec_end:"", con_end:"った", dec_tag:"stem-ka", con_tag:"stem-past", detail:"past"});
 
 // we want some te forms to only apply to verbs, not adjectives
 // FIXME: need a way to not break ～ないでください, ~ないでいく, etc

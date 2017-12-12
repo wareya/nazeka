@@ -36,11 +36,14 @@ async function restoreOptions()
 
 function setOptions()
 {
+    let length = parseInt(document.querySelector("#length").value, 10);
+    if(!length) // NaN is falsy
+        length = 25;
     browser.storage.local.set(
     {
         enabled: document.querySelector("#enabled").checked,
         compact: document.querySelector("#compact").checked,
-        length: parseInt(document.querySelector("#length").value),
+        length: length,
     });
 }
 
