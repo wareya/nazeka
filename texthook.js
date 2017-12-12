@@ -51,11 +51,11 @@ function display_div (middle, x, y, time)
     while(find_root.parent && find_root.parent != find_root)
     {
         let rect = find_root.frameElement.getBoundingClientRect();
-        find_root = find_root.parent;
         let sx = find_root.scrollX;
         let sy = find_root.scrollY;
-        newx += (rect.x + sx);
-        newy += (rect.y + sy);
+        find_root = find_root.parent;
+        newx += (rect.x - sx);
+        newy += (rect.y - sy);
     }
     let mydoc = find_root.document;
     
