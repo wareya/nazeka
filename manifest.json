@@ -5,7 +5,9 @@
 
     "permissions": [
         "contextMenus",
-        "storage"
+        "storage",
+        "tabs",
+        "clipboardRead"
     ],
     
     "background": {
@@ -13,7 +15,9 @@
     },
 
     "web_accessible_resources": [
-        "dict/JMdict.json"
+        "dict/JMdict.json",
+        "reader.js",
+        "reader.html"
     ],
 
     "content_scripts": [

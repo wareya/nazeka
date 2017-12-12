@@ -26,6 +26,8 @@ let settings = {
 enabled: false,
 compact: true,
 length: 25,
+fixedwidth: false,
+fixedwidthpositioning: false,
 };
 
 let last_time_display = Date.now();
@@ -45,6 +47,9 @@ function delete_div ()
 
 function display_div (middle, x, y, time)
 {
+    middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
+    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
+    
     let find_root = window;
     let newx = x;
     let newy = y;
@@ -59,32 +64,49 @@ function display_div (middle, x, y, time)
     }
     let mydoc = find_root.document;
     
-    middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
-    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
+    let styletext = "";
+    if(settings.fixedwidth)
+        styletext += "width: 600px; "
+    else
+        styletext += "max-width: 600px; "
+    styletext += "position: absolute; top: 0; left: 0;";
+    styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
     
     let other = mydoc.body.getElementsByClassName(div_class);
+    let outer = undefined;
     if(other.length > 0)
     {
-        other[0].replaceChild(middle, other[0].firstChild);
-        
-        let styletext = "max-width: 600px; position: absolute; top: " + (newy+5) + "px; left: " + (newx+5) + "px;";
-        styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
-        other[0].style = styletext;
-        
-        other[0].style.visibility = "visible";
+        outer = other[0];
+        outer.replaceChild(middle, other[0].firstChild);
+        outer.style.visibility = "visible";
     }
     else
     {
-        let outer = mydoc.createElement("div");
+        outer = mydoc.createElement("div");
         outer.className = div_class;
-        let styletext = "max-width: 600px; position: absolute; top: " + (newy+5) + "px; left: " + (newx+5) + "px;";
-        styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
-        outer.style = styletext;
-        
         outer.appendChild(middle);
-        
         mydoc.body.appendChild(outer);
     }
+    
+    outer.style = styletext;
+    
+    
+    let mywidth = 600;
+    if(!settings.fixedwidthpositioning)
+        mywidth = outer.offsetWidth;
+    
+    let buffer = 25;
+    let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth);
+    if(newx + mywidth > pretend_doc_width)
+    {
+        newx -= (newx + mywidth - pretend_doc_width);
+        newx -= buffer;
+        if(newx < 0)
+            newx = 0;
+    }
+    
+    outer.style.top = (newy+5)+"px";
+    outer.style.left = (newx+5)+"px";
 }
 
 function exists_div()
@@ -455,7 +477,13 @@ async function settings_reload()
         settings.length = (await browser.storage.local.get("length")).length;
         if(!settings.length)
             settings.length = 25;
-            
+        settings.fixedwidth = (await browser.storage.local.get("fixedwidth")).fixedwidth;
+        if(!settings.fixedwidth)
+            settings.fixedwidth = false;
+        settings.fixedwidthpositioning = (await browser.storage.local.get("fixedwidthpositioning")).fixedwidthpositioning;
+        if(!settings.fixedwidthpositioning)
+            settings.fixedwidthpositioning = false;
+        
         if(!settings.enabled && exists_div())
             delete_div();
         //console.log("set settings");
@@ -464,7 +492,7 @@ async function settings_reload()
     }
     catch(error)
     {
-        console.log("failed to set settings, maybe not stored yet?");
+        //console.log("failed to set settings, maybe not stored yet?");
     } // not stored yet, probably
     
     settings_reloader = setTimeout(settings_reload, settings_reload_rate);

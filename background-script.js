@@ -741,18 +741,6 @@ function lookup_indirect(text, time)
     }
 }
 
-browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
-{
-    if (req.type == "search")
-    {
-        sendResponse(lookup_indirect(req.text, req.time));
-    }
-    else
-    {
-        return;
-    }
-});
-
 async function update_icon(enabled)
 {
     if(enabled)
@@ -783,16 +771,57 @@ async function toggle_enabled()
     update_icon(enabled);
 }
 
-async function init_icon()
+async function fixicon()
 {
-    browser.browserAction.onClicked.addListener(toggle_enabled);
     let enabled = (await browser.storage.local.get("enabled")).enabled;
     if(enabled == undefined)
         enabled = false;
     update_icon(enabled);
 }
 
+async function init_icon()
+{
+    browser.browserAction.onClicked.addListener(toggle_enabled);
+    fixicon();
+}
+
 init_icon();
 
+function tryopenwindow(info, tab)
+{
+    try
+    {
+        browser.windows.create({
+            url:browser.extension.getURL("reader.html"),
+            type:"popup"
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+        console.log(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+}
 
+browser.contextMenus.create({
+    id: "nazeka-reopen",
+    title: "Open Reader",
+    contexts: ["browser_action"],
+    onclick: tryopenwindow
+});
 
+browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
+{
+    if (req.type == "search")
+    {
+        sendResponse(lookup_indirect(req.text, req.time));
+    }
+    else if (req.type == "toggle")
+    {
+        toggle_enabled();
+    }
+    else
+    {
+        return;
+    }
+});
