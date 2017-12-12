@@ -549,47 +549,62 @@ window.addEventListener("mousemove", (event)=>
     //console.log("searching for text");
     let textNode;
     let offset;
-    // find the text under the mouse event
-    if (document.caretPositionFromPoint)
-    {
-        let range = document.caretPositionFromPoint(event.clientX+seach_x_offset, event.clientY);
-        if(range)
-        {
-            textNode = range.offsetNode;
-            offset = range.offset;
-        }
-    }
-    else if (document.caretRangeFromPoint)
-    {
-        let range = document.caretRangeFromPoint(event.clientX+seach_x_offset, event.clientY);
-        if(range)
-        {
-            textNode = range.startContainer;
-            offset = range.startOffset;
-        }
-    }
     
-    // try without the offset
-    if (textNode == undefined || textNode.nodeType != 3)
+    let nodeResetList = [];
+    let nodeResetSeen = new Set();
+    
+    // find the text under the mouse event
+    let nodeIsBad  = true;
+    while(nodeIsBad)
     {
-        if (document.caretPositionFromPoint)
+        nodeIsBad = false;
+        
+        let hitpage = function(x, y)
         {
-            let range = document.caretPositionFromPoint(event.clientX, event.clientY);
+            let range = undefined;
+            if (document.caretPositionFromPoint)
+                range = document.caretPositionFromPoint(x, y);
+            else if (document.caretRangeFromPoint)
+                range = document.caretRangeFromPoint(x, y);
             if(range)
             {
                 textNode = range.offsetNode;
                 offset = range.offset;
             }
-        }
-        else if (document.caretRangeFromPoint)
+        };
+        
+        hitpage(event.clientX+seach_x_offset, event.clientY);
+        // try without the offset
+        if (textNode == undefined || textNode.nodeType != 3)
+            hitpage(event.clientX, event.clientY);
+        
+        if(!(textNode == undefined))
         {
-            let range = document.caretRangeFromPoint(event.clientX, event.clientY);
-            if(range)
+            // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
+            try
             {
-                textNode = range.startContainer;
-                offset = range.startOffset;
+                if(textNode.nodeType == 1 && !nodeResetSeen.has(textNode))
+                {
+                    let style = window.getComputedStyle(textNode);
+                    let bg_color = style.getPropertyValue("background-color"); 
+                    if(bg_color == "rgba(0, 0, 0, 0)")
+                    {
+                        nodeIsBad = true;
+                        nodeResetList.push([textNode, style.getPropertyValue("z-index")]);
+                        nodeResetSeen.add(textNode);
+                        textNode.style.zIndex = -100000000;
+                        continue;
+                    }
+                }
             }
+            catch(err) {}
         }
+    }
+    for(let toreset of nodeResetList)
+    {
+        let element = toreset[0];
+        let z_index = toreset[1];
+        element.style.zIndex = z_index;
     }
     // if there was text, use it
     if (textNode && textNode.nodeType == 3)
@@ -602,6 +617,7 @@ window.addEventListener("mousemove", (event)=>
         let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
         if(!hit)
         {
+//             console.log("no hit");
             lookup_cancel();
             return;
         }
@@ -661,10 +677,20 @@ window.addEventListener("mousemove", (event)=>
         if(text != "")
             lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY);
         else
+        {
+//             console.log("no text");
             lookup_cancel();
+        }
     }
     else
+    {
+//         console.log("no text node");
+//         console.log("actual type:");
+//         console.log(textNode.nodeType);
+//         console.log("offset:");
+//         console.log(offset);
         lookup_cancel();
+    }
 });
 
 
