@@ -786,7 +786,8 @@ async function update_icon(enabled)
             "16": "img/enabled16.png",
             "32": "img/enabled32.png",
             "512": "img/enabled512.png"
-        }},)
+        }},);
+        browser.browserAction.setTitle({title:"Nazeka (enabled)"});
     }
     else
     {
@@ -794,7 +795,8 @@ async function update_icon(enabled)
             "16": "img/action16.png",
             "32": "img/action32.png",
             "512": "img/action512.png"
-        }},)
+        }},);
+        browser.browserAction.setTitle({title:"Nazeka (disabled)"});
     }
 }
 

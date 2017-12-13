@@ -639,7 +639,7 @@ let throttle = 8;
 
 let seach_x_offset = -3;
 
-window.addEventListener("mousemove", (event)=>
+function update(event)
 {
     if(!settings.enabled) return;
     
@@ -796,6 +796,9 @@ window.addEventListener("mousemove", (event)=>
 //         console.log(offset);
         lookup_cancel();
     }
-});
+}
+
+window.addEventListener("mousemove", update);
+window.addEventListener("touchmove", update);
 
 
