@@ -29,6 +29,7 @@ length: 25,
 fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
+showoriginal: true,
 };
 
 let last_time_display = Date.now();
@@ -155,8 +156,10 @@ function build_div (text, result)
 "<style>\
 .nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
 .nazeka_main_reb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
+.nazeka_original{font-style: oblique; float: right; margin-right: 2px; margin-left:2px;}\
 </style>";
-    //temp.innerHTML += "Looked up " + text + "<br>";
+    if(settings.showoriginal)
+        temp.innerHTML += "<div class=nazeka_original>Looked up " + text + "</div>";
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     // FIXME: A bunch of code here depends on the literal text used to run the search instead of the text with which the search succeeded.
     // The search can convert between hiragana and katakana to find a valid match, so we should know what text it actually used.
@@ -499,7 +502,8 @@ async function settings_reload()
         getvar("length", 25);
         getvar("fixedwidth", false);
         getvar("fixedwidthpositioning", false);
-        getvar("superborder", true);
+        getvar("superborder", false);
+        getvar("showoriginal", true);
         
         if(!settings.enabled && exists_div())
             delete_div();

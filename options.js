@@ -6,6 +6,7 @@ function restoreListeners()
     document.querySelector("#fixedwidth").addEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").addEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
+    document.querySelector("#showoriginal").addEventListener("change", setOptions);
 }
 function removeListeners()
 {
@@ -15,6 +16,7 @@ function removeListeners()
     document.querySelector("#fixedwidth").removeEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").removeEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
+    document.querySelector("#showoriginal").addEventListener("change", setOptions);
 }
 
 async function restoreOptions()
@@ -33,7 +35,8 @@ async function restoreOptions()
         let length = await getvar("length", 25);
         let fixedwidth = await getvar("fixedwidth", false);
         let fixedwidthpositioning = await getvar("fixedwidthpositioning", false);
-        let superborder = await getvar("superborder", true);
+        let superborder = await getvar("superborder", false);
+        let showoriginal = await getvar("showoriginal", true);
         removeListeners();
         document.querySelector("#enabled").checked = enabled?true:false;
         document.querySelector("#compact").checked = compact?true:false;
@@ -41,6 +44,7 @@ async function restoreOptions()
         document.querySelector("#fixedwidth").checked = fixedwidth?true:false;
         document.querySelector("#fixedwidthpositioning").checked = fixedwidthpositioning?true:false;
         document.querySelector("#superborder").checked = superborder?true:false;
+        document.querySelector("#showoriginal").checked = showoriginal?true:false;
     }
     catch (error){}
     removeListeners();
@@ -60,6 +64,7 @@ function setOptions()
         fixedwidth: document.querySelector("#fixedwidth").checked,
         fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
         superborder: document.querySelector("#superborder").checked,
+        showoriginal: document.querySelector("#showoriginal").checked,
     });
 }
 
