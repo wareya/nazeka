@@ -242,14 +242,18 @@ function build_div (text, result)
                     {
                         if(form.process.length > 0)
                             temptag += "～";
+                        let added = 0;
                         for(let f = form.process.length-1; f >= 0; f--)
                         {
                             let info = form.process[f];
+                            if(info == "")
+                                continue;
                             if(info.startsWith("(") && info.endsWith(")") && f != 0)
                                 continue;
-                            temptag += info;
-                            if(f > 0)
+                            if(added > 0)
                                 temptag += "―";
+                            added++;
+                            temptag += info;
                         }
                     }
                 }
@@ -328,14 +332,18 @@ function build_div (text, result)
                 {
                     if(form.process.length > 0)
                         temptag += "～";
+                    let added = 0;
                     for(let f = form.process.length-1; f >= 0; f--)
                     {
                         let info = form.process[f];
+                        if(info == "")
+                            continue;
                         if(info.startsWith("(") && info.endsWith(")") && f != 0)
                             continue;
-                        temptag += info;
-                        if(f > 0)
+                        if(added > 0)
                             temptag += "―";
+                        added++;
+                        temptag += info;
                     }
                 }
             }
