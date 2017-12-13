@@ -152,14 +152,22 @@ function build_div (text, result)
     //print_object(result);
     let middle = document.createElement("div");
     let temp = document.createElement("div");
-    temp.innerHTML +=
-"<style>\
-.nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
+    // TODO: link to this instead of hardcoding it; work on unhardcoding other CSS too
+    let style = document.createElement("style");
+    style.type = "text/css";
+    style.textContent =
+".nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
 .nazeka_main_reb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
 .nazeka_original{font-style: oblique; float: right; margin-right: 2px; margin-left:2px;}\
-</style>";
+";
+    temp.appendChild(style);
     if(settings.showoriginal)
-        temp.innerHTML += "<div class=nazeka_original>Looked up " + text + "</div>";
+    {
+        let original = document.createElement("div");
+        original.className = "nazeka_original";
+        original.textContent = "Looked up " + text;
+        temp.appendChild(original);
+    }
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     // FIXME: A bunch of code here depends on the literal text used to run the search instead of the text with which the search succeeded.
     // The search can convert between hiragana and katakana to find a valid match, so we should know what text it actually used.
@@ -169,7 +177,8 @@ function build_div (text, result)
         if(term.deconj.size > 0)
             text = term.deconj.values().next().value.text;
         //print_object(term);
-        let temptag = "<span class=nazeka_word>";
+        let temptag = document.createElement("span");
+        temptag.className = "nazeka_word";
         let found_kanji = true;
         if(term.k_ele)
         {
@@ -228,9 +237,10 @@ function build_div (text, result)
             if(found_kanji)
             {
                 let kanji_text = term.k_ele[which].keb;
-                temptag += "<span class=nazeka_main_keb>"
-                temptag += kanji_text;
-                temptag += "</span>"
+                let keb = document.createElement("span");
+                keb.className = "nazeka_main_keb";
+                keb.textContent = kanji_text;
+                temptag.appendChild(keb);
                 // FIXME: show inf for located keb
                 
                 // list readings
@@ -252,10 +262,10 @@ function build_div (text, result)
                 }
                 if(term.deconj)
                 {
+                    let deconj = "";
                     for(let form of term.deconj)
                     {
-                        if(form.process.length > 0)
-                            temptag += "～";
+                        let formtext = "";
                         let added = 0;
                         for(let f = form.process.length-1; f >= 0; f--)
                         {
@@ -265,29 +275,38 @@ function build_div (text, result)
                             if(info.startsWith("(") && info.endsWith(")") && f != 0)
                                 continue;
                             if(added > 0)
-                                temptag += "―";
+                                formtext += "―";
                             added++;
-                            temptag += info;
+                            formtext += info;
+                        }
+                        if(formtext != "")
+                        {
+                            deconj += "～";
+                            deconj += formtext;
                         }
                     }
+                    temptag.appendChild(document.createTextNode(deconj));
                 }
-                temptag += " 《";
+                temptag.appendChild(document.createTextNode(" 《"));
                 for(let j = 0; j < readings.length; j++)
                 {
-                    temptag += readings[j].reb;
+                    temptag.appendChild(document.createTextNode(readings[j].reb));
                     if(readings[j].inf)
                     {
                         for(let info of readings[j].inf)
                         {
-                            temptag += " <span class=nazeka_reb_inf>(";
-                            temptag += clip(info);
-                            temptag += ")</span>";
+                            let reb_inf = document.createElement("span");
+                            reb_inf.className = "nazeka_reb_inf";
+                            reb_inf.textContent += "(";
+                            reb_inf.textContent += clip(info);
+                            reb_inf.textContent += ")";
+                            temptag.appendChild(reb_inf);
                         }
                     }
                     if(j+1 != readings.length)
-                        temptag += "・";
+                        temptag.appendChild(document.createTextNode("・"));
                 }
-                temptag += "》";
+                temptag.appendChild(document.createTextNode("》"));
                 
                 // list alternatives
                 let alternatives = [];
@@ -312,40 +331,45 @@ function build_div (text, result)
                 }
                 
                 if(alternatives.length > 0)
-                    temptag += " (also ";
+                    temptag.appendChild(document.createTextNode(" (also "));
                 for(let j = 0; j < alternatives.length; j++)
                 {
-                    temptag += alternatives[j].keb;
+                    temptag.appendChild(document.createTextNode(alternatives[j].keb));
                     if(alternatives[j].inf)
                     {
                         for(let info of alternatives[j].inf)
                         {
-                            temptag += " <span class=nazeka_keb_inf>(";
-                            temptag += clip(info);
-                            temptag += ")</span>";
+                            temptag.appendChild(document.createTextNode(" "));
+                            let keb_inf = document.createElement("span");
+                            keb_inf.className = "nazeka_keb_inf";
+                            keb_inf.textContent += "(";
+                            keb_inf.textContent += clip(info);
+                            keb_inf.textContent += ")";
+                            temptag.appendChild(keb_inf);
                         }
                     }
                     if(j+1 < alternatives.length)
-                        temptag += ", ";
+                        temptag.appendChild(document.createTextNode(", "));
                 }
                 if(alternatives.length > 0)
-                    temptag += ")";
+                    temptag.appendChild(document.createTextNode(")"));
             }
         }
         else
             found_kanji = false;
         if(!found_kanji)
         {
-            temptag += "<span class=nazeka_main_reb>"
-            temptag += text;
-            temptag += "</span>"
+            let main_reb = document.createElement("span");
+            main_reb.className = "nazeka_main_reb";
+            main_reb.textContent = text;
+            temptag.appendChild(main_reb);
             // FIXME: show inf for located reb
             if(term.deconj)
             {
+                let deconj = "";
                 for(let form of term.deconj)
                 {
-                    if(form.process.length > 0)
-                        temptag += "～";
+                    let formtext = "";
                     let added = 0;
                     for(let f = form.process.length-1; f >= 0; f--)
                     {
@@ -355,11 +379,17 @@ function build_div (text, result)
                         if(info.startsWith("(") && info.endsWith(")") && f != 0)
                             continue;
                         if(added > 0)
-                            temptag += "―";
+                            formtext += "―";
                         added++;
-                        temptag += info;
+                        formtext += info;
+                    }
+                    if(formtext != "")
+                    {
+                        deconj += "～";
+                        deconj += formtext;
                     }
                 }
+                temptag.appendChild(document.createTextNode(deconj));
             }
             
             // list alternatives
@@ -370,28 +400,31 @@ function build_div (text, result)
                     alternatives.push(term.r_ele[j]);
             
             if(alternatives.length > 0)
-                temptag += " (also ";
+                temptag.appendChild(document.createTextNode(" (also "));
             for(let j = 0; j < alternatives.length; j++)
             {
-                temptag += alternatives[j].reb;
+                temptag.appendChild(document.createTextNode(alternatives[j].reb));
                 if(alternatives[j].inf)
                 {
                     for(let info of alternatives[j].inf)
                     {
-                        temptag += " <span class=nazeka_reb_inf>(";
-                        temptag += clip(info);
-                        temptag += ")</span>";
+                        temptag.appendChild(document.createTextNode(" "));
+                        let reb_inf = document.createElement("span");
+                        reb_inf.className = "nazeka_reb_inf";
+                        reb_inf.textContent += "(";
+                        reb_inf.textContent += clip(info);
+                        reb_inf.textContent += ")";
+                        temptag.appendChild(reb_inf);
                     }
                 }
                 if(j+1 < alternatives.length)
-                    temptag += ", ";
+                    temptag.appendChild(document.createTextNode(", "));
             }
             if(alternatives.length > 0)
-                temptag += ")";
+                temptag.appendChild(document.createTextNode(")"));
         }
-        temptag += "</span>";
-        temp.innerHTML += temptag;
-        temp.innerHTML += "<br>";
+        temp.appendChild(temptag);
+        temp.appendChild(document.createElement("br"));
         
         let goodsenses = [];
         for(let j = 0; j < term.sense.length; j++)
@@ -428,56 +461,76 @@ function build_div (text, result)
             else
                 lastpos = sense.pos;
             
-            //temp.innerHTML += "<span class=num>" + (j+1) + ".</span> ";
             if(sense.pos)
             {
-                let temptag = "<span class=nazeka_pos>(";
+                let part = document.createElement("span");
+                part.className = "nazeka_pos";
+                let temptext = "(";
                 let parts = [];
                 for(let l = 0; l < sense.pos.length; l++)
                     parts.push(sense.pos[l]);
-                temptag += parts.join(", ");
-                temptag += ")</span>";
+                temptext += parts.join(", ");
+                temptext += ")";
+                part.textContent = temptext;
+                temp.appendChild(part);
                 if(settings.compact)
-                    temptag += " ";
+                    temp.appendChild(document.createTextNode(" "));
                 else
-                    temptag  += "<br>";
-                temp.innerHTML += temptag;
+                    temp.appendChild(document.createElement("br"));
+                
             }
             if(settings.compact)
             {
                 if(goodsenses.length > 1)
-                    temp.innerHTML += " <span class=nazeka_num>(" + (j+1) + ")</span> ";
+                {
+                    let number = document.createElement("span");
+                    number.className = "nazeka_num";
+                    number.textContent = "("+(j+1)+")";
+                    temp.appendChild(number);
+                    temp.appendChild(document.createTextNode(" "));
+                }
             }
             else
             {
-                temp.innerHTML += "<span class=nazeka_num>" + (j+1) + ".</span> ";
+                let temptag = document.createElement("span");
+                temptag.className = "nazeka_num";
+                temptag.textContent = ""+(j+1)+".";
+                temp.appendChild(temptag);
+                temp.appendChild(document.createTextNode(" "));
             }
             if(sense.inf)
-                temp.innerHTML += "<i>(" + sense.inf + ")</i> ";
+            {
+                let info = document.createElement("i");
+                info.textContent = "("+sense.inf+") ";
+                temp.appendChild(info);
+            }
             if(sense.misc)
             {
-                let temptag = "<span class=nazeka_misc>(";
+                let temptag = document.createElement("span");
+                temptag.className = "nazeka_misc";
+                let temptext = "(";
                 let parts = [];
                 for(let l = 0; l < sense.misc.length; l++)
                     parts.push(sense.misc[l].substring(1, sense.misc[l].length-1));
-                temptag += parts.join(", ");
-                temptag += ")</span>";
-                temptag += " ";
-                temp.innerHTML += temptag;
+                temptext += parts.join(", ");
+                temptext += ")";
+                temptag.textContent = temptext;
+                temp.appendChild(temptag);
+                temp.appendChild(document.createTextNode(" "));
             }
-            temp.innerHTML += sense.gloss.join("; ");
+            temp.appendChild(document.createTextNode(sense.gloss.join("; ")));
             if(settings.compact)
             {
                 if(sense.gloss.length > 1 || j+1 != goodsenses.length)
-                    temp.innerHTML += "; ";
+                    temp.appendChild(document.createTextNode("; "));
             }
             else
             {
-                temp.innerHTML += "<br>";
+                temp.appendChild(document.createElement("br"));
             }
         }
         if(settings.compact)
-            temp.innerHTML += "<br>";
+            temp.appendChild(document.createElement("br"));
     }
     middle.appendChild(temp);
     return middle;

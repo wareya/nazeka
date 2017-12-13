@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "nazeka",
-    "version": "0.01",
+    "version": "0.0pre1",
     "author": "Wareya",
     "homepage_url": "https://github.com/wareya/nazeka",
     "description": "A rikai replacement.",
@@ -20,7 +20,8 @@
     "web_accessible_resources": [
         "dict/JMdict.json",
         "reader.js",
-        "reader.html"
+        "reader.html",
+        "etc/popupbase.css"
     ],
 
     "content_scripts": [
