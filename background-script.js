@@ -850,6 +850,10 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     {
         toggle_enabled();
     }
+    else if (req.type == "fixicon")
+    {
+        fixicon();
+    }
     else if (req.type == "gimmetext")
     {
         clipboard_hook(sender.tab);

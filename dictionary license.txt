@@ -1,0 +1,3 @@
+JMdict is licensed under the CC-BY-SA 3.0 license. https://creativecommons.org/licenses/by-sa/3.0/
+
+It has been converted from XML to JSON for compactness and ease of use.

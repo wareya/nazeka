@@ -51,6 +51,11 @@ async function restoreOptions()
     restoreListeners();
 }
 
+function fixicon()
+{
+    browser.runtime.sendMessage({type:"fixicon"});
+}
+
 function setOptions()
 {
     let length = parseInt(document.querySelector("#length").value, 10);
@@ -65,7 +70,7 @@ function setOptions()
         fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
         superborder: document.querySelector("#superborder").checked,
         showoriginal: document.querySelector("#showoriginal").checked,
-    });
+    }).then(()=>{fixicon();},()=>{});
 }
 
 if (document.readyState == "complete")
