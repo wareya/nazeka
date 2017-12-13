@@ -6,7 +6,7 @@ This is my first nontrivial javascript work and there are probably a lot of obvi
 
 Building:
 
-Build process requires python and lxml, or an existing copy of the extension to rip JMdict.json from.
+Build process requires python and lxml, or an existing copy of the extension to rip JMdict#.json from.
 
 - Download JMdict.gz from http://www.edrdg.org/jmdict/edict_doc.html
 - Convert it to json with https://gist.github.com/wareya/c2175520db5f1927e4f6ba839487dd8c

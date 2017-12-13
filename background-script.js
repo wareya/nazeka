@@ -8,9 +8,11 @@
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
 // Seriously.
 
-let dict = undefined;
+let dict = [];
 let lookup_kan = new Map();
 let lookup_kana = new Map();
+
+let dictsloaded = 0;
 
 function builddict()
 {
@@ -18,50 +20,84 @@ function builddict()
     {
         if (this.status === 200)
         {
-            dict = JSON.parse(this.responseText);
-            
-            // Build map of spellings to dictionary entry.
-
-            for (let i = 0; i < dict.length; i++)
-            {
-                let entry = dict[i];
-                if (entry.k_ele != undefined) for (let j = 0; j < entry.k_ele.length; j++)
-                {
-                    let s = entry.k_ele[j];
-                    if (!lookup_kan.has(s.keb))
-                        lookup_kan.set(s.keb, [i]);
-                    else
-                        lookup_kan.get(s.keb).push(i);
-                }
-                for (let j = 0; j < entry.r_ele.length; j++)
-                {
-                    let s = entry.r_ele[j];
-                    if (!lookup_kana.has(s.reb))
-                        lookup_kana.set(s.reb, [i]);
-                    else
-                        lookup_kana.get(s.reb).push(i);
-                }
-            }
-            for (let i = 0; i < 5; i++)
-            {
-                console.log(dict[i]);
-            }
-            console.log("built lookup tables");
-            console.log("size:");
-            console.log(Object.keys(lookup_kan).length);
-            console.log(Object.keys(lookup_kana).length);
-            console.log("dict size:");
-            console.log(dict.length);
+            dict = dict.concat(JSON.parse(this.responseText));
+            dictsloaded++;
         }
         else
             console.error(xhr.statusText);
     }
 }
-let req = new XMLHttpRequest();
-req.addEventListener("load", builddict);
-// FIXME: apparently this has to be in an async function now.
-req.open("GET", browser.extension.getURL("dict/JMdict.json"));
-req.send();
+
+// Having a >4MB flat text file with stupid adhoc formatting is okay
+// but having a >4MB json file with nothing weird in it isn't
+// Thanks, linter team!
+function load_part_of_dictionary(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", builddict);
+    // FIXME: apparently this has to be in an async function now.
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+load_part_of_dictionary("dict/JMdict1.json");
+load_part_of_dictionary("dict/JMdict2.json");
+load_part_of_dictionary("dict/JMdict3.json");
+load_part_of_dictionary("dict/JMdict4.json");
+load_part_of_dictionary("dict/JMdict5.json");
+load_part_of_dictionary("dict/JMdict6.json");
+load_part_of_dictionary("dict/JMdict7.json");
+load_part_of_dictionary("dict/JMdict8.json");
+load_part_of_dictionary("dict/JMdict9.json");
+load_part_of_dictionary("dict/JMdict10.json");
+
+function buildlookups()
+{
+    // Build map of spellings to dictionary entry.
+
+    for (let i = 0; i < dict.length; i++)
+    {
+        let entry = dict[i];
+        if (entry.k_ele != undefined) for (let j = 0; j < entry.k_ele.length; j++)
+        {
+            let s = entry.k_ele[j];
+            if (!lookup_kan.has(s.keb))
+                lookup_kan.set(s.keb, [i]);
+            else
+                lookup_kan.get(s.keb).push(i);
+        }
+        for (let j = 0; j < entry.r_ele.length; j++)
+        {
+            let s = entry.r_ele[j];
+            if (!lookup_kana.has(s.reb))
+                lookup_kana.set(s.reb, [i]);
+            else
+                lookup_kana.get(s.reb).push(i);
+        }
+    }
+    for (let i = 0; i < 5; i++)
+    {
+        console.log(dict[i]);
+    }
+    console.log("built lookup tables");
+    console.log("size:");
+    console.log(Object.keys(lookup_kan).length);
+    console.log(Object.keys(lookup_kana).length);
+    console.log("dict size:");
+    console.log(dict.length);
+}
+
+let waiter = undefined;
+function waittobuildlookups()
+{
+    if(dictsloaded == 10)
+    {
+        clearInterval(waiter);
+        waiter = undefined;
+        buildlookups();
+    }
+}
+waiter = setInterval(waittobuildlookups, 1000);
 
 // In JMdict, part-of-speech tags are XML entities.
 // We processed JMdict's XML with entity processing disabled so we can just use the bare tags (e.g. "v1", not "ichidan verb").
