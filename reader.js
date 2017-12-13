@@ -10,7 +10,8 @@ function toggle()
 browser.contextMenus.create({
     id: "nazeka-toggle",
     title: "Toggle Nazeka",
-    contexts: ["all"],
+    contexts: ["page", "selection"],
+    documentUrlPatterns: ["moz-extension://*/reader.html"],
     onclick: toggle
 });
 
