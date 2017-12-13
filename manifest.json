@@ -11,7 +11,7 @@
     ],
     
     "background": {
-        "scripts": ["background-script.js"]
+        "page": "background.html"
     },
 
     "web_accessible_resources": [

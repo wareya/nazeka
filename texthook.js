@@ -518,7 +518,7 @@ async function lookup_loop()
         //console.log("queue not empty");
         let lookup = lookup_queue.pop();
         lookup_queue = [];
-        let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now()});
+        let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div()});
         if(response)
         {
             let mydiv = build_div(response.text, response.result);

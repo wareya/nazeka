@@ -705,13 +705,13 @@ function build_lookup_comb (forms)
 let last_lookup = "";
 let last_time_lookup = Date.now();
 
-function lookup_indirect(text, time)
+function lookup_indirect(text, time, divexisted)
 {
     if(text == "")
         return;
     //if(time < last_time_lookup+20) // reduces lag buildup
     //    return;
-    if(text == last_lookup)// && (exists_div()))// || time < last_time_lookup+100)) // helps reduce double-lookups
+    if(text == last_lookup && divexisted)// || time < last_time_lookup+100)) // helps reduce double-lookups
         return;
     last_lookup = text;
     last_time_lookup = time;
@@ -719,12 +719,13 @@ function lookup_indirect(text, time)
     // try to look up successively shorter substrings of text
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
+    console.log("trying to look up " + text);
     let forms = deconjugate(text);
     let result = build_lookup_comb(forms);
     while(result === undefined && text.length > 0)
     {
-        //console.log("trying to look up " + text);
         text = text.substring(0, text.length-1);
+        console.log("trying to look up " + text);
         forms = deconjugate(text);
         result = build_lookup_comb(forms);
     }
@@ -810,15 +811,48 @@ browser.contextMenus.create({
     onclick: tryopenwindow
 });
 
+let origin_tab = undefined;
+
+function set_up_paste_overload()
+{
+    document.querySelector("#nazeka-paste-target").addEventListener("paste", (event) =>
+    {
+        // skip event if there's no plaintext; thanks github.com/kmltml/clipboard-inserter
+        let text = event.clipboardData.getData("text/plain");
+        event.preventDefault();
+        
+        if(origin_tab != undefined)
+            browser.tabs.sendMessage(origin_tab.id, {type:"text",text:text});
+    });
+}
+
+if (document.readyState == "complete")
+    set_up_paste_overload();
+else
+    document.addEventListener("DOMContentLoaded", set_up_paste_overload);
+
+function clipboard_hook(tab)
+{
+    origin_tab = tab;
+    let target = document.querySelector("#nazeka-paste-target");
+    target.textContent = "";
+    target.focus();
+    document.execCommand("paste");
+}
+
 browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
 {
     if (req.type == "search")
     {
-        sendResponse(lookup_indirect(req.text, req.time));
+        sendResponse(lookup_indirect(req.text, req.time, req.divexisted));
     }
     else if (req.type == "toggle")
     {
         toggle_enabled();
+    }
+    else if (req.type == "gimmetext")
+    {
+        clipboard_hook(sender.tab);
     }
     else
     {

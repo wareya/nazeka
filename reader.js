@@ -1,3 +1,7 @@
+// Copyright 2017; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
+'use strict';
+
 function toggle()
 {
     browser.runtime.sendMessage({type:"toggle"});
@@ -38,37 +42,32 @@ function cycle_text(text)
     text_previous = text;
 }
 
-window.addEventListener("load", () =>
+function gimmetext()
 {
-    document.querySelector("#nazeka-paste-target").addEventListener("paste", (event) =>
-    {
-        // skip event if there's no plaintext; thanks github.com/kmltml/clipboard-inserter
-        let text = event.clipboardData.getData("text/plain");
-        if(text !== "")
-            cycle_text(text);
-        
-        event.preventDefault();
-    })
-});
-
-function checkpaste()
-{
-    let target = document.querySelector("#nazeka-paste-target");
-    
-    target.parentNode.style.visibility = "visible";
-    
-    target.textContent = "";
-    target.focus();
-    document.execCommand("paste");
-    
-    target.parentNode.style.visibility = "hidden";
+    browser.runtime.sendMessage({type:"gimmetext"});
 }
 
 let interval = 250;
-
-setInterval(checkpaste, interval);
+async function checkpaste()
+{
+    try
+    {
+        let text = await gimmetext();
+        cycle_text(text);
+    }
+    catch(error){}
+    
+    setTimeout(checkpaste, interval);
+}
+setTimeout(checkpaste, interval);
 
 var executing = browser.tabs.executeScript({
     file: "/texthook.js",
     allFrames: true
+});
+
+browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
+{
+    if (req.type == "text")
+        cycle_text(req.text);
 });
