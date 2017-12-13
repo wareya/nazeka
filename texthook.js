@@ -108,7 +108,7 @@ function display_div (middle, x, y, time)
     
     let buffer = 25;
     let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth);
-    if(newx + mywidth > pretend_doc_width)
+    if(newx + mywidth > pretend_doc_width-buffer)
     {
         newx -= (newx + mywidth - pretend_doc_width);
         newx -= buffer;
