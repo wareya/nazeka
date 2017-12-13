@@ -2,6 +2,9 @@
     "manifest_version": 2,
     "name": "nazeka",
     "version": "0.01",
+    "author": "Wareya",
+    "homepage_url": "https://github.com/wareya/nazeka",
+    "description": "A rikai replacement.",
 
     "permissions": [
         "contextMenus",
