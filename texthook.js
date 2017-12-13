@@ -28,6 +28,7 @@ compact: true,
 length: 25,
 fixedwidth: false,
 fixedwidthpositioning: false,
+superborder: false,
 };
 
 let last_time_display = Date.now();
@@ -47,8 +48,14 @@ function delete_div ()
 
 function display_div (middle, x, y, time)
 {
+    let bordercolor = undefined;
+    if(settings.superborder)
+        bordercolor = "white";
+    else
+        bordercolor = "#CCC";
+    
     middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
-    middle.firstChild.style = "border: 1px solid white; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
+    middle.firstChild.style = "border: 1px solid " + bordercolor + "; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
     
     let find_root = window;
     let newx = x;
@@ -69,8 +76,12 @@ function display_div (middle, x, y, time)
         styletext += "width: 600px; "
     else
         styletext += "max-width: 600px; "
-    styletext += "position: absolute; top: 0; left: 0;";
-    styletext += "background-color: white; border-radius: 3px; border: 1px solid white; z-index: 100000;";
+    styletext += "position: absolute; top: 0; left: 0; ";
+    
+    if(settings.superborder)
+        styletext += "background-color: " + bordercolor + "; border-radius: 3px; border: 1px solid " + bordercolor + "; z-index: 100000;";
+    else
+        styletext += "border-radius: 3px; background-color: #111; z-index: 100000;";
     
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
@@ -476,21 +487,19 @@ async function settings_reload()
 {
     try
     {
-        settings.enabled = (await browser.storage.local.get("enabled")).enabled;
-        if(settings.enabled == undefined)
-            settings.enabled = false;
-        settings.compact = (await browser.storage.local.get("compact")).compact;
-        if(settings.compact == undefined)
-            settings.compact = true;
-        settings.length = (await browser.storage.local.get("length")).length;
-        if(!settings.length)
-            settings.length = 25;
-        settings.fixedwidth = (await browser.storage.local.get("fixedwidth")).fixedwidth;
-        if(!settings.fixedwidth)
-            settings.fixedwidth = false;
-        settings.fixedwidthpositioning = (await browser.storage.local.get("fixedwidthpositioning")).fixedwidthpositioning;
-        if(!settings.fixedwidthpositioning)
-            settings.fixedwidthpositioning = false;
+        async function getvar(name, defval)
+        {
+            let temp = (await browser.storage.local.get(name))[name];
+            if(temp == undefined)
+                temp = defval;
+            settings[name] = temp;
+        }
+        getvar("enabled", false);
+        getvar("compact", true);
+        getvar("length", 25);
+        getvar("fixedwidth", false);
+        getvar("fixedwidthpositioning", false);
+        getvar("superborder", true);
         
         if(!settings.enabled && exists_div())
             delete_div();

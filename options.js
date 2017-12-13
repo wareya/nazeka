@@ -5,6 +5,7 @@ function restoreListeners()
     document.querySelector("#length").addEventListener("change", setOptions);
     document.querySelector("#fixedwidth").addEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").addEventListener("change", setOptions);
+    document.querySelector("#superborder").addEventListener("change", setOptions);
 }
 function removeListeners()
 {
@@ -13,33 +14,33 @@ function removeListeners()
     document.querySelector("#length").removeEventListener("change", setOptions);
     document.querySelector("#fixedwidth").removeEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").removeEventListener("change", setOptions);
+    document.querySelector("#superborder").addEventListener("change", setOptions);
 }
 
 async function restoreOptions()
 {
     try
     {
-        let enabled = (await browser.storage.local.get("enabled")).enabled;
-        if(enabled == undefined)
-            enabled = false;
-        let compact = (await browser.storage.local.get("compact")).compact;
-        if(compact == undefined)
-            compact = true;
-        let length = (await browser.storage.local.get("length")).length;
-        if(length == undefined)
-            length = 25;
-        let fixedwidth = (await browser.storage.local.get("fixedwidth")).fixedwidth;
-        if(fixedwidth == undefined)
-            fixedwidth = false;
-        let fixedwidthpositioning = (await browser.storage.local.get("fixedwidthpositioning")).fixedwidthpositioning;
-        if(fixedwidthpositioning == undefined)
-            fixedwidthpositioning = false;
+        async function getvar(name, defval)
+        {
+            let temp = (await browser.storage.local.get(name))[name];
+            if(temp == undefined)
+                temp = defval;
+            return temp;
+        }
+        let enabled = await getvar("enabled", false);
+        let compact = await getvar("compact", true);
+        let length = await getvar("length", 25);
+        let fixedwidth = await getvar("fixedwidth", false);
+        let fixedwidthpositioning = await getvar("fixedwidthpositioning", false);
+        let superborder = await getvar("superborder", true);
         removeListeners();
         document.querySelector("#enabled").checked = enabled?true:false;
         document.querySelector("#compact").checked = compact?true:false;
         document.querySelector("#length").value = length?length:25;
         document.querySelector("#fixedwidth").checked = fixedwidth?true:false;
         document.querySelector("#fixedwidthpositioning").checked = fixedwidthpositioning?true:false;
+        document.querySelector("#superborder").checked = superborder?true:false;
     }
     catch (error){}
     removeListeners();
@@ -58,6 +59,7 @@ function setOptions()
         length: length,
         fixedwidth: document.querySelector("#fixedwidth").checked,
         fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
+        superborder: document.querySelector("#superborder").checked,
     });
 }
 

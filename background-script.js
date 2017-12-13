@@ -719,13 +719,13 @@ function lookup_indirect(text, time, divexisted)
     // try to look up successively shorter substrings of text
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
-    console.log("trying to look up " + text);
+    //console.log("trying to look up " + text);
     let forms = deconjugate(text);
     let result = build_lookup_comb(forms);
     while(result === undefined && text.length > 0)
     {
         text = text.substring(0, text.length-1);
-        console.log("trying to look up " + text);
+        //console.log("trying to look up " + text);
         forms = deconjugate(text);
         result = build_lookup_comb(forms);
     }
