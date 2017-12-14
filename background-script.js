@@ -199,12 +199,15 @@ let rules = [];
 // "e" stem used for potential and ba
 rules.push({type: "neverfinalrule"
 , dec_end:
-["く","す","つ","う","る","る","ぐ","ぶ","ぬ","む","る","う","く"]
+["く","す","つ","う","る","ぐ","ぶ","ぬ","む","る","う","く"]
 , con_end:
-["け","せ","て","え","れ","れ","げ","べ","ね","め","れ","え","け"]
+["け","せ","て","え","れ","げ","べ","ね","め","れ","え","け"]
 , dec_tag:
-["v5k","v5s","v5t","v5u","v5r","v5r-i","v5g","v5b","v5n","v5m","v1","v5u-s","v5k-s"]
-, con_tag:"stem-e", detail:"(izenkei)"});
+["v5k","v5s","v5t","v5u","v5r","v5g","v5b","v5n","v5m","v1","v5u-s","v5k-s"]
+, con_tag:"stem-izenkei", detail:"(izenkei)"});
+// the potential of v5r-i verbs does not use a simple e ending, it uses the ren'youkei (infinitive) followed by える, thus ありえる
+rules.push({type: "neverfinalrule", dec_end:"る", con_end:"れ", dec_tag: "v5r-i", con_tag:"stem-e", detail:"(izenkei)"});
+rules.push({type: "neverfinalrule", dec_end:"", con_end:"", dec_tag: "stem-izenkei", con_tag:"stem-e", detail:""});
 
 // true imperative
 rules.push({type: "onlyfinalrule"
@@ -368,7 +371,8 @@ rules.push({type: "stdrule", dec_end:"", con_end:"れば", dec_tag:"stem-ke", co
 ////////////////////
 
 //passive and potential
-rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem-e", con_tag:"v1", detail:"potential"}); // FIXME don't allow to attach to the short causative
+rules.push({type: "stdrule", dec_end:"", con_end:"る", dec_tag:"stem-izenkei", con_tag:"v1", detail:"potential"}); // FIXME don't allow to attach to the short causative
+rules.push({type: "stdrule", dec_end:"る", con_end:"りえる", dec_tag:"v5r-i", con_tag:"v1", detail:"potential"}); // v5r-i verbs have an irregular potential
 // note: ichidan (i.e. v1) verbs cannot conjugate to stem-a
 rules.push({type: "stdrule", dec_end:"", con_end:"れる", dec_tag:"stem-a", con_tag:"v1", detail:"passive"});
 rules.push({type: "stdrule", dec_end:"る", con_end:"られる", dec_tag:"v1", con_tag:"v1", detail:"passive/potential"});
@@ -782,21 +786,21 @@ async function update_icon(enabled)
 {
     if(enabled)
     {
+        browser.browserAction.setTitle({title:"Nazeka (enabled)"});
         browser.browserAction.setIcon({path:{
             "16": "img/enabled16.png",
             "32": "img/enabled32.png",
             "512": "img/enabled512.png"
         }},);
-        browser.browserAction.setTitle({title:"Nazeka (enabled)"});
     }
     else
     {
+        browser.browserAction.setTitle({title:"Nazeka (disabled)"});
         browser.browserAction.setIcon({path:{
             "16": "img/action16.png",
             "32": "img/action32.png",
             "512": "img/action512.png"
         }},);
-        browser.browserAction.setTitle({title:"Nazeka (disabled)"});
     }
 }
 
