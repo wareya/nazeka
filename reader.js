@@ -2,19 +2,6 @@
 
 'use strict';
 
-function toggle()
-{
-    browser.runtime.sendMessage({type:"toggle"});
-}
-
-browser.contextMenus.create({
-    id: "nazeka-toggle",
-    title: "Toggle Nazeka",
-    contexts: ["page", "selection"],
-    documentUrlPatterns: ["moz-extension://*/reader.html"],
-    onclick: toggle
-});
-
 function might_have_japanese(text)
 {
     for(let char of text)

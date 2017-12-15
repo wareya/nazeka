@@ -888,10 +888,6 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     {
         sendResponse(lookup_indirect(req.text, req.time, req.divexisted));
     }
-    else if (req.type == "toggle")
-    {
-        toggle_enabled();
-    }
     else if (req.type == "fixicon")
     {
         fixicon();
@@ -904,4 +900,12 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     {
         return;
     }
+});
+
+browser.contextMenus.create({
+    id: "nazeka-toggle",
+    title: "Toggle Nazeka",
+    contexts: ["page", "selection"],
+    documentUrlPatterns: ["moz-extension://*/reader.html"],
+    onclick: toggle_enabled
 });
