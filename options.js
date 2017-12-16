@@ -3,6 +3,7 @@ function restoreListeners()
     document.querySelector("#enabled").addEventListener("change", setOptions);
     document.querySelector("#compact").addEventListener("change", setOptions);
     document.querySelector("#length").addEventListener("change", setOptions);
+    document.querySelector("#scale").addEventListener("change", setOptions);
     document.querySelector("#fixedwidth").addEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").addEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
@@ -13,6 +14,7 @@ function removeListeners()
     document.querySelector("#enabled").removeEventListener("change", setOptions);
     document.querySelector("#compact").removeEventListener("change", setOptions);
     document.querySelector("#length").removeEventListener("change", setOptions);
+    document.querySelector("#scale").addEventListener("change", setOptions);
     document.querySelector("#fixedwidth").removeEventListener("change", setOptions);
     document.querySelector("#fixedwidthpositioning").removeEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
@@ -33,6 +35,7 @@ async function restoreOptions()
         let enabled = await getvar("enabled", false);
         let compact = await getvar("compact", true);
         let length = await getvar("length", 25);
+        let scale = await getvar("scale", 1);
         let fixedwidth = await getvar("fixedwidth", false);
         let fixedwidthpositioning = await getvar("fixedwidthpositioning", false);
         let superborder = await getvar("superborder", false);
@@ -41,6 +44,7 @@ async function restoreOptions()
         document.querySelector("#enabled").checked = enabled?true:false;
         document.querySelector("#compact").checked = compact?true:false;
         document.querySelector("#length").value = length?length:25;
+        document.querySelector("#scale").value = scale?scale:1;
         document.querySelector("#fixedwidth").checked = fixedwidth?true:false;
         document.querySelector("#fixedwidthpositioning").checked = fixedwidthpositioning?true:false;
         document.querySelector("#superborder").checked = superborder?true:false;
@@ -61,11 +65,15 @@ function setOptions()
     let length = parseInt(document.querySelector("#length").value, 10);
     if(!length) // NaN is falsy
         length = 25;
+    let scale = Number(document.querySelector("#scale").value);
+    if(!scale) // NaN is falsy
+        scale = 1;
     browser.storage.local.set(
     {
         enabled: document.querySelector("#enabled").checked,
         compact: document.querySelector("#compact").checked,
         length: length,
+        scale: scale,
         fixedwidth: document.querySelector("#fixedwidth").checked,
         fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
         superborder: document.querySelector("#superborder").checked,

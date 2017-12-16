@@ -30,6 +30,7 @@ fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
 showoriginal: true,
+scale: 1,
 };
 
 let last_time_display = Date.now();
@@ -100,9 +101,11 @@ function display_div (middle, x, y, time)
         mydoc.body.appendChild(outer);
     }
     
+    if(settings.scale != 1 && settings.scale > 0 && settings.scale < 64)
+        styletext += " transform-origin: top left; transform: scale(" + Number(settings.scale) + ");";
+    
     outer.style = styletext;
-    
-    
+        
     let mywidth = 600;
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth;
@@ -569,7 +572,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     {
         let option = setting[0];
         let value = setting[1];
-        if(["enabled","compact","length","fixedwidth","fixedwidthpositioning","superborder","showoriginal"].includes(option))
+        if(["enabled","compact","length","fixedwidth","fixedwidthpositioning","superborder","showoriginal","scale"].includes(option))
             settings[option] = value.newValue;
     }
     if(!settings.enabled && exists_div())
