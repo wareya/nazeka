@@ -81,8 +81,8 @@ function buildlookups()
     }
     console.log("built lookup tables");
     console.log("size:");
-    console.log(Object.keys(lookup_kan).length);
-    console.log(Object.keys(lookup_kana).length);
+    console.log(lookup_kan.size);
+    console.log(lookup_kana.size);
     console.log("dict size:");
     console.log(dict.length);
 }
@@ -771,13 +771,13 @@ function lookup_indirect(text, time, divexisted)
     }
     if(result !== undefined)
     {
-        //console.log("found lookup");
-        //console.log(text)
+        console.log("found lookup");
+        console.log(text)
         return {text:text, result:result};
     }
     else
     {
-        //console.log("did not find lookup");
+        console.log("did not find lookup");
         //console.log(text);
     }
 }
@@ -787,20 +787,26 @@ async function update_icon(enabled)
     if(enabled)
     {
         browser.browserAction.setTitle({title:"Nazeka (enabled)"});
-        browser.browserAction.setIcon({path:{
-            "16": "img/enabled16.png",
-            "32": "img/enabled32.png",
-            "512": "img/enabled512.png"
-        }},);
+        try
+        {
+            browser.browserAction.setIcon({path:{
+                "16": "img/enabled16.png",
+                "32": "img/enabled32.png",
+                "512": "img/enabled512.png"
+            }},);
+        } catch (err) {}
     }
     else
     {
         browser.browserAction.setTitle({title:"Nazeka (disabled)"});
-        browser.browserAction.setIcon({path:{
-            "16": "img/action16.png",
-            "32": "img/action32.png",
-            "512": "img/action512.png"
-        }},);
+        try
+        {
+            browser.browserAction.setIcon({path:{
+                "16": "img/action16.png",
+                "32": "img/action32.png",
+                "512": "img/action512.png"
+            }},);
+        } catch (err) {}
     }
 }
 
@@ -846,12 +852,15 @@ function tryopenwindow(info, tab)
     }
 }
 
-browser.contextMenus.create({
-    id: "nazeka-reopen",
-    title: "Open Reader",
-    contexts: ["browser_action"],
-    onclick: tryopenwindow
-});
+if(browser.contextMenus)
+{
+    browser.contextMenus.create({
+        id: "nazeka-reopen",
+        title: "Open Reader",
+        contexts: ["browser_action"],
+        onclick: tryopenwindow
+    });
+}
 
 let origin_tab = undefined;
 
@@ -882,8 +891,10 @@ function clipboard_hook(tab)
     document.execCommand("paste");
 }
 
+console.log("setting message listener");
 browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
 {
+    console.log("received message to background script");
     if (req.type == "search")
     {
         sendResponse(lookup_indirect(req.text, req.time, req.divexisted));
@@ -901,6 +912,7 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
         return;
     }
 });
+console.log("set message listener");
 
 browser.contextMenus.create({
     id: "nazeka-toggle",

@@ -31,6 +31,8 @@ fixedwidthpositioning: false,
 superborder: false,
 showoriginal: true,
 scale: 1,
+width: 600,
+lookuprate: 8,
 };
 
 let last_time_display = Date.now();
@@ -75,9 +77,9 @@ function display_div (middle, x, y, time)
     
     let styletext = "";
     if(settings.fixedwidth)
-        styletext += "width: 600px; "
+        styletext += "width: " + Math.round(Number(settings.width)) + "px; "
     else
-        styletext += "max-width: 600px; "
+        styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
     styletext += "position: absolute; top: 0; left: 0; ";
     
     if(settings.superborder)
@@ -106,7 +108,7 @@ function display_div (middle, x, y, time)
     
     outer.style = styletext;
         
-    let mywidth = 600;
+    let mywidth = settings.width;
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth;
     
@@ -553,6 +555,9 @@ async function settings_init()
         getvar("enabled", false);
         getvar("compact", true);
         getvar("length", 25);
+        getvar("scale", 1);
+        getvar("width", 600);
+        getvar("lookuprate", 8);
         getvar("fixedwidth", false);
         getvar("fixedwidthpositioning", false);
         getvar("superborder", false);
@@ -572,7 +577,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     {
         let option = setting[0];
         let value = setting[1];
-        if(["enabled","compact","length","fixedwidth","fixedwidthpositioning","superborder","showoriginal","scale"].includes(option))
+        if(Object.keys(settings).includes(option))
             settings[option] = value.newValue;
     }
     if(!settings.enabled && exists_div())
@@ -583,13 +588,14 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 
 let lookup_timer = undefined;
 let lookup_queue = [];
-let lookup_rate = 8;
+//let lookup_rate = 8;
 
 let lookup_loop_cancel = false;
 let lookup_last_time = Date.now();
 
 async function lookup_loop()
 {
+    //console.log("running lookup queue");
     lookup_last_time = Date.now();
     let t_start = Date.now();
     if(lookup_queue.length > 0)
@@ -597,7 +603,9 @@ async function lookup_loop()
         //console.log("queue not empty");
         let lookup = lookup_queue.pop();
         lookup_queue = [];
+        console.log("asking background to search the dictionary");
         let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div()});
+        console.log("got response");
         if(response)
         {
             let mydiv = build_div(response.text, response.result);
@@ -606,12 +614,13 @@ async function lookup_loop()
         }
     }
     let t_end = Date.now();
-    let t_to_wait = lookup_rate - (t_end - t_start);
+    let t_to_wait = settings.lookuprate - (t_end - t_start);
     if(t_to_wait < 0) t_to_wait = 0;
-    if(t_to_wait > lookup_rate) t_to_wait = lookup_rate;
+    if(t_to_wait > settings.lookuprate) t_to_wait = settings.lookuprate;
     
     if(lookup_loop_cancel)
     {
+        console.log("queue setup");
         lookup_loop_cancel = false;
         lookup_timer = undefined;
         return;
@@ -620,27 +629,29 @@ async function lookup_loop()
         lookup_timer = setTimeout(lookup_loop, t_to_wait);
 }
 
-lookup_timer = setTimeout(lookup_loop, lookup_rate);
+lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
 
 function lookup_enqueue(text, x, y, x2, y2)
 {
+    console.log("trying to enqueue lookup");
     lookup_queue = [[text, x, y, x2, y2]];
-    if(!lookup_timer || lookup_last_time+lookup_rate*100 < Date.now())
+    console.log("enqueued lookup");
+    if(!lookup_timer || lookup_last_time+settings.lookuprate*100 < Date.now())
     {
         if(lookup_timer)
             clearTimeout(lookup_timer);
-        lookup_timer = setTimeout(lookup_loop, lookup_rate);
+        lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
     }
 }
 
 function lookup_cancel()
 {
+    console.log("cancelling lookup");
     lookup_queue = [];
     delete_div();
 }
 
 let time_of_last = Date.now();
-let throttle = 8;
 
 let seach_x_offset = -3;
 
@@ -648,15 +659,15 @@ function update(event)
 {
     if(!settings.enabled) return;
     
-    if(Date.now() - time_of_last < throttle)
+    if(Date.now() - time_of_last < settings.lookuprate)
     {
         //console.log("too soon, returning");
         //console.log(Date.now() + " vs " + time_of_last);
         return;
     }
-    //console.log("---- mousemove entry at " + Date.now());
+    console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
-    //console.log("searching for text");
+    console.log("searching for text");
     let textNode;
     let offset;
     
@@ -718,8 +729,8 @@ function update(event)
     // if there was text, use it
     if (textNode && textNode.nodeType == 3)
     {
-        //print_object(textNode);
-        //print_object(textNode.parentNode);
+        print_object(textNode);
+        print_object(textNode.parentNode);
         let rect = textNode.parentNode.getBoundingClientRect();
         let fud = 5;
         // FIXME: Doesn't work to reject in all cases
@@ -730,7 +741,7 @@ function update(event)
             lookup_cancel();
             return;
         }
-        //console.log("found text");
+        console.log("found text");
         let text = textNode.textContent.substring(offset, textNode.textContent.length);
         
         // grab text from later and surrounding DOM nodes
@@ -778,13 +789,16 @@ function update(event)
         }
         
         text = text.trim();
-        //print_object(text);
+        print_object(text);
         text = text.substring(0, Math.min(text.length, settings.length));
         
         //if(text != "")
             //lookup_indirect(text, event.clientX, event.clientY, time_of_last);
         if(text != "")
+        {
+            console.log("calling lookup_enqueue");
             lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY);
+        }
         else
         {
 //             console.log("no text");
@@ -802,7 +816,17 @@ function update(event)
     }
 }
 
+function update_touch(event)
+{
+    console.log("touch event triggered");
+    if(event.touches)
+    {
+        console.log("receiving touch event");
+        update(event.touches[0]);
+    }
+}
+
 window.addEventListener("mousemove", update);
-window.addEventListener("touchmove", update);
+document.addEventListener("touchmove", update_touch);
 
 
