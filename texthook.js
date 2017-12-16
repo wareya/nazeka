@@ -44,7 +44,7 @@ function delete_div ()
     let other = document.body.getElementsByClassName(div_class);
     if(other.length > 0)
     {
-        other[0].style.visibility = "hidden";
+        other[0].style.display = "none";
         if(other[0].children.length > 0)
             other[0].children[0].innerHTML = "";
     }
@@ -93,7 +93,7 @@ function display_div (middle, x, y, time)
     {
         outer = other[0];
         outer.replaceChild(middle, other[0].firstChild);
-        outer.style.visibility = "visible";
+        outer.style.display = "block";
     }
     else
     {
@@ -107,10 +107,10 @@ function display_div (middle, x, y, time)
         styletext += " transform-origin: top left; transform: scale(" + Number(settings.scale) + ");";
     
     outer.style = styletext;
-        
-    let mywidth = settings.width;
+    
+    let mywidth = settings.width*settings.scale;
     if(!settings.fixedwidthpositioning)
-        mywidth = outer.offsetWidth;
+        mywidth = outer.offsetWidth*settings.scale;
     
     let buffer = 25;
     let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth);
@@ -134,7 +134,7 @@ function exists_div()
     let mydoc = find_root.document;
     
     let other = document.body.getElementsByClassName(div_class);
-    return (other.length > 0 && other[0].style.visibility != "hidden");
+    return (other.length > 0 && other[0].style.display != "none");
 }
 
 
@@ -665,9 +665,9 @@ function update(event)
         //console.log(Date.now() + " vs " + time_of_last);
         return;
     }
-    console.log("---- entry to word lookup at " + Date.now());
+    //console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
-    console.log("searching for text");
+    //console.log("searching for text");
     let textNode;
     let offset;
     
@@ -741,7 +741,7 @@ function update(event)
             lookup_cancel();
             return;
         }
-        console.log("found text");
+        //console.log("found text");
         let text = textNode.textContent.substring(offset, textNode.textContent.length);
         
         // grab text from later and surrounding DOM nodes
@@ -796,7 +796,7 @@ function update(event)
             //lookup_indirect(text, event.clientX, event.clientY, time_of_last);
         if(text != "")
         {
-            console.log("calling lookup_enqueue");
+            //console.log("calling lookup_enqueue");
             lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY);
         }
         else
@@ -818,10 +818,10 @@ function update(event)
 
 function update_touch(event)
 {
-    console.log("touch event triggered");
+    //console.log("touch event triggered");
     if(event.touches)
     {
-        console.log("receiving touch event");
+        //console.log("receiving touch event");
         update(event.touches[0]);
     }
 }
