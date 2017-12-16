@@ -1,10 +1,17 @@
 {
     "manifest_version": 2,
     "name": "nazeka",
-    "version": "0.0pre2",
+    "version": "0.0pre3",
     "author": "Wareya",
     "homepage_url": "https://github.com/wareya/nazeka",
     "description": "A rikai replacement.",
+
+    "applications": {
+        "gecko": {
+            "id": "nazeka@wareya.moe",
+            "strict_min_version": "54.0"
+        }
+    },
 
     "permissions": [
         "contextMenus",
@@ -61,12 +68,5 @@
         "16": "img/enabled16.png",
         "32": "img/enabled32.png",
         "512": "img/enabled512.png"
-    },
-
-    "applications": {
-        "gecko": {
-            "id": "nazeka@wareya.moe",
-            "strict_min_version": "45.0"
-        }
     }
 }
