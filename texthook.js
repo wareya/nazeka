@@ -158,7 +158,7 @@ function build_div (text, result)
     style.textContent =
 ".nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
 .nazeka_main_reb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
-.nazeka_original{font-style: oblique; float: right; margin-right: 2px; margin-left:2px;}\
+.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}\
 ";
     temp.appendChild(style);
     if(settings.showoriginal)
