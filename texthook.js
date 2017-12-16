@@ -603,9 +603,9 @@ async function lookup_loop()
         //console.log("queue not empty");
         let lookup = lookup_queue.pop();
         lookup_queue = [];
-        console.log("asking background to search the dictionary");
+        //console.log("asking background to search the dictionary");
         let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div()});
-        console.log("got response");
+        //console.log("got response");
         if(response)
         {
             let mydiv = build_div(response.text, response.result);
@@ -620,7 +620,7 @@ async function lookup_loop()
     
     if(lookup_loop_cancel)
     {
-        console.log("queue setup");
+        //console.log("queue setup");
         lookup_loop_cancel = false;
         lookup_timer = undefined;
         return;
@@ -633,9 +633,9 @@ lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
 
 function lookup_enqueue(text, x, y, x2, y2)
 {
-    console.log("trying to enqueue lookup");
+    //console.log("trying to enqueue lookup");
     lookup_queue = [[text, x, y, x2, y2]];
-    console.log("enqueued lookup");
+    //console.log("enqueued lookup");
     if(!lookup_timer || lookup_last_time+settings.lookuprate*100 < Date.now())
     {
         if(lookup_timer)
@@ -646,7 +646,7 @@ function lookup_enqueue(text, x, y, x2, y2)
 
 function lookup_cancel()
 {
-    console.log("cancelling lookup");
+    //console.log("cancelling lookup");
     lookup_queue = [];
     delete_div();
 }
@@ -665,6 +665,7 @@ function update(event)
         //console.log(Date.now() + " vs " + time_of_last);
         return;
     }
+    
     //console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
     //console.log("searching for text");
@@ -729,8 +730,8 @@ function update(event)
     // if there was text, use it
     if (textNode && textNode.nodeType == 3)
     {
-        print_object(textNode);
-        print_object(textNode.parentNode);
+        //print_object(textNode);
+        //print_object(textNode.parentNode);
         let rect = textNode.parentNode.getBoundingClientRect();
         let fud = 5;
         // FIXME: Doesn't work to reject in all cases
@@ -789,7 +790,7 @@ function update(event)
         }
         
         text = text.trim();
-        print_object(text);
+        //print_object(text);
         text = text.substring(0, Math.min(text.length, settings.length));
         
         //if(text != "")
@@ -827,6 +828,6 @@ function update_touch(event)
 }
 
 window.addEventListener("mousemove", update);
-document.addEventListener("touchmove", update_touch);
+document.addEventListener("touchstart", update_touch);
 
 

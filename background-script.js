@@ -465,9 +465,9 @@ function stdrule_deconjugate_inner(my_form, my_rule)
     {
         if(false)//my_rule.detail=="potential")
         {
-            console.log("Returning from deconjugation: tag doesn't match");
-            console.log(my_form);
-            console.log(my_rule);
+            //console.log("Returning from deconjugation: tag doesn't match");
+            //console.log(my_form);
+            //console.log(my_rule);
         }
         return;
     }
@@ -771,13 +771,13 @@ function lookup_indirect(text, time, divexisted)
     }
     if(result !== undefined)
     {
-        console.log("found lookup");
-        console.log(text)
+        //console.log("found lookup");
+        //console.log(text)
         return {text:text, result:result};
     }
     else
     {
-        console.log("did not find lookup");
+        //console.log("did not find lookup");
         //console.log(text);
     }
 }
@@ -847,8 +847,8 @@ function tryopenwindow(info, tab)
     }
     catch(err)
     {
-        console.log(err);
-        console.log(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        //console.log(err);
+        //console.log(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 }
 
@@ -891,10 +891,10 @@ function clipboard_hook(tab)
     document.execCommand("paste");
 }
 
-console.log("setting message listener");
+//console.log("setting message listener");
 browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
 {
-    console.log("received message to background script");
+    //console.log("received message to background script");
     if (req.type == "search")
     {
         sendResponse(lookup_indirect(req.text, req.time, req.divexisted));
@@ -912,7 +912,7 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
         return;
     }
 });
-console.log("set message listener");
+//console.log("set message listener");
 
 browser.contextMenus.create({
     id: "nazeka-toggle",
