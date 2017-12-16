@@ -536,10 +536,7 @@ function build_div (text, result)
     return middle;
 }
 
-
-let settings_reload_rate = 200;
-let settings_reloader = undefined;
-async function settings_reload()
+async function settings_init()
 {
     try
     {
@@ -560,19 +557,24 @@ async function settings_reload()
         
         if(!settings.enabled && exists_div())
             delete_div();
-        //console.log("set settings");
-        //console.log(settings.enabled);
-        //console.log(settings.compact);
-    }
-    catch(error)
-    {
-        //console.log("failed to set settings, maybe not stored yet?");
-    } // not stored yet, probably
-    
-    settings_reloader = setTimeout(settings_reload, settings_reload_rate);
+    } catch(err) {} // options not stored yet
 }
 
-settings_reloader = setTimeout(settings_reload, settings_reload_rate);
+settings_init();
+
+browser.storage.onChanged.addListener((updates, storageArea) =>
+{
+    if(storageArea != "local") return;
+    for(let setting of Object.entries(updates))
+    {
+        let option = setting[0];
+        let value = setting[1];
+        if(["enabled","compact","length","fixedwidth","fixedwidthpositioning","superborder","showoriginal"].includes(option))
+            settings[option] = value.newValue;
+    }
+    if(!settings.enabled && exists_div())
+        delete_div();
+});
 
 // look up words on a timer loop that only uses the most recent lookup request and ignores all the others
 
@@ -701,8 +703,7 @@ function update(event)
                         continue;
                     }
                 }
-            }
-            catch(err) {}
+            } catch(err) {}
         }
     }
     for(let toreset of nodeResetList)
