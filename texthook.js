@@ -103,6 +103,8 @@ function display_div (middle, x, y, time)
         mydoc.body.appendChild(outer);
     }
     
+    outer.lang = "ja";
+    
     if(settings.scale != 1 && settings.scale > 0 && settings.scale < 64)
         styletext += " transform-origin: top left; transform: scale(" + Number(settings.scale) + ");";
     
@@ -764,7 +766,7 @@ function update(event)
             i++;
             while(i < current_node.parentNode.childNodes.length)
             {
-                let next_node = current_node.parentNode.childNodes[i];
+                let next_node = current_node.parentNode.childNodes[i++];
                 let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
                 
                 if(tagname == "rt" || tagname == "rp")
@@ -782,7 +784,6 @@ function update(event)
                 {
                     text += next_node.textContent;
                 }
-                i++;
             }
             if(text.length < settings.length)
                 current_node = current_node.parentNode;
