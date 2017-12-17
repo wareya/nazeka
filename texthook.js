@@ -33,6 +33,11 @@ showoriginal: true,
 scale: 1,
 width: 600,
 lookuprate: 8,
+bgcolor: "#111111",
+fgcolor: "#CCCCCC",
+hlcolor: "#99DDFF",
+font: "",
+hlfont: "",
 };
 
 let last_time_display = Date.now();
@@ -52,14 +57,16 @@ function delete_div ()
 
 function display_div (middle, x, y, time)
 {
-    let bordercolor = undefined;
-    if(settings.superborder)
-        bordercolor = "white";
-    else
-        bordercolor = "#CCC";
-    
-    middle.style = "background-color: #111; border-radius: 2.5px; border: 1px solid #111;";
-    middle.firstChild.style = "border: 1px solid " + bordercolor + "; border-radius: 2px; padding: 2px; background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; text-align: left;";
+    //let bordercolor = undefined;
+    //if(settings.superborder)
+    //    bordercolor = "white";
+    //else
+    //    bordercolor = "#CCC";
+    let font = settings.font.trim();
+    if(font != "")
+        font += ",";
+    middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
+    middle.firstChild.style = `border: 1px solid ${settings.fgcolor}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; font-size: 13px; text-align: left;`;
     
     let find_root = window;
     let newx = x;
@@ -83,9 +90,9 @@ function display_div (middle, x, y, time)
     styletext += "position: absolute; top: 0; left: 0; ";
     
     if(settings.superborder)
-        styletext += "background-color: " + bordercolor + "; border-radius: 3px; border: 1px solid " + bordercolor + "; z-index: 100000;";
+        styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 100000;`;
     else
-        styletext += "border-radius: 3px; background-color: #111; z-index: 100000;";
+        styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 100000;`;
     
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
@@ -162,11 +169,16 @@ function build_div (text, result)
     // TODO: link to this instead of hardcoding it; work on unhardcoding other CSS too
     let style = document.createElement("style");
     style.type = "text/css";
+    let font = settings.hlfont.trim();
+    if(font != "")
+        font += ",";
+    if(settings.font.trim() != "")
+        font += settings.font.trim() + ",";
     style.textContent =
-".nazeka_main_keb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
-.nazeka_main_reb{font-family: IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:#9DF}\
+`.nazeka_main_keb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
+.nazeka_main_reb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}\
-";
+`;
     temp.appendChild(style);
     if(settings.showoriginal)
     {
@@ -564,6 +576,12 @@ async function settings_init()
         getvar("fixedwidthpositioning", false);
         getvar("superborder", false);
         getvar("showoriginal", true);
+        
+        getvar("bgcolor", "#111111");
+        getvar("fgcolor", "#CCCCCC");
+        getvar("hlcolor", "#99DDFF");
+        getvar("font", "");
+        getvar("hlfont", "");
         
         if(!settings.enabled && exists_div())
             delete_div();

@@ -10,6 +10,11 @@ function restoreListeners()
     document.querySelector("#fixedwidthpositioning").addEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
     document.querySelector("#showoriginal").addEventListener("change", setOptions);
+    document.querySelector("#bgcolor").addEventListener("change", setOptions);
+    document.querySelector("#fgcolor").addEventListener("change", setOptions);
+    document.querySelector("#hlcolor").addEventListener("change", setOptions);
+    document.querySelector("#font").addEventListener("change", setOptions);
+    document.querySelector("#hlfont").addEventListener("change", setOptions);
 }
 function removeListeners()
 {
@@ -23,6 +28,11 @@ function removeListeners()
     document.querySelector("#fixedwidthpositioning").removeEventListener("change", setOptions);
     document.querySelector("#superborder").addEventListener("change", setOptions);
     document.querySelector("#showoriginal").addEventListener("change", setOptions);
+    document.querySelector("#bgcolor").addEventListener("change", setOptions);
+    document.querySelector("#fgcolor").addEventListener("change", setOptions);
+    document.querySelector("#hlcolor").addEventListener("change", setOptions);
+    document.querySelector("#font").addEventListener("change", setOptions);
+    document.querySelector("#hlfont").addEventListener("change", setOptions);
 }
 
 async function restoreOptions()
@@ -46,6 +56,11 @@ async function restoreOptions()
         let fixedwidthpositioning = await getvar("fixedwidthpositioning", false);
         let superborder = await getvar("superborder", false);
         let showoriginal = await getvar("showoriginal", true);
+        let bgcolor = await getvar("bgcolor", "#111111");
+        let fgcolor = await getvar("fgcolor", "#CCCCCC");
+        let hlcolor = await getvar("hlcolor", "#99DDFF");
+        let font = await getvar("font", "");
+        let hlfont = await getvar("hlfont", "");
         removeListeners();
         document.querySelector("#enabled").checked = enabled?true:false;
         document.querySelector("#compact").checked = compact?true:false;
@@ -57,8 +72,12 @@ async function restoreOptions()
         document.querySelector("#fixedwidthpositioning").checked = fixedwidthpositioning?true:false;
         document.querySelector("#superborder").checked = superborder?true:false;
         document.querySelector("#showoriginal").checked = showoriginal?true:false;
-    }
-    catch (error){}
+        document.querySelector("#bgcolor").value = bgcolor?bgcolor:"#111111";
+        document.querySelector("#fgcolor").value = fgcolor?fgcolor:"#CCCCCC";
+        document.querySelector("#hlcolor").value = hlcolor?hlcolor:"#99DDFF";
+        document.querySelector("#font").value = font?font:"";
+        document.querySelector("#hlfont").value = hlfont?hlfont:"";
+    } catch (error) {}
     removeListeners();
     restoreListeners();
 }
@@ -94,6 +113,11 @@ function setOptions()
         fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
         superborder: document.querySelector("#superborder").checked,
         showoriginal: document.querySelector("#showoriginal").checked,
+        bgcolor: document.querySelector("#bgcolor").value,
+        fgcolor: document.querySelector("#fgcolor").value,
+        hlcolor: document.querySelector("#hlcolor").value,
+        font: document.querySelector("#font").value,
+        hlfont: document.querySelector("#hlfont").value,
     }).then(()=>{fixicon();},()=>{});
 }
 
