@@ -48,8 +48,10 @@ let last_time_display = Date.now();
 
 let div_class = "nazeka_fGKRTDGFGgr9atT";
 
+let last_displayed = undefined;
 function delete_div ()
 {
+    last_displayed = undefined;
     let other = document.body.getElementsByClassName(div_class);
     if(other.length > 0)
     {
@@ -172,8 +174,20 @@ function build_div_inner (text, result)
     {
         let original = document.createElement("div");
         original.className = "nazeka_original";
-        original.textContent = "Looked up " + text;
+        original.textContent = "Looked up ";
+        let original_inner = document.createElement("span");
+        original_inner.className = "nazeka_lookup";
+        original_inner.textContent = text;
+        original.appendChild(original_inner);
         temp.appendChild(original);
+    }
+    else
+    {
+        let original_inner = document.createElement("span");
+        original_inner.className = "nazeka_lookup";
+        original_inner.textContent = text;
+        original_inner.style.display = "none";
+        temp.appendChild(original_inner);
     }
     
     let style = document.createElement("style");
@@ -196,6 +210,10 @@ function build_div_inner (text, result)
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
+        let container = document.createElement("div");
+        container.className = "nazeka_word_container";
+        container.style.marginBottom = "3px";
+        container.setAttribute("nazeka_seq", term.seq);
         if(term.deconj && term.deconj.length > 0)
             text = term.deconj.values().next().value.text;
         //print_object(term);
@@ -315,9 +333,11 @@ function build_div_inner (text, result)
                     temptag.appendChild(document.createTextNode(deconj));
                 }
                 temptag.appendChild(document.createTextNode(" 《"));
+                let e_readings = document.createElement("span");
+                e_readings.className = "nazeka_readings";
                 for(let j = 0; j < readings.length; j++)
                 {
-                    temptag.appendChild(document.createTextNode(readings[j].reb));
+                    e_readings.appendChild(document.createTextNode(readings[j].reb));
                     if(readings[j].inf)
                     {
                         for(let info of readings[j].inf)
@@ -327,12 +347,13 @@ function build_div_inner (text, result)
                             reb_inf.textContent += "(";
                             reb_inf.textContent += clip(info);
                             reb_inf.textContent += ")";
-                            temptag.appendChild(reb_inf);
+                            e_readings.appendChild(reb_inf);
                         }
                     }
                     if(j+1 != readings.length)
-                        temptag.appendChild(document.createTextNode("・"));
+                        e_readings.appendChild(document.createTextNode("・"));
                 }
+                temptag.appendChild(e_readings);
                 temptag.appendChild(document.createTextNode("》"));
                 
                 // list alternatives
@@ -455,8 +476,8 @@ function build_div_inner (text, result)
             if(alternatives.length > 0)
                 temptag.appendChild(document.createTextNode(")"));
         }
-        temp.appendChild(temptag);
-        temp.appendChild(document.createElement("br"));
+        container.appendChild(temptag);
+        container.appendChild(document.createElement("br"));
         
         let goodsenses = [];
         for(let j = 0; j < term.sense.length; j++)
@@ -484,6 +505,8 @@ function build_div_inner (text, result)
             goodsenses.push(sense);
         }
         let lastpos = [];
+        let definition = document.createElement("div");
+        definition.className = "nazeka_definitions";
         for(let j = 0; j < goodsenses.length; j++)
         {
             let sense = goodsenses[j];
@@ -504,11 +527,11 @@ function build_div_inner (text, result)
                 temptext += parts.join(", ");
                 temptext += ")";
                 part.textContent = temptext;
-                temp.appendChild(part);
+                definition.appendChild(part);
                 if(settings.compact)
-                    temp.appendChild(document.createTextNode(" "));
+                    definition.appendChild(document.createTextNode(" "));
                 else
-                    temp.appendChild(document.createElement("br"));
+                    definition.appendChild(document.createElement("br"));
                 
             }
             if(settings.compact)
@@ -518,8 +541,8 @@ function build_div_inner (text, result)
                     let number = document.createElement("span");
                     number.className = "nazeka_num";
                     number.textContent = "("+(j+1)+")";
-                    temp.appendChild(number);
-                    temp.appendChild(document.createTextNode(" "));
+                    definition.appendChild(number);
+                    definition.appendChild(document.createTextNode(" "));
                 }
             }
             else
@@ -527,14 +550,14 @@ function build_div_inner (text, result)
                 let temptag = document.createElement("span");
                 temptag.className = "nazeka_num";
                 temptag.textContent = ""+(j+1)+".";
-                temp.appendChild(temptag);
-                temp.appendChild(document.createTextNode(" "));
+                definition.appendChild(temptag);
+                definition.appendChild(document.createTextNode(" "));
             }
             if(sense.inf)
             {
                 let info = document.createElement("i");
                 info.textContent = "("+sense.inf+") ";
-                temp.appendChild(info);
+                definition.appendChild(info);
             }
             if(sense.misc)
             {
@@ -547,22 +570,22 @@ function build_div_inner (text, result)
                 temptext += parts.join(", ");
                 temptext += ")";
                 temptag.textContent = temptext;
-                temp.appendChild(temptag);
-                temp.appendChild(document.createTextNode(" "));
+                definition.appendChild(temptag);
+                definition.appendChild(document.createTextNode(" "));
             }
-            temp.appendChild(document.createTextNode(sense.gloss.join("; ")));
+            definition.appendChild(document.createTextNode(sense.gloss.join("; ")));
             if(settings.compact)
             {
                 if(sense.gloss.length > 1 || j+1 != goodsenses.length)
-                    temp.appendChild(document.createTextNode("; "));
+                    definition.appendChild(document.createTextNode("; "));
             }
             else
             {
-                temp.appendChild(document.createElement("br"));
+                definition.appendChild(document.createElement("br"));
             }
         }
-        if(settings.compact)
-            temp.appendChild(document.createElement("br"));
+        container.appendChild(definition);
+        temp.appendChild(container);
     }
     return temp;
 }
@@ -571,19 +594,21 @@ function build_div_intermediary()
 {
     let middle = document.createElement("div");
     let inner = document.createElement("div");
+    inner.className = "nazeka_listing";
     middle.appendChild(inner);
     return middle;
 }
 
-// FIXME: redundant garbage, find a way to deduplicate a lot of the logical parts of this
 function build_div (text, result)
 {
+    last_displayed = [{text:text, result:result}];
     let middle = build_div_intermediary();
     middle.firstChild.appendChild(build_div_inner(text, result));
     return middle;
 }
 function build_div_compound (results)
 {
+    last_displayed = results;
     //console.log("Displaying:");
     //print_object(result);
     let middle = build_div_intermediary();
@@ -918,7 +943,103 @@ function update_touch(event)
     }
 }
 
-window.addEventListener("mousemove", update);
-document.addEventListener("touchstart", update_touch);
+function message(text)
+{
+    if(!text) return;
+    let mydiv = document.createElement("div");
+    mydiv.style = "background-color: rgba(0, 0, 0, 0.5); color: white; width: 200px; position: fixed; right: 25px; bottom: 25px; z-index: 100000; padding: 5px; border-radius: 3px;"
+    mydiv.textContent = text;
+    document.body.appendChild(mydiv);
+    
+    function delete_later()
+    {
+        mydiv.remove();
+    }
+    
+    setTimeout(delete_later, 3000);
+}
 
+async function mine_to_storage(object)
+{
+    let cards = (await browser.storage.local.get("cards")).cards;
+    if(!cards)
+        cards = [];
+    console.log(cards);
+    cards.push(object);
+    browser.storage.local.set({cards:cards});
+}
+
+function mine(highlight)
+{
+    let front = highlight.textContent;
+    let word = highlight.parentElement.parentElement;
+    let readings = "";
+    let readings_elements = word.getElementsByClassName("nazeka_readings");
+    if(readings_elements.length)
+        readings = readings_elements[0].textContent;
+    let definitions = word.getElementsByClassName("nazeka_definitions")[0].textContent;
+    let seq = word.getAttribute("nazeka_seq");
+    
+    console.log(front);
+    console.log(readings);
+    console.log(definitions);
+    console.log(seq);
+    
+    mine_to_storage({front: front, readings: readings, definitions: definitions, seq: seq});
+}
+
+function keytest(event)
+{
+    if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
+        return;
+    if(!exists_div())
+        return;
+    console.log("key");
+    console.log(event.key);
+    if(event.key == "m")
+    {
+        console.log("mining request");
+        let mydiv = document.body.getElementsByClassName(div_class)[0].cloneNode(true);
+        delete_div();
+        mydiv.style.position = "fixed";
+        mydiv.style.left = "unset";
+        mydiv.style.top = "10px";
+        mydiv.style.right = "10px";
+        mydiv.className = "nazeka_mining_ui";
+        let newheader = document.createElement("div");
+        newheader.textContent = "Mining UI. Press the given entry to mine it, or this message to cancel.";
+        newheader.addEventListener("click", ()=>
+        {
+            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+        });
+        mydiv.firstChild.firstChild.prepend(newheader);
+        mydiv.style.zIndex = 100000-1;
+        
+        for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
+        {
+            keb.addEventListener("click", (event)=>
+            {
+                mine(event.target);
+                while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                    document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            });
+        }
+        for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
+        {
+            reb.addEventListener("click", (event)=>
+            {
+                mine(event.target);
+                while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                    document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            });
+        }
+        
+        document.body.appendChild(mydiv);
+    }
+}
+
+window.addEventListener("mousemove", update);
+window.addEventListener("keydown", keytest);
+document.addEventListener("touchstart", update_touch);
 

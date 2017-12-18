@@ -37,6 +37,8 @@
         "dict/JMdict10.json",
         "reader.js",
         "reader.html",
+        "mining.js",
+        "mining.html",
         "etc/popupbase.css"
     ],
 

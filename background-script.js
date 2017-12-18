@@ -1062,7 +1062,7 @@ async function init_icon()
 
 init_icon();
 
-function tryopenwindow(info, tab)
+function open_reader(info, tab)
 {
     try
     {
@@ -1070,21 +1070,32 @@ function tryopenwindow(info, tab)
             url:browser.extension.getURL("reader.html"),
             type:"popup"
         });
-    }
-    catch(err)
+    } catch(err) {}
+}
+function open_mining(info, tab)
+{
+    try
     {
-        //console.log(err);
-        //console.log(JSON.stringify(err, Object.getOwnPropertyNames(err)));
-    }
+        browser.windows.create({
+            url:browser.extension.getURL("mining.html"),
+            type:"popup"
+        });
+    } catch(err) {}
 }
 
 if(browser.contextMenus)
 {
     browser.contextMenus.create({
-        id: "nazeka-reopen",
+        id: "nazeka-reader",
         title: "Open Reader",
         contexts: ["browser_action"],
-        onclick: tryopenwindow
+        onclick: open_reader
+    });
+    browser.contextMenus.create({
+        id: "nazeka-mining",
+        title: "View Mined Cards",
+        contexts: ["browser_action"],
+        onclick: open_mining
     });
 }
 
