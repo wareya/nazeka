@@ -862,6 +862,8 @@ function sort_results(text, results)
             entry.priority += 12;
         if(reading_kana == prefers_kana(entry))
             entry.priority += 10;
+        if(entry.sense && entry.sense.length >= 3)
+            entry.priority += 3;
         // FIXME: affects words with only one obscure/rare/obsolete sense
         if(all_senses_have_a_tag(entry, ["obsc", "rare", "obs"]))
             entry.priority -= 5;
