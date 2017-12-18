@@ -163,8 +163,8 @@ function clip(str)
 
 function build_div_inner (text, result)
 {
-    console.log("building div for " + text);
-    console.log(result);
+    //console.log("building div for " + text);
+    //console.log(result);
     let temp = document.createElement("div");
     if(settings.showoriginal)
     {
@@ -194,7 +194,7 @@ function build_div_inner (text, result)
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
-        if(term.deconj)
+        if(term.deconj && term.deconj.length > 0)
             text = term.deconj.values().next().value.text;
         //print_object(term);
         let temptag = document.createElement("span");

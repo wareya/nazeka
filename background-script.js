@@ -670,11 +670,13 @@ function build_lookup_comb (forms)
         if(!looked_up.hasOwnProperty(form.text))
         {
             let result = search(form.text);
+            let copied_result = [];
             if(result)
             {
                 for(let r = 0; r < result.length; r++)
                 {
-                    let entry = result[r];
+                    let entry = {};
+                    Object.assign(entry, result[r]);
                     entry.deconj = undefined; // clear if something set it before, we need this later
                     // store all the parts of speech that this dictionary entry can apply to
                     // normally, they're scattered across its senses
@@ -686,8 +688,9 @@ function build_lookup_comb (forms)
                         for(let j = 0; j < sense.pos.length; j++)
                             entry.allpos.add(sense.pos[j]);
                     }
+                    copied_result.push(entry);
                 }
-                looked_up[form.text] = result;
+                looked_up[form.text] = copied_result;
             }
         }
     }
@@ -999,7 +1002,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
             if(results.length > 0)
                 first = false;
         }
-        console.log(results);
+        //console.log(results);
         if(results.length > 0)
             return results;
     }
