@@ -282,6 +282,7 @@ function build_div (text, result)
                 if(term.deconj)
                 {
                     let deconj = "";
+                    let first = true;
                     for(let form of term.deconj)
                     {
                         let formtext = "";
@@ -300,9 +301,13 @@ function build_div (text, result)
                         }
                         if(formtext != "")
                         {
-                            deconj += "～";
+                            if(first)
+                                deconj += "～";
+                            else
+                                deconj += "・";
                             deconj += formtext;
                         }
+                        first = false;
                     }
                     temptag.appendChild(document.createTextNode(deconj));
                 }
@@ -386,6 +391,7 @@ function build_div (text, result)
             if(term.deconj)
             {
                 let deconj = "";
+                let first = true;
                 for(let form of term.deconj)
                 {
                     let formtext = "";
@@ -404,9 +410,13 @@ function build_div (text, result)
                     }
                     if(formtext != "")
                     {
-                        deconj += "～";
+                        if(first)
+                            deconj += "～";
+                        else
+                            deconj += "・";
                         deconj += formtext;
                     }
+                    first = false;
                 }
                 temptag.appendChild(document.createTextNode(deconj));
             }

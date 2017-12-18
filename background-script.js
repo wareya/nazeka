@@ -331,7 +331,7 @@ rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:
 
 // negatives
 rules.push({type: "contextrule", contextrule: "adjspecial", dec_end:"", con_end:"ない", dec_tag:"stem-mizenkei", con_tag:"adj-i", detail:"negative"});
-rules.push({type: "stdrule", dec_end:"", con_end:"ん", dec_tag:"stem-a", con_tag:"adj-i", detail:"slurred negative"}); // causes problems with ichidan verbs but they can't conjugate to stem-a
+rules.push({type: "stdrule", dec_end:"", con_end:"ん", dec_tag:"stem-mizenkei", con_tag:"adj-i", detail:"slurred negative"});
 rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ず", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"adverbial negative"});
 rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ずに", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"without doing so"});
 rules.push({type: "onlyfinalrule", dec_end:"", con_end:"ぬ", dec_tag:"stem-mizenkei", con_tag:"uninflectable", detail:"archaic negative"});
