@@ -24,6 +24,15 @@
 <label for=fixedwidthpositioning class=panel-formElements-item>Position as though fixed width</label><br>
 <input id="length" type="number" min="6" max="100" value="25" name=length/>
 <label for=length class=panel-formElements-item>Search length (characters) (default 25, sane values are from 25 to 50)</label><br>
+<select id="alternatives_mode" type="checkbox" name=alternatives_mode>
+    <option value=0>Longest match only</option>
+    <option value=1>Longest and shortest match</option>
+    <option value=2>Longest and second longest match</option>
+    <option value=3>All matches</option>
+</select>
+<label for=alternatives_mode class=panel-formElements-item>Matching mode</label><br>
+<input id="strict_alternatives" type="checkbox" name=strict_alternatives/>
+<label for=strict_alternatives class=panel-formElements-item>Strict matching for alternative matches</label><br>
 <input id="scale" type="number" min="0.1" max="64" value="1" name=scale step="0.1"/>
 <label for=scale class=panel-formElements-item>Lookup popup scale</label><br>
 <input id="width" type="number" min="100" max="10000" value="600" name=width/>

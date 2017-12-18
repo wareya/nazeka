@@ -30,6 +30,8 @@ fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
 showoriginal: true,
+alternatives_mode: 0, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
+strict_alternatives: true, // if true, alternatives looked up in all kana can not return results with kanji glosses that don't have any usually/exclusively kana info
 scale: 1,
 width: 600,
 lookuprate: 8,
@@ -159,14 +161,19 @@ function clip(str)
     return str.substring(1, str.length-1);
 }
 
-// FIXME: redundant garbage, find a way to deduplicate a lot of the logical parts of this
-function build_div (text, result)
+function build_div_inner (text, result)
 {
-    //console.log("Displaying:");
-    //print_object(result);
-    let middle = document.createElement("div");
+    console.log("building div for " + text);
+    console.log(result);
     let temp = document.createElement("div");
-    // TODO: link to this instead of hardcoding it; work on unhardcoding other CSS too
+    if(settings.showoriginal)
+    {
+        let original = document.createElement("div");
+        original.className = "nazeka_original";
+        original.textContent = "Looked up " + text;
+        temp.appendChild(original);
+    }
+    
     let style = document.createElement("style");
     style.type = "text/css";
     let font = settings.hlfont.trim();
@@ -180,20 +187,14 @@ function build_div (text, result)
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}\
 `;
     temp.appendChild(style);
-    if(settings.showoriginal)
-    {
-        let original = document.createElement("div");
-        original.className = "nazeka_original";
-        original.textContent = "Looked up " + text;
-        temp.appendChild(original);
-    }
+    
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     // FIXME: A bunch of code here depends on the literal text used to run the search instead of the text with which the search succeeded.
     // The search can convert between hiragana and katakana to find a valid match, so we should know what text it actually used.
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
-        if(term.deconj.size > 0)
+        if(term.deconj)
             text = term.deconj.values().next().value.text;
         //print_object(term);
         let temptag = document.createElement("span");
@@ -561,7 +562,31 @@ function build_div (text, result)
         if(settings.compact)
             temp.appendChild(document.createElement("br"));
     }
-    middle.appendChild(temp);
+    return temp;
+}
+
+function build_div_intermediary()
+{
+    let middle = document.createElement("div");
+    let inner = document.createElement("div");
+    middle.appendChild(inner);
+    return middle;
+}
+
+// FIXME: redundant garbage, find a way to deduplicate a lot of the logical parts of this
+function build_div (text, result)
+{
+    let middle = build_div_intermediary();
+    middle.firstChild.appendChild(build_div_inner(text, result));
+    return middle;
+}
+function build_div_compound (results)
+{
+    //console.log("Displaying:");
+    //print_object(result);
+    let middle = build_div_intermediary();
+    for(let lookup of results)
+        middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result));
     return middle;
 }
 
@@ -592,6 +617,9 @@ async function settings_init()
         getvar("hlcolor", "#99DDFF");
         getvar("font", "");
         getvar("hlfont", "");
+        
+        getvar("alternatives_mode", 0);
+        getvar("strict_alternatives", true);
         
         if(!settings.enabled && exists_div())
             delete_div();
@@ -634,13 +662,22 @@ async function lookup_loop()
         let lookup = lookup_queue.pop();
         lookup_queue = [];
         //console.log("asking background to search the dictionary");
-        let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div()});
+        let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div(), alternatives_mode:settings.alternatives_mode, strict_alternatives:settings.strict_alternatives});
         //console.log("got response");
         if(response)
         {
-            let mydiv = build_div(response.text, response.result);
-            if(mydiv)
-                display_div(mydiv, lookup[3], lookup[4]);
+            if(!response.length)
+            {
+                let mydiv = build_div(response.text, response.result);
+                if(mydiv)
+                    display_div(mydiv, lookup[3], lookup[4]);
+            }
+            else
+            {
+                let mydiv = build_div_compound(response);
+                if(mydiv)
+                    display_div(mydiv, lookup[3], lookup[4]);
+            }
         }
     }
     let t_end = Date.now();

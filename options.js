@@ -15,6 +15,8 @@ function restoreListeners()
     document.querySelector("#hlcolor").addEventListener("change", setOptions);
     document.querySelector("#font").addEventListener("change", setOptions);
     document.querySelector("#hlfont").addEventListener("change", setOptions);
+    document.querySelector("#alternatives_mode").addEventListener("change", setOptions);
+    document.querySelector("#strict_alternatives").addEventListener("change", setOptions);
 }
 function removeListeners()
 {
@@ -33,6 +35,8 @@ function removeListeners()
     document.querySelector("#hlcolor").addEventListener("change", setOptions);
     document.querySelector("#font").addEventListener("change", setOptions);
     document.querySelector("#hlfont").addEventListener("change", setOptions);
+    document.querySelector("#alternatives_mode").addEventListener("change", setOptions);
+    document.querySelector("#strict_alternatives").addEventListener("change", setOptions);
 }
 
 async function restoreOptions()
@@ -61,6 +65,8 @@ async function restoreOptions()
         let hlcolor = await getvar("hlcolor", "#99DDFF");
         let font = await getvar("font", "");
         let hlfont = await getvar("hlfont", "");
+        let alternatives_mode = await getvar("alternatives_mode", 0);
+        let strict_alternatives = await getvar("strict_alternatives", true);
         removeListeners();
         document.querySelector("#enabled").checked = enabled?true:false;
         document.querySelector("#compact").checked = compact?true:false;
@@ -77,6 +83,8 @@ async function restoreOptions()
         document.querySelector("#hlcolor").value = hlcolor?hlcolor:"#99DDFF";
         document.querySelector("#font").value = font?font:"";
         document.querySelector("#hlfont").value = hlfont?hlfont:"";
+        document.querySelector("#alternatives_mode").value = alternatives_mode?alternatives_mode:0;
+        document.querySelector("#strict_alternatives").checked = strict_alternatives?strict_alternatives:true;
     } catch (error) {}
     removeListeners();
     restoreListeners();
@@ -118,6 +126,8 @@ function setOptions()
         hlcolor: document.querySelector("#hlcolor").value,
         font: document.querySelector("#font").value,
         hlfont: document.querySelector("#hlfont").value,
+        alternatives_mode: document.querySelector("#alternatives_mode").value,
+        strict_alternatives: document.querySelector("#strict_alternatives").checked,
     }).then(()=>{fixicon();},()=>{});
 }
 

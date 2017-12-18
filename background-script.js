@@ -843,6 +843,18 @@ function has_pri(object)
     return false;
 }
 
+function filter_kana_ish_results(results)
+{
+    if(results == undefined) return;
+    let newresults = [];
+    for(let entry of results)
+    {
+        if(is_kana(entry) || prefers_kana(entry))
+            newresults.push(entry);
+    }
+    return newresults;
+}
+
 function sort_results(text, results)
 {
     if(results == undefined) return undefined;
@@ -883,7 +895,7 @@ function sort_results(text, results)
 
 let last_lookup = "";
 let last_time_lookup = Date.now();
-function lookup_indirect(text, time, divexisted)
+function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alternatives)
 {
     if(text == "")
         return;
@@ -898,26 +910,98 @@ function lookup_indirect(text, time, divexisted)
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
     //console.log("trying to look up " + text);
-    let forms = deconjugate(text);
-    let result = build_lookup_comb(forms);
-    while(result === undefined && text.length > 0)
+    if(alternatives_mode == 0 || alternatives_mode == 1 || alternatives_mode == 2)
     {
-        text = text.substring(0, text.length-1);
-        //console.log("trying to look up " + text);
-        forms = deconjugate(text);
-        result = build_lookup_comb(forms);
+        let forms = deconjugate(text);
+        let result = build_lookup_comb(forms);
+        while(result === undefined && text.length > 0)
+        {
+            text = text.substring(0, text.length-1);
+            //console.log("trying to look up " + text);
+            forms = deconjugate(text);
+            result = build_lookup_comb(forms);
+        }
+        if(result !== undefined && result.length > 0)
+        {
+            //console.log("found lookup");
+            //console.log(text)
+            result = sort_results(text, result);
+            if(alternatives_mode == 0 || text.length <= 1)
+                return {text:text, result:result};
+            else if(alternatives_mode == 1) // second longest too 
+            {
+                let len = text.length-1;
+                let short_text = text.substring(0, len);
+                let short_forms = deconjugate(short_text);
+                let short_result = build_lookup_comb(short_forms);
+                
+                while(short_result === undefined && len > 0)
+                {
+                    len--;
+                    short_text = text.substring(0, len);
+                    short_forms = deconjugate(short_text);
+                    short_result = build_lookup_comb(short_forms);
+                }
+                if(strict_alternatives && is_kana(short_text))
+                    short_result = filter_kana_ish_results(short_result);
+                if(short_result !== undefined && short_result.length > 0)
+                {
+                    short_result = sort_results(short_text, short_result);
+                    return [{text:text, result:result}, {text:short_text, result:short_result}];
+                }
+                else
+                    return {text:text, result:result};
+            }
+            else if(alternatives_mode == 2) // shortest too
+            {
+                let len = 1;
+                let short_text = text.substring(0, len);
+                let short_forms = deconjugate(short_text);
+                let short_result = build_lookup_comb(short_forms);
+                
+                while(short_result === undefined && short_text.length+1 < text.length)
+                {
+                    len++;
+                    short_text = text.substring(0, len);
+                    short_forms = deconjugate(short_text);
+                    short_result = build_lookup_comb(short_forms);
+                }
+                if(strict_alternatives && is_kana(short_text))
+                    short_result = filter_kana_ish_results(short_result);
+                if(short_result !== undefined && short_result.length > 0)
+                {
+                    short_result = sort_results(short_text, short_result);
+                    return [{text:text, result:result}, {text:short_text, result:short_result}];
+                }
+                else
+                    return {text:text, result:result};
+            }
+        }
     }
-    if(result !== undefined)
+    else if(alternatives_mode == 3)
     {
-        //console.log("found lookup");
-        //console.log(text)
-        result = sort_results(text, result);
-        return {text:text, result:result};
-    }
-    else
-    {
-        //console.log("did not find lookup");
-        //console.log(text);
+        let results = [];
+        let first = true;
+        while(text.length > 0)
+        {
+            let forms = deconjugate(text);
+            let result = build_lookup_comb(forms);
+            
+            if(!first && strict_alternatives && is_kana(text))
+                result = filter_kana_ish_results(result);
+            
+            if(result !== undefined && result.length > 0)
+            {
+                result = sort_results(text, result);
+                results.push({text:text, result:result});
+            }
+            text = text.substring(0, text.length-1);
+            if(results.length > 0)
+                first = false;
+        }
+        console.log(results);
+        if(results.length > 0)
+            return results;
     }
 }
 
@@ -1036,7 +1120,7 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     //console.log("received message to background script");
     if (req.type == "search")
     {
-        sendResponse(lookup_indirect(req.text, req.time, req.divexisted));
+        sendResponse(lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives));
     }
     else if (req.type == "fixicon")
     {
