@@ -4,12 +4,13 @@
  * TODO:
  * 
  * ! Finish porting the underlay's deconjugation rules
- * ! Definition priority handling (prefer words with any commonness tags, shorter deconjugations, expressions, non-archaic/non-obscure words, high frequencies)
  * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * - More configurability
  * - VNstats frequency data
+ * - Integrate frequency into priority handling
  * - Load deconjugation rules from an advanced setting, with a reset button
- * - Work with text input fields
+ * - Mining support features
+ * ? Export/import settings with json
  * ? List definitions of shorter text strings if they're not pure kana (in addition to main definitions)
  * 
  */
@@ -25,6 +26,7 @@ function print_object(message)
 let settings = {
 enabled: false,
 compact: true,
+usetextfields: true,
 length: 25,
 fixedwidth: false,
 fixedwidthpositioning: false,
@@ -742,6 +744,19 @@ function update(event)
     let nodeResetList = [];
     let nodeResetSeen = new Set();
     
+    function acceptable_element(node)
+    {
+        if(!textNode) return false;
+        //console.log(node);
+        if(textNode.nodeType != 1)
+            return false;
+        if(textNode.tagName.toLowerCase() == "textarea")
+            return true;
+        if(textNode.tagName.toLowerCase() == "input")
+            if(["search", "submit", "text", "url"].includes(node.type.toLowerCase()))
+                return true;
+        return false;
+    }
     // find the text under the mouse event
     let nodeIsBad  = true;
     while(nodeIsBad)
@@ -764,7 +779,7 @@ function update(event)
         
         hitpage(event.clientX+seach_x_offset, event.clientY);
         // try without the offset
-        if (textNode == undefined || textNode.nodeType != 3)
+        if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
             hitpage(event.clientX, event.clientY);
         
         if(!(textNode == undefined))
@@ -772,7 +787,7 @@ function update(event)
             // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
             try
             {
-                if(textNode.nodeType == 1 && !nodeResetSeen.has(textNode))
+                if(textNode.nodeType == 1 && !nodeResetSeen.has(textNode) && !acceptable_element(textNode))
                 {
                     let style = window.getComputedStyle(textNode);
                     let bg_color = style.getPropertyValue("background-color"); 
@@ -795,22 +810,32 @@ function update(event)
         element.style.zIndex = z_index;
     }
     // if there was text, use it
-    if (textNode && textNode.nodeType == 3)
+    let elemental = acceptable_element(textNode);
+    if (textNode && (textNode.nodeType == 3 || elemental))
     {
         //print_object(textNode);
         //print_object(textNode.parentNode);
-        let rect = textNode.parentNode.getBoundingClientRect();
+    
+        let rect = undefined;
         let fud = 5;
+        if(elemental)
+            rect = textNode.getBoundingClientRect();
+        else
+            rect = textNode.parentNode.getBoundingClientRect();
+        
         // FIXME: Doesn't work to reject in all cases
         let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
         if(!hit)
         {
-//             console.log("no hit");
             lookup_cancel();
             return;
         }
         //console.log("found text");
-        let text = textNode.textContent.substring(offset, textNode.textContent.length);
+        let text = "";
+        if(elemental)
+            text = textNode.value.substring(offset, textNode.value.length);
+        else
+            text = textNode.textContent.substring(offset, textNode.textContent.length);
         
         // grab text from later and surrounding DOM nodes
         let current_node = textNode;
