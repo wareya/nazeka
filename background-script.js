@@ -742,9 +742,145 @@ function build_lookup_comb (forms)
         return;
 }
 
+
+
+function is_kana(object)
+{
+    if(object.seq && object.k_ele)
+        return false;
+    if(object.seq)
+        return true;
+    if(typeof object !== "string")
+        return false;
+    
+    for(let i = 0; i < object.length; i++)
+    {
+        let codepoint = object.codePointAt(i);
+        if(!(codepoint >= 0x3040 && codepoint <= 0x30FF))
+            return false;
+    }
+    return true;
+}
+
+function prefers_kana(object)
+{
+    if(object.seq)
+    {
+        for(let sense of object.sense)
+        {
+            if(sense.misc) for(let misc of sense.misc)
+            {
+                if(clip(misc) == "uk" || clip(misc) == "ek")
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+function prefers_kanji(object)
+{
+    if(object.seq)
+    {
+        for(let sense of object.sense)
+        {
+            if(sense.misc) for(let misc of sense.misc)
+            {
+                if(clip(misc) == "uK" || clip(misc) == "eK")
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+function all_senses_have_a_tag(object, tag)
+{
+    if(object.seq)
+    {
+        for(let sense of object.sense)
+        {
+            let anymatch = false;
+            if(sense.misc)
+            {
+                for(let misc of sense.misc)
+                {
+                    if(tag.length)
+                    {
+                        for(let actualtag of tag)
+                            if(clip(misc) == actualtag)
+                                anymatch = true;
+                    }
+                    else if(clip(misc) == tag)
+                        anymatch = true;
+                }
+            }
+            if(!anymatch)
+                return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+function has_pri(object)
+{
+    if(object.seq)
+    {
+        for(let sense of object.sense)
+        {
+            if(object.k_ele) for(let ele of object.k_ele)
+            {
+                if(ele.pri)
+                    return true;
+            }
+            if(object.r_ele) for(let ele of object.r_ele)
+            {
+                if(ele.pri)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+function sort_results(text, results)
+{
+    if(results == undefined) return undefined;
+    
+    let reading_kana = is_kana(text);
+    
+    for(let entry of results)
+    {
+        let result_kana = is_kana(entry);
+        entry.priority = (entry.seq-1000000)/-10000000; // divided by one more order of magnitude
+        
+        if(reading_kana == result_kana)
+            entry.priority += 100;
+        if(has_pri(entry))
+            entry.priority += 30;
+        if((!reading_kana) == prefers_kanji(entry))
+            entry.priority += 12;
+        if(reading_kana == prefers_kana(entry))
+            entry.priority += 10;
+        // FIXME: affects words with only one obscure/rare/obsolete sense
+        if(all_senses_have_a_tag(entry, ["obsc", "rare", "obs"]))
+            entry.priority -= 5;
+        // FIXME: prefer short deconjugations to long deconjugations, not just no deconjugations to any deconjugations
+        if(entry.deconj)
+            entry.priority -= 1;
+    }
+    
+    results.sort((a,b)=>
+    {
+        return b.priority - a.priority;
+        //return a.priority - b.priority;
+    });
+    
+    return results;
+}
+
 let last_lookup = "";
 let last_time_lookup = Date.now();
-
 function lookup_indirect(text, time, divexisted)
 {
     if(text == "")
@@ -773,6 +909,7 @@ function lookup_indirect(text, time, divexisted)
     {
         //console.log("found lookup");
         //console.log(text)
+        result = sort_results(text, result);
         return {text:text, result:result};
     }
     else
