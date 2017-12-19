@@ -4,6 +4,24 @@ Nazeka is a rikai replacement.
 
 This is my first nontrivial javascript work and there are probably a lot of obvious peeves to have with the code.
 
+Options:
+
+- Enabled: whether to search pages for text
+- Compact: definitions on same line or with linebreaks
+- Show original text: shows the string of text that nazeka used to look up a set of definitions
+- Super border: add an additional level to the double border
+- Fixed width: always use maximum width width, don't shrink to small contents
+- Position as though fixed width: when rejecting the popup from the right side of the window, act as though it has the maximum width, even if it doesn't
+- Search length: maximum length to search for words
+- Matching mode: what kinds, of alternative lookups to display
+- Strict matching for alternative matches: if true, alternative lookups of hiragana strings will not produce definitions that are not at least usually kana
+- Lookup popup scale: zoom factor for entire popup
+- Lookup popup width: maximum width for the lookup
+- Lookup throttle: minimum milliseconds between the start of lookups
+- Colors: the colors of the popup
+- Font override: font override for the whole popup, max priority but will fall back to default fonts for characters not in the font override
+- Font override (highlighted text only): for the main spelling of a definition
+
 Building:
 
 Build process requires python and lxml, or an existing copy of the extension to rip JMdict#.json from.
