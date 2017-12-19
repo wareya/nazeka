@@ -68,7 +68,7 @@ function display_div (middle, x, y, time)
     //    bordercolor = "white";
     //else
     //    bordercolor = "#CCC";
-    let font = settings.font.trim();
+    let font = settings.font.trim().replace(";","");
     if(font != "")
         font += ",";
     middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
@@ -195,8 +195,8 @@ function build_div_inner (text, result)
     let font = settings.hlfont.trim();
     if(font != "")
         font += ",";
-    if(settings.font.trim() != "")
-        font += settings.font.trim() + ",";
+    if(settings.font.trim().replace(";","") != "")
+        font += settings.font.trim().replace(";","") + ",";
     style.textContent =
 `.nazeka_main_keb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
 .nazeka_main_reb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
