@@ -5,7 +5,7 @@
 function reset()
 {
     browser.storage.local.set({cards:[]});
-    document.body.querySelector("#reset").textContent = "";
+    document.body.querySelector("#field").textContent = "";
 }
 
 async function init_page()
