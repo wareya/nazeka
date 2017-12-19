@@ -11,22 +11,23 @@ function reset()
 async function init_page()
 {
     let data = (await browser.storage.local.get("cards")).cards;
-    console.log(data);
-    let text = "";
-    for(let card of data)
+    if(data)
     {
-        text += card.front.replace("\t", "\\t");
-        text += "\t";
-        text += card.readings.replace("\t", "\\t");
-        text += "\t";
-        text += card.definitions.replace("\t", "\\t");
-        text += "\t";
-        text += card.seq.replace("\t", "\\t");
-        text += "\n";
+        let text = "";
+        for(let card of data)
+        {
+            text += card.front.replace("\t", "\\t");
+            text += "\t";
+            text += card.readings.replace("\t", "\\t");
+            text += "\t";
+            text += card.definitions.replace("\t", "\\t");
+            text += "\t";
+            text += card.seq.replace("\t", "\\t");
+            text += "\n";
+        }
+        let element = document.body.querySelector("#field");
+        element.textContent = text;
     }
-    let element = document.body.querySelector("#field");
-    element.textContent = text;
-    
     document.body.querySelector("#reset").addEventListener("click", reset);
 }
 
