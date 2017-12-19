@@ -896,6 +896,29 @@ function sort_results(text, results)
     return results;
 }
 
+function skip_rereferenced_entries(results)
+{
+    let newresults = [];
+    let seenseq = new Set();
+    
+    console.log(results);
+    for(let lookup of results)
+    {
+        let newlookup = [];
+        console.log(lookup);
+        for(let entry of lookup.result)
+        {
+            if(seenseq.has(entry.seq))
+                continue;
+            seenseq.add(entry.seq);
+            newlookup.push(entry);
+        }
+        if(newlookup.length > 0)
+            newresults.push({text:lookup.text, result:newlookup});
+    }
+    return newresults;
+}
+
 let last_lookup = "";
 let last_time_lookup = Date.now();
 function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alternatives)
@@ -913,6 +936,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
     //console.log("trying to look up " + text);
+    // FIXME: later lookups using definitions already caught
     if(alternatives_mode == 0 || alternatives_mode == 1 || alternatives_mode == 2)
     {
         let forms = deconjugate(text);
@@ -930,7 +954,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
             //console.log(text)
             result = sort_results(text, result);
             if(alternatives_mode == 0 || text.length <= 1)
-                return {text:text, result:result};
+                return skip_rereferenced_entries([{text:text, result:result}]);
             else if(alternatives_mode == 1) // second longest too 
             {
                 let len = text.length-1;
@@ -950,10 +974,10 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return [{text:text, result:result}, {text:short_text, result:short_result}];
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}]);
                 }
                 else
-                    return {text:text, result:result};
+                    return skip_rereferenced_entries([{text:text, result:result}]);
             }
             else if(alternatives_mode == 2) // shortest too
             {
@@ -974,10 +998,10 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return [{text:text, result:result}, {text:short_text, result:short_result}];
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}]);
                 }
                 else
-                    return {text:text, result:result};
+                    return skip_rereferenced_entries([{text:text, result:result}]);
             }
         }
     }
@@ -1004,7 +1028,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
         }
         //console.log(results);
         if(results.length > 0)
-            return results;
+            return skip_rereferenced_entries(results);
     }
 }
 
