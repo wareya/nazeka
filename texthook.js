@@ -222,6 +222,9 @@ function build_div_inner (text, result)
         let temptag = document.createElement("span");
         temptag.className = "nazeka_word";
         let found_kanji = true;
+        let original_kana = "";
+        if(term.found.reb)
+            original_kana = term.found.reb;
         
         if(term.k_ele)
         {
@@ -417,7 +420,7 @@ function build_div_inner (text, result)
             }
         }
         else
-            found_kanji = false;
+            found_kanji = true;
         if(!found_kanji)
         {
             let main_reb = document.createElement("span");
@@ -510,20 +513,25 @@ function build_div_inner (text, result)
         {
             let sense = term.sense[j];
             
-            if(sense.stagk && found_kanji)
+            // FIXME: this shows too many senses. it's better than the previous code, which could show too few when looking up kana,
+            // but for looking up さくや for example, it shows both definitions, even though さくや is restricted to a spelling that is restricted to only one definition.
+            if(original_kana != "")
+            {
+                if(sense.stagr)
+                {
+                    let found = false;
+                    for(let l = 0; l < sense.stagr.length; l++)
+                        if(sense.stagr[l] == original_kana)
+                            found = true;
+                    if(!found)
+                        continue;
+                }
+            }
+            else if(sense.stagk && found_kanji)
             {
                 let found = false;
                 for(let l = 0; l < sense.stagk.length; l++)
                     if(sense.stagk[l] == text)
-                        found = true;
-                if(!found)
-                    continue;
-            }
-            if(sense.stagr && !found_kanji)
-            {
-                let found = false;
-                for(let l = 0; l < sense.stagr.length; l++)
-                    if(sense.stagr[l] == text)
                         found = true;
                 if(!found)
                     continue;
