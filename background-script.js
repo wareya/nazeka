@@ -111,12 +111,38 @@ function clip(str)
     return str.substring(1, str.length-1);
 }
 
-function getfromdict(indexes)
+function getfromdict(indexes, text)
 {
     let ret = [];
     for(let i = 0; i < indexes.length; i++)
     {
-        let entry = dict[indexes[i]];
+        let entry = {};
+        Object.assign(entry, dict[indexes[i]]);
+        
+        entry.from = text;
+        if(entry.k_ele)
+        {
+            for(let spelling of entry.k_ele)
+            {
+                if(spelling.keb == entry.from)
+                {
+                    entry.found = spelling;
+                    break;
+                }
+            }
+        }
+        if(!entry.found && entry.r_ele)
+        {
+            for(let spelling of entry.r_ele)
+            {
+                if(spelling.reb == entry.from)
+                {
+                    entry.found = spelling;
+                    break;
+                }
+            }
+        }
+        
         let lastpos = [];
         // JMdict tags part-of-speech for senses sparsely
         // e.g. if 1. and 2. share the same list of POSs, only 1. will have a POS list
@@ -169,9 +195,9 @@ function replace_kata_with_hira(text)
 function search_inner(text)
 {
     if (lookup_kan.has(text))
-        return getfromdict(lookup_kan.get(text));
+        return getfromdict(lookup_kan.get(text), text);
     else if (lookup_kana.has(text))
-        return getfromdict(lookup_kana.get(text));
+        return getfromdict(lookup_kana.get(text), text);
     else
         return;
 }
@@ -675,8 +701,8 @@ function build_lookup_comb (forms)
             {
                 for(let r = 0; r < result.length; r++)
                 {
-                    let entry = {};
-                    Object.assign(entry, result[r]);
+                    let entry = result[r];
+                    //Object.assign(entry, result[r]);
                     entry.deconj = undefined; // clear if something set it before, we need this later
                     // store all the parts of speech that this dictionary entry can apply to
                     // normally, they're scattered across its senses
@@ -846,21 +872,24 @@ function has_pri(object)
     return false;
 }
 
-function filter_kana_ish_results(results)
+function weird_lookup(entry)
 {
-    if(results == undefined) return;
-    let newresults = [];
-    for(let entry of results)
+    if(entry.found && entry.found.inf)
     {
-        if(is_kana(entry) || prefers_kana(entry))
-            newresults.push(entry);
+        for(let info of entry.found.inf)
+        {
+            if(["ik", "iK", "io"].includes(clip(info)))
+            {
+                entry.priority -= 50;
+                break;
+            }
+        }
     }
-    return newresults;
 }
 
 function sort_results(text, results)
 {
-    if(results == undefined) return undefined;
+    if(results == undefined) return;
     
     let reading_kana = is_kana(text);
     
@@ -869,6 +898,8 @@ function sort_results(text, results)
         let result_kana = is_kana(entry);
         entry.priority = (entry.seq-1000000)/-10000000; // divided by one more order of magnitude
         
+        if(weird_lookup(entry))
+            entry.priority -= 50;
         if(reading_kana == result_kana)
             entry.priority += 100;
         if(has_pri(entry))
@@ -894,6 +925,18 @@ function sort_results(text, results)
     });
     
     return results;
+}
+
+function filter_kana_ish_results(results)
+{
+    if(results == undefined) return;
+    let newresults = [];
+    for(let entry of results)
+    {
+        if(is_kana(entry) || prefers_kana(entry))
+            newresults.push(entry);
+    }
+    return newresults;
 }
 
 function skip_rereferenced_entries(results)
