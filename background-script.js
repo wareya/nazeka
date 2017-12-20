@@ -35,7 +35,6 @@ function load_part_of_dictionary(filename)
 {
     let req = new XMLHttpRequest();
     req.addEventListener("load", builddict);
-    // FIXME: apparently this has to be in an async function now.
     req.open("GET", browser.extension.getURL(filename));
     req.send();
     return req;

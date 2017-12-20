@@ -282,7 +282,6 @@ function build_div_inner (text, result)
                 keb.className = "nazeka_main_keb";
                 keb.textContent = kanji_text;
                 temptag.appendChild(keb);
-                // FIXME: show inf for located keb
                 
                 // list readings
                 let readings = [];
@@ -420,14 +419,13 @@ function build_div_inner (text, result)
             }
         }
         else
-            found_kanji = true;
+            found_kanji = false;
         if(!found_kanji)
         {
             let main_reb = document.createElement("span");
             main_reb.className = "nazeka_main_reb";
             main_reb.textContent = term.found.reb;
             temptag.appendChild(main_reb);
-            // FIXME: show inf for located reb
             if(term.deconj)
             {
                 let deconj = "";
@@ -463,6 +461,8 @@ function build_div_inner (text, result)
             // FIXME wrapper span
             if(term.found.inf)
             {
+                let maininfos = document.createElement("span");
+                maininfos.className = "nazeka_main_infos";
                 for(let info of term.found.inf)
                 {
                     let reb_inf = document.createElement("span");
@@ -470,8 +470,9 @@ function build_div_inner (text, result)
                     reb_inf.textContent += "(";
                     reb_inf.textContent += clip(info);
                     reb_inf.textContent += ")";
-                    temptag.appendChild(reb_inf);
+                    maininfos.appendChild(reb_inf);
                 }
+                temptag.appendChild(maininfos);
             }
             
             // list alternatives
