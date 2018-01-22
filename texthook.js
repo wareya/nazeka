@@ -145,8 +145,8 @@ function display_div (middle, x, y, time)
     {
         if(newx + mywidth > pretend_doc_width-buffer)
         {
-            newx += (newx + mywidth - pretend_doc_width);
-            newx += buffer;
+            newx -= (newx + mywidth - pretend_doc_width);
+            newx -= buffer;
             if(newx < 0)
                 newx = 0;
         }

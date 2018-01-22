@@ -196,6 +196,7 @@ function buildpage()
             optionsection.appendChild(header);
             continue;
         }
+        let container = document.createElement("div");
         let configger = undefined;
         if(option.kind == "checkbox")
         {
@@ -261,12 +262,24 @@ function buildpage()
         let labelText = document.createTextNode(option.label);
         
         if(option.kind == "checkbox")
+        {
             label.appendChild(configger);
+            label.appendChild(labelText);
+            container.appendChild(label);
+        }
         else
-            optionsection.appendChild(configger);
+        {
+            label.appendChild(labelText);
+            let cont1 = document.createElement("div");
+            let cont2 = document.createElement("div");
+            cont1.appendChild(configger);
+            cont2.appendChild(label);
+            container.appendChild(cont1);
+            container.appendChild(cont2);
+        }
         
-        label.appendChild(labelText);
-        optionsection.appendChild(label);
+        container.style.marginBottom = "8px";
+        optionsection.appendChild(container);
     }
 }
 
