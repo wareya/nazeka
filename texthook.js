@@ -4,6 +4,7 @@
  * TODO:
  * 
  * ! Finish porting the underlay's deconjugation rules
+ * - Add an option for "hide unfitting senses/spellings/readings" vs "show everything but with details about what can be what"
  * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
  * - More configurability
  * - VNstats frequency data
@@ -36,6 +37,9 @@ fgcolor: "#CCCCCC",
 hlcolor: "#99DDFF",
 font: "",
 hlfont: "",
+corner: 0,
+xoffset: 5,
+yoffset: 22
 };
 
 let last_time_display = Date.now();
@@ -87,12 +91,15 @@ function display_div (middle, x, y, time)
         styletext += "width: " + Math.round(Number(settings.width)) + "px; "
     else
         styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
+    styletext += "min-width: 150px; "
     styletext += "position: absolute; top: 0; left: 0; ";
     
     if(settings.superborder)
         styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 100000;`;
     else
         styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 100000;`;
+    
+    styletext += "writing-mode: horizontal-tb; line-height: initial;";
     
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
@@ -123,16 +130,60 @@ function display_div (middle, x, y, time)
     
     let buffer = 25;
     let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth);
-    if(newx + mywidth > pretend_doc_width-buffer)
+    if(settings.corner == 1 || settings.corner == 3)
     {
-        newx -= (newx + mywidth - pretend_doc_width);
-        newx -= buffer;
-        if(newx < 0)
-            newx = 0;
+        newx = mydoc.defaultView.innerWidth - newx;
+        if(newx + mywidth > pretend_doc_width-buffer)
+        {
+            newx -= (newx + mywidth - pretend_doc_width);
+            newx -= buffer;
+            if(newx > mydoc.defaultView.innerWidth)
+                newx = mydoc.defaultView.innerWidth;
+        }
+    }
+    else
+    {
+        if(newx + mywidth > pretend_doc_width-buffer)
+        {
+            newx += (newx + mywidth - pretend_doc_width);
+            newx += buffer;
+            if(newx < 0)
+                newx = 0;
+        }
+    }
+    if(settings.corner == 2 || settings.corner == 3)
+    {
+        newy = mydoc.defaultView.innerHeight - newy;
     }
     
-    outer.style.top = (newy+5)+"px";
-    outer.style.left = (newx+5)+"px";
+    if(settings.corner == 3)
+    {
+        outer.style.top = "unset";
+        outer.style.bottom = (newy+settings.yoffset)+"px";
+        outer.style.right = (newx-settings.xoffset)+"px";
+        outer.style.left = "unset";
+    }
+    else if(settings.corner == 2)
+    {
+        outer.style.top = "unset";
+        outer.style.bottom = (newy+settings.yoffset)+"px";
+        outer.style.right = "unset";
+        outer.style.left = (newx+settings.xoffset)+"px";
+    }
+    else if(settings.corner == 1)
+    {
+        outer.style.top = (newy+settings.yoffset)+"px";
+        outer.style.bottom = "unset";
+        outer.style.right = (newx-settings.xoffset)+"px";
+        outer.style.left = "unset";
+    }
+    else // 0 etc
+    {
+        outer.style.top = (newy+settings.yoffset)+"px";
+        outer.style.bottom = "unset";
+        outer.style.right = "unset";
+        outer.style.left = (newx+settings.xoffset)+"px";
+    }
 }
 
 function exists_div()
@@ -164,15 +215,17 @@ function build_div_inner (text, result)
     //console.log("building div for " + text);
     //console.log(result);
     let temp = document.createElement("div");
+    temp.style.position = "relative";
     if(settings.showoriginal)
     {
         let original = document.createElement("div");
         original.className = "nazeka_original";
-        original.textContent = "Looked up ";
+        //original.textContent = "Looked up ";
         let original_inner = document.createElement("span");
         original_inner.className = "nazeka_lookup";
         original_inner.textContent = text;
         original.appendChild(original_inner);
+        
         temp.appendChild(original);
     }
     else
@@ -620,7 +673,15 @@ function build_div_inner (text, result)
             }
         }
         container.appendChild(definition);
-        temp.appendChild(container);
+        if(settings.corner == 2 || settings.corner == 3)
+        {
+            if(settings.showoriginal)
+                temp.insertBefore(container, temp.children[0].nextSibling);
+            else
+                temp.insertBefore(container, temp.children[0]);
+        }
+        else
+            temp.appendChild(container);
     }
     return temp;
 }
@@ -648,7 +709,12 @@ function build_div_compound (results)
     //print_object(result);
     let middle = build_div_intermediary();
     for(let lookup of results)
-        middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result));
+    {
+        if(settings.corner == 2 || settings.corner == 3)
+            middle.firstChild.insertBefore(build_div_inner(lookup.text, lookup.result), middle.firstChild.children[0]);
+        else
+            middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result));
+    }
     return middle;
 }
 
@@ -682,6 +748,10 @@ async function settings_init()
         
         getvar("alternatives_mode", 0);
         getvar("strict_alternatives", true);
+        
+        getvar("corner", 0);
+        getvar("xoffset", 5);
+        getvar("yoffset", 22);
         
         if(!settings.enabled && exists_div())
             delete_div();

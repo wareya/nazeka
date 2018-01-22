@@ -1,42 +1,273 @@
+'use strict';
+
+let settings = [];
+
+function defaults()
+{
+    // behavior
+    settings.push({
+        kind: "dummy",
+        label: "Behavior"
+    });
+    
+    settings.push({
+        id: "enabled",
+        kind: "checkbox",
+        default: false,
+        label: "Enabled"
+    });
+    settings.push({
+        id: "compact",
+        kind: "checkbox",
+        default: true,
+        label: "Compact"
+    });
+    settings.push({
+        id: "showoriginal",
+        kind: "checkbox",
+        default: true,
+        label: "Show original text"
+    });
+    settings.push({
+        id: "length",
+        kind: "number",
+        min: 6,
+        max: 100,
+        step: 1,
+        default: 25,
+        label: "Search length (characters) (default 25, sane values are from 25 to 50)"
+    });
+    settings.push({
+        id: "lookuprate",
+        kind: "number",
+        min: 1,
+        max: 1000,
+        step: 1,
+        default: 8,
+        label: "Lookup throttle (milliseconds)"
+    });
+    settings.push({
+        id: "alternatives_mode",
+        kind: "combobox",
+        options: ["Longest match only", "Longest and shortest match", "Longest and second longest match", "All matches"],
+        default: 0,
+        label: "Matching mode"
+    });
+    settings.push({
+        id: "strict_alternatives",
+        kind: "checkbox",
+        default: true,
+        label: "Strict matching for alternative matches"
+    });
+    
+    // display
+    settings.push({
+        kind: "dummy",
+        label: "Display"
+    });
+    
+    settings.push({
+        id: "scale",
+        kind: "number",
+        min: 0.1,
+        max: 64,
+        step: 0.1,
+        default: 1,
+        label: "Lookup popup scale"
+    });
+    settings.push({
+        id: "xoffset",
+        kind: "number",
+        min: 1,
+        max: 200,
+        step: 1,
+        default: 5,
+        label: "Popup offset, horizontal (pixels, default is 5)"
+    });
+    settings.push({
+        id: "yoffset",
+        kind: "number",
+        min: 1,
+        max: 200,
+        step: 1,
+        default: 22,
+        label: "Popup offset, vertical (pixels, default is 22)"
+    });
+    settings.push({
+        id: "width",
+        kind: "number",
+        min: 100,
+        max: 10000,
+        step: 1,
+        default: 600,
+        label: "Lookup popup width (before scaling)"
+    });
+    settings.push({
+        id: "fixedwidth",
+        kind: "checkbox",
+        default: false,
+        label: "Fixed width"
+    });
+    settings.push({
+        id: "fixedwidthpositioning",
+        kind: "checkbox",
+        default: false,
+        label: "Position as though fixed width"
+    });
+    settings.push({
+        id: "corner",
+        kind: "combobox",
+        options: ["Top left", "Top right", "Bottom left", "Bottom right"],
+        default: 0,
+        label: "Popup positioning corner (note: order of definitions is reversed, but \"original text\" still shows up at top of each lookup's definitions, not bottom)"
+    });
+    
+    // theme
+    settings.push({
+        kind: "dummy",
+        label: "Theme"
+    });
+    
+    settings.push({
+        id: "superborder",
+        kind: "checkbox",
+        default: false,
+        label: "Super border"
+    });
+    settings.push({
+        id: "bgcolor",
+        kind: "color",
+        default: "#111111",
+        label: "Background color"
+    });
+    settings.push({
+        id: "fgcolor",
+        kind: "color",
+        default: "#CCCCCC",
+        label: "Foreground color"
+    });
+    settings.push({
+        id: "hlcolor",
+        kind: "color",
+        default: "#99DDFF",
+        label: "Highlight color"
+    });
+    settings.push({
+        id: "font",
+        kind: "text",
+        default: "",
+        label: "Font override (without trailing comma)"
+    });
+    settings.push({
+        id: "hlfont",
+        kind: "text",
+        default: "",
+        label: "Font override (highlighted text only) (without trailing comma)"
+    });
+}
+defaults();
+
 function restoreListeners()
 {
-    document.querySelector("#enabled").addEventListener("change", setOptions);
-    document.querySelector("#compact").addEventListener("change", setOptions);
-    document.querySelector("#length").addEventListener("change", setOptions);
-    document.querySelector("#scale").addEventListener("change", setOptions);
-    document.querySelector("#width").addEventListener("change", setOptions);
-    document.querySelector("#lookuprate").addEventListener("change", setOptions);
-    document.querySelector("#fixedwidth").addEventListener("change", setOptions);
-    document.querySelector("#fixedwidthpositioning").addEventListener("change", setOptions);
-    document.querySelector("#superborder").addEventListener("change", setOptions);
-    document.querySelector("#showoriginal").addEventListener("change", setOptions);
-    document.querySelector("#bgcolor").addEventListener("change", setOptions);
-    document.querySelector("#fgcolor").addEventListener("change", setOptions);
-    document.querySelector("#hlcolor").addEventListener("change", setOptions);
-    document.querySelector("#font").addEventListener("change", setOptions);
-    document.querySelector("#hlfont").addEventListener("change", setOptions);
-    document.querySelector("#alternatives_mode").addEventListener("change", setOptions);
-    document.querySelector("#strict_alternatives").addEventListener("change", setOptions);
+    for(let option of settings)
+    {
+        if(option.kind == "dummy") continue;
+        document.querySelector("#"+option.id).addEventListener("change", setOptions);
+    }
 }
 function removeListeners()
 {
-    document.querySelector("#enabled").removeEventListener("change", setOptions);
-    document.querySelector("#compact").removeEventListener("change", setOptions);
-    document.querySelector("#length").removeEventListener("change", setOptions);
-    document.querySelector("#scale").addEventListener("change", setOptions);
-    document.querySelector("#width").addEventListener("change", setOptions);
-    document.querySelector("#lookuprate").addEventListener("change", setOptions);
-    document.querySelector("#fixedwidth").removeEventListener("change", setOptions);
-    document.querySelector("#fixedwidthpositioning").removeEventListener("change", setOptions);
-    document.querySelector("#superborder").addEventListener("change", setOptions);
-    document.querySelector("#showoriginal").addEventListener("change", setOptions);
-    document.querySelector("#bgcolor").addEventListener("change", setOptions);
-    document.querySelector("#fgcolor").addEventListener("change", setOptions);
-    document.querySelector("#hlcolor").addEventListener("change", setOptions);
-    document.querySelector("#font").addEventListener("change", setOptions);
-    document.querySelector("#hlfont").addEventListener("change", setOptions);
-    document.querySelector("#alternatives_mode").addEventListener("change", setOptions);
-    document.querySelector("#strict_alternatives").addEventListener("change", setOptions);
+    for(let option of settings)
+    {
+        if(option.kind == "dummy") continue;
+        document.querySelector("#"+option.id).removeEventListener("change", setOptions);
+    }
+}
+
+function buildpage()
+{
+    let optionsection = document.querySelector("#optionsection");
+    for(let option of settings)
+    {
+        if(option.kind == "dummy")
+        {
+            let header = document.createElement("h2");
+            header.textContent = option.label;
+            optionsection.appendChild(header);
+            continue;
+        }
+        let configger = undefined;
+        if(option.kind == "checkbox")
+        {
+            let input = document.createElement("input");
+            input.type = "checkbox";
+            input.id = option.id;
+            input.name = option.id;
+            input.checked = option.default;
+            input.style.zIndex = -100000;
+            configger = input;
+        }
+        if(option.kind == "number")
+        {
+            let input = document.createElement("input");
+            input.type = "number";
+            input.id = option.id;
+            input.name = option.id;
+            input.min = option.min;
+            input.max = option.max;
+            input.value = option.default;
+            input.step = option.step;
+            configger = input;
+        }
+        if(option.kind == "combobox")
+        {
+            let select = document.createElement("select");
+            select.id = option.id;
+            select.name = option.id;
+            let i = 0;
+            for(let setting of option.options)
+            {
+                let opt = document.createElement("option");
+                opt.value = i;
+                opt.text = setting;
+                select.add(opt);
+                i += 1;
+            }
+            select.value = option.default;
+            configger = select;
+        }
+        if(option.kind == "color")
+        {
+            let input = document.createElement("input");
+            input.type = "color";
+            input.id = option.id;
+            input.name = option.id;
+            input.value = option.default;
+            configger = input;
+        }
+        if(option.kind == "text")
+        {
+            let input = document.createElement("input");
+            input.type = "text";
+            input.id = option.id;
+            input.name = option.id;
+            input.value = option.default;
+            configger = input;
+        }
+        
+        let label = document.createElement("label");
+        label.for = option.id;
+        label.className = "panel-formElements-item";
+        let labelText = document.createTextNode(option.label);
+        
+        if(option.kind == "checkbox")
+            label.appendChild(configger);
+        else
+            optionsection.appendChild(configger);
+        
+        label.appendChild(labelText);
+        optionsection.appendChild(label);
+    }
 }
 
 async function restoreOptions()
@@ -45,46 +276,23 @@ async function restoreOptions()
     {
         async function getvar(name, defval)
         {
-            let temp = (await browser.storage.local.get(name))[name];
+            let temp = (await browser.storage.local.get(name))[name]; // FIXME do this for all options instead of once per option
             if(temp == undefined)
                 temp = defval;
             return temp;
         }
-        let enabled = await getvar("enabled", false);
-        let compact = await getvar("compact", true);
-        let length = await getvar("length", 25);
-        let scale = await getvar("scale", 1);
-        let width = await getvar("width", 600);
-        let lookuprate = await getvar("lookuprate", 8);
-        let fixedwidth = await getvar("fixedwidth", false);
-        let fixedwidthpositioning = await getvar("fixedwidthpositioning", false);
-        let superborder = await getvar("superborder", false);
-        let showoriginal = await getvar("showoriginal", true);
-        let bgcolor = await getvar("bgcolor", "#111111");
-        let fgcolor = await getvar("fgcolor", "#CCCCCC");
-        let hlcolor = await getvar("hlcolor", "#99DDFF");
-        let font = await getvar("font", "");
-        let hlfont = await getvar("hlfont", "");
         let alternatives_mode = await getvar("alternatives_mode", 0);
         let strict_alternatives = await getvar("strict_alternatives", true);
         removeListeners();
-        document.querySelector("#enabled").checked = enabled?true:false;
-        document.querySelector("#compact").checked = compact?true:false;
-        document.querySelector("#length").value = length?length:25;
-        document.querySelector("#scale").value = scale?scale:1;
-        document.querySelector("#width").value = width?width:600;
-        document.querySelector("#lookuprate").value = lookuprate?lookuprate:8;
-        document.querySelector("#fixedwidth").checked = fixedwidth?true:false;
-        document.querySelector("#fixedwidthpositioning").checked = fixedwidthpositioning?true:false;
-        document.querySelector("#superborder").checked = superborder?true:false;
-        document.querySelector("#showoriginal").checked = showoriginal?true:false;
-        document.querySelector("#bgcolor").value = bgcolor?bgcolor:"#111111";
-        document.querySelector("#fgcolor").value = fgcolor?fgcolor:"#CCCCCC";
-        document.querySelector("#hlcolor").value = hlcolor?hlcolor:"#99DDFF";
-        document.querySelector("#font").value = font?font:"";
-        document.querySelector("#hlfont").value = hlfont?hlfont:"";
-        document.querySelector("#alternatives_mode").value = alternatives_mode?alternatives_mode:0;
-        document.querySelector("#strict_alternatives").checked = strict_alternatives?strict_alternatives:true;
+        for(let option of settings)
+        {
+            if(option.kind == "dummy") continue;
+            let value = await getvar(option.id, option.default);
+            if(option.kind == "checkbox")
+                document.querySelector("#"+option.id).checked = value?true:false;
+            if(option.kind == "number" || option.kind == "text" || option.kind == "color" || option.kind == "combobox")
+                document.querySelector("#"+option.id).value = value?value:option.default;
+        }
     } catch (error) {}
     removeListeners();
     restoreListeners();
@@ -97,47 +305,38 @@ function fixicon()
 
 function setOptions()
 {
-    let length = parseInt(document.querySelector("#length").value, 10);
-    if(!length) // NaN is falsy
-        length = 25;
-    let scale = Number(document.querySelector("#scale").value);
-    if(!scale) // NaN is falsy
-        scale = 1;
-    let width = Number(document.querySelector("#width").value);
-    if(!width) // NaN is falsy
-        width = 600;
-    let lookuprate = Number(document.querySelector("#lookuprate").value);
-    if(!lookuprate) // NaN is falsy
-        lookuprate = 8;
-    browser.storage.local.set(
+    let setstuff = {};
+    for(let option of settings)
     {
-        enabled: document.querySelector("#enabled").checked,
-        compact: document.querySelector("#compact").checked,
-        length: length,
-        scale: scale,
-        width: width,
-        lookuprate: lookuprate,
-        fixedwidth: document.querySelector("#fixedwidth").checked,
-        fixedwidthpositioning: document.querySelector("#fixedwidthpositioning").checked,
-        superborder: document.querySelector("#superborder").checked,
-        showoriginal: document.querySelector("#showoriginal").checked,
-        bgcolor: document.querySelector("#bgcolor").value,
-        fgcolor: document.querySelector("#fgcolor").value,
-        hlcolor: document.querySelector("#hlcolor").value,
-        font: document.querySelector("#font").value,
-        hlfont: document.querySelector("#hlfont").value,
-        alternatives_mode: document.querySelector("#alternatives_mode").value,
-        strict_alternatives: document.querySelector("#strict_alternatives").checked,
-    }).then(()=>{fixicon();},()=>{});
+        if(option.kind == "dummy") continue;
+        if(option.kind == "checkbox")
+            setstuff[option.id] = document.querySelector("#"+option.id).checked;
+        if(option.kind == "number")
+        {
+            let num = Number(document.querySelector("#"+option.id).value);
+            if(!num) // NaN is falsy
+                num = option.default;
+            if(option.step % 1 == 0)
+                num = Math.round(num);
+            setstuff[option.id] = num;
+        }
+        if(option.kind == "text")
+            setstuff[option.id] = document.querySelector("#"+option.id).value;
+        if(option.kind == "color")
+            setstuff[option.id] = document.querySelector("#"+option.id).value;
+        if(option.kind == "combobox")
+            setstuff[option.id] = document.querySelector("#"+option.id).value;
+    }
+    browser.storage.local.set(setstuff).then(()=>{fixicon();},()=>{});
 }
 
 if (document.readyState == "complete")
 {
+    buildpage();
     restoreOptions();
-    //setOptions();
 }
 else
 {
+    document.addEventListener("DOMContentLoaded", buildpage);
     document.addEventListener("DOMContentLoaded", restoreOptions);
-    //document.addEventListener("DOMContentLoaded", setOptions);
 }
