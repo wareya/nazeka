@@ -88,10 +88,15 @@ function display_div (middle, x, y, time)
     
     let styletext = "";
     if(settings.fixedwidth)
-        styletext += "width: " + Math.round(Number(settings.width)) + "px; "
-    else
+    {
         styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
-    styletext += "min-width: 150px; "
+        styletext += "min-width: " + Math.round(Number(settings.width)) + "px; "
+    }
+    else
+    {
+        styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
+        styletext += "min-width: 150px; "
+    }
     styletext += "position: absolute; top: 0; left: 0; ";
     
     if(settings.superborder)
@@ -128,61 +133,81 @@ function display_div (middle, x, y, time)
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
     
+    let corner = settings.corner;
+    
     let buffer = 25;
-    let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth);
-    if(settings.corner == 1 || settings.corner == 3)
+    if(corner != 1 && corner != 3)
     {
+        let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) + mydoc.defaultView.scrollX;
+        if(newx + mywidth > pretend_doc_width-buffer)
+        {
+            if(corner == 4)// && Math.abs(newx + mywidth - pretend_doc_width) > mywidth/2)
+                corner = 1;
+            else
+            {
+                newx -= (newx + mywidth - pretend_doc_width);
+                newx -= buffer;
+                if(newx < mydoc.defaultView.scrollX)
+                    newx = mydoc.defaultView.scrollX;
+            }
+        }
+    }
+    if(corner == 1 || corner == 3) // don't use else here, we might get here because of "corner = 1" a few lines above
+    {
+        let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) - mydoc.defaultView.scrollX;
         newx = mydoc.defaultView.innerWidth - newx;
         if(newx + mywidth > pretend_doc_width-buffer)
         {
-            newx -= (newx + mywidth - pretend_doc_width);
-            newx -= buffer;
-            if(newx > mydoc.defaultView.innerWidth)
-                newx = mydoc.defaultView.innerWidth;
+            newx += (newx + mywidth - pretend_doc_width);
+            newx += buffer;
+            // this is wrong but it can't be fixed without invoking cthulhu
+            if(newx > mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5)
+                newx = mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5;
         }
-    }
-    else
-    {
-        if(newx + mywidth > pretend_doc_width-buffer)
-        {
-            newx -= (newx + mywidth - pretend_doc_width);
-            newx -= buffer;
-            if(newx < 0)
-                newx = 0;
-        }
-    }
-    if(settings.corner == 2 || settings.corner == 3)
-    {
-        newy = mydoc.defaultView.innerHeight - newy;
     }
     
-    if(settings.corner == 3)
+    if(corner == 2 || corner == 3)
+    {
+        newy = mydoc.defaultView.innerHeight - newy;
+        if(newy < 0)
+            newy = 0;
+    }
+    
+    if(corner == 3)
     {
         outer.style.top = "unset";
         outer.style.bottom = (newy+settings.yoffset)+"px";
         outer.style.right = (newx-settings.xoffset)+"px";
         outer.style.left = "unset";
+        outer.style.marginRight = "unset";
+        outer.style.marginLeft = "unset";
     }
-    else if(settings.corner == 2)
+    else if(corner == 2)
     {
         outer.style.top = "unset";
         outer.style.bottom = (newy+settings.yoffset)+"px";
         outer.style.right = "unset";
         outer.style.left = (newx+settings.xoffset)+"px";
+        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" on very wide pages (e.g. pages of vertical text)
+        outer.style.marginLeft = "unset";
     }
-    else if(settings.corner == 1)
+    else if(corner == 1)
     {
         outer.style.top = (newy+settings.yoffset)+"px";
         outer.style.bottom = "unset";
         outer.style.right = (newx-settings.xoffset)+"px";
         outer.style.left = "unset";
+        outer.style.marginRight = "unset";
+        outer.style.marginLeft = "unset";
     }
-    else // 0 etc
+    else // 0 or invalid
     {
         outer.style.top = (newy+settings.yoffset)+"px";
         outer.style.bottom = "unset";
         outer.style.right = "unset";
         outer.style.left = (newx+settings.xoffset)+"px";
+        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" on very wide pages (e.g. pages of vertical text)
+        outer.style.marginLeft = "unset";
     }
 }
 

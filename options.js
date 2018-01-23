@@ -117,9 +117,9 @@ function defaults()
     settings.push({
         id: "corner",
         kind: "combobox",
-        options: ["Top left", "Top right", "Bottom left", "Bottom right"],
+        options: ["Top left", "Top right", "Bottom left", "Bottom right", "Top auto"],
         default: 0,
-        label: "Popup positioning corner (note: order of definitions is reversed, but \"original text\" still shows up at top of each lookup's definitions, not bottom)"
+        label: "Popup positioning corner (note: for \"bottom\" corners, order of definitions is reversed, but \"original text\" still shows up at top of each lookup's definitions, not bottom) (\"top auto\" feels very bad unless \"position as though fixed width\" is also enabled)"
     });
     
     // theme
