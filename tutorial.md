@@ -1,3 +1,7 @@
+# Installation
+
+Install from [Mozilla's official Firefox addons website](https://addons.mozilla.org/en-US/firefox/addon/nazeka/), or [assemble an addon package yourself](https://github.com/wareya/nazeka/blob/master/readme.txt).
+
 # Settings
 
 It's recommended to mess with the settings before using Nazeka for too long. The default settings are one-size-fits-all, but not actually very good for extensive reading.
