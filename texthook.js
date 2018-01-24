@@ -1142,7 +1142,7 @@ function keytest(event)
         mydiv.style.marginBottom = "unset";
         mydiv.className = "nazeka_mining_ui";
         let newheader = document.createElement("div");
-        newheader.textContent = "Mining UI. Press the given entry to mine it, or this message to cancel.";
+        newheader.textContent = "Mining UI. Press the given entry's highlighted part to mine it, or this message to cancel.";
         newheader.addEventListener("click", ()=>
         {
             while(document.body.getElementsByClassName("nazeka_mining_ui").length)
