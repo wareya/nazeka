@@ -1126,13 +1126,20 @@ function keytest(event)
         return;
     if(event.key == "m")
     {
+        while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+            document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
         //console.log("mining request");
         let mydiv = document.body.getElementsByClassName(div_class)[0].cloneNode(true);
         delete_div();
         mydiv.style.position = "fixed";
         mydiv.style.left = "unset";
+        mydiv.style.bottom = "unset";
         mydiv.style.top = "10px";
         mydiv.style.right = "10px";
+        mydiv.style.marginRight = "unset";
+        mydiv.style.marginLeft = "unset";
+        mydiv.style.marginTop = "unset";
+        mydiv.style.marginBottom = "unset";
         mydiv.className = "nazeka_mining_ui";
         let newheader = document.createElement("div");
         newheader.textContent = "Mining UI. Press the given entry to mine it, or this message to cancel.";
