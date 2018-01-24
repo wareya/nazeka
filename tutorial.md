@@ -39,6 +39,16 @@ Nazeka can be toggled from this page by right clicking the page and selecting th
 
 # Mining
 
-Nazeka's mining support is extremely primitive and requires lots of user interaction. That said, Nazeka *does* technically support mining.
+Nazeka's mining support is extremely primitive and inflexible, and requires lots of user interaction. That said, Nazeka *does* technically support mining.
 
-unfinished
+Press "m" while Nazeka's lookup popup is open to turn the popup into a mining UI. The mining UI moves to the top right corner of the screen.
+
+![image: mining](https://i.imgur.com/z7Yjj1w.png)
+
+After clicking on the highlighted part of one of the entries, go back to a main browser window if you're in the Reader, then right click Nazeka's toggle icon again, and select "View Mined Cards".
+
+![image: mined cards](https://i.imgur.com/bcERj3n.png)
+
+This shows a text field listing all the cards you've mined with Nazeka. Pressing "Reset" will clear Nazeka's memory of **all** mined cards. Don't do it unless you need to.
+
+Each line in this list is tab-separated-fields. Spelling, tab, reading, tab, definition, tab, JMDict ID. This list can be imported into Anki, but you need to make a compatible deck. Nazeka doesn't have a formatting system yet, but whenever I add support for including the sentence you mined, it'll use a formatting system.
