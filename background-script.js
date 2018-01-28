@@ -8,6 +8,79 @@
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
 // Seriously.
 
+let epwing = [
+];
+let lookup_epwing_kan = new Map();
+let lookup_epwing_kana = new Map();
+
+
+function string_is_kana(str)
+{
+    for(let i = 0; i < str.length; i++)
+    {
+        let codepoint = str.codePointAt(i);
+        if(!(codepoint >= 0x3040 && codepoint <= 0x30FF))
+            return false;
+    }
+}
+
+function add_epwing_id(id, i)
+{
+    if(string_is_kana(id))
+    {
+        if (!lookup_epwing_kana.has(id))
+            lookup_epwing_kana.set(id, [i]);
+        else
+            lookup_epwing_kana.get(id).push(i);
+    }
+    else
+    {
+        if (!lookup_epwing_kan.has(id))
+            lookup_epwing_kan.set(id, [i]);
+        else
+            lookup_epwing_kan.get(id).push(i);
+    }
+}
+
+for (let i = 0; i < epwing.length; i++)
+{
+    let heading = epwing[i]["heading"];
+    let text = epwing[i]["text"];
+    if(heading.startsWith("¶"))
+    {
+        let id = heading.match(/¶([^＜]*)/)[1].trim();
+        // there's stuff inside the brackets but it doesn't represent this dictionary entry, just another one where it appears
+        add_epwing_id(id, i);
+    }
+    else if(heading.includes("＜") && heading.includes("【"))
+    {
+        let useful = heading.match(/＜(.*)＞/)[1].trim();
+        let kana = useful.match(/([^【]*)/)[1].trim();
+        let kanji = useful.match(/【([^】]*)/)[1].trim();
+        add_epwing_id(kanji, i);
+        add_epwing_id(kana, i);
+    }
+    else if(heading.includes("＜") && !heading.includes("【"))
+    {
+        let kana = heading.match(/([^＜]*)/)[1].trim();
+        let kanji = heading.match(/＜(.*)＞/)[1].trim();
+        add_epwing_id(kanji, i);
+        add_epwing_id(kana, i);
+    }
+    else if(text.split(/\\n/)[0].includes("【"))
+    {
+        let useful = text.match(/([^】]*】)/)[1].trim();
+        let kana = useful.match(/([^【]*)/)[1].trim();
+        let kanji = useful.match(/【([^】]*)/)[1].trim();
+        add_epwing_id(kanji, i);
+        add_epwing_id(kana, i);
+    }
+    else
+    {
+        console.log(`Unknown kind of entry at index ${i} in epwing dictionary`);
+    }
+}
+
 let dict = [];
 let lookup_kan = new Map();
 let lookup_kana = new Map();
@@ -197,6 +270,15 @@ function search_inner(text)
         return getfromdict(lookup_kan.get(text), text);
     else if (lookup_kana.has(text))
         return getfromdict(lookup_kana.get(text), text);
+    else
+        return;
+}
+function search_inner_epwing(text)
+{
+    if (lookup_epwing_kan.has(text))
+        return epwing[lookup_epwing_kan.get(text)];
+    else if (lookup_epwing_kana.has(text))
+        return epwing[lookup_epwing_kana.get(text)];
     else
         return;
 }
@@ -760,7 +842,29 @@ function build_lookup_comb (forms)
             //console.log("testing A");
             //print_object(entry);
             if(entry.deconj)
+            {
+                let epwing_data = "";
+                if(entry.k_ele)
+                {
+                    for(let spelling of entry.k_ele)
+                    {
+                        let res = search_inner_epwing(spelling.keb);
+                        if(res && res["text"])
+                            epwing_data = res["text"];
+                    }
+                }
+                if(epwing_data == "" && entry.r_ele)
+                {
+                    for(let spelling of entry.r_ele)
+                    {
+                        let res = search_inner_epwing(spelling.reb);
+                        if(res && res["text"])
+                            epwing_data = res["text"];
+                    }
+                }
+                entry.epwing = epwing_data;
                 merger.push(entry);
+            }
         }
     }
     //print_object(merger);
@@ -943,11 +1047,11 @@ function skip_rereferenced_entries(results)
     let newresults = [];
     let seenseq = new Set();
     
-    console.log(results);
+    //console.log(results);
     for(let lookup of results)
     {
         let newlookup = [];
-        console.log(lookup);
+        //console.log(lookup);
         for(let entry of lookup.result)
         {
             if(seenseq.has(entry.seq))

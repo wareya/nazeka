@@ -697,6 +697,11 @@ function build_div_inner (text, result)
                 definition.appendChild(document.createElement("br"));
             }
         }
+        if(term.epwing)
+        {
+            definition.appendChild(document.createElement("br"));
+            definition.appendChild(document.createTextNode(term.epwing));
+        }
         container.appendChild(definition);
         if(settings.corner == 2 || settings.corner == 3)
         {
