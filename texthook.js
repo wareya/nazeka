@@ -18,6 +18,7 @@
 
 'use strict';
 
+// updated by a timer looping function, based on local storage set by the options page
 let settings = {
 enabled: false,
 compact: true,
@@ -44,8 +45,10 @@ yoffset: 22
 
 let last_time_display = Date.now();
 
+// FIXME: this should be the extension ID or a per-page random string, but it's not useful to change this yet, not until firefox lands shadow DOM
 let div_class = "nazeka_fGKRTDGFGgr9atT";
 
+// the popup is inserted into the page as a screen-relative div, we never delete it because modifying the root DOM of very long pages is expensive, we hide it instead
 let last_displayed = undefined;
 function delete_div ()
 {
@@ -59,14 +62,11 @@ function delete_div ()
     }
 }
 
+// here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
+// this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
 function display_div (middle, x, y, time)
 {
-    //let bordercolor = undefined;
-    //if(settings.superborder)
-    //    bordercolor = "white";
-    //else
-    //    bordercolor = "#CCC";
-    let font = settings.font.trim().replace(";","");
+    let font = settings.font.trim().replace(";","").replace("}","");
     if(font != "")
         font += ",";
     middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
@@ -235,14 +235,18 @@ function clip(str)
     return str.substring(1, str.length-1);
 }
 
+// Here we actually build the content of the lookup popup, based on the text we looked up and the list of lookups from the background script
+// note that we can get multiple lookups and this function only handles a single lookup
 function build_div_inner (text, result)
 {
     //console.log("building div for " + text);
     //console.log(result);
     let temp = document.createElement("div");
     temp.style.position = "relative";
+    // the "Looked up XXXX" text
     if(settings.showoriginal)
     {
+        // nesting it like this lets us access nazeka_lookup when we want to get the text we looked up, if we have text in front of it, which we don't anymore
         let original = document.createElement("div");
         original.className = "nazeka_original";
         //original.textContent = "Looked up ";
@@ -262,13 +266,14 @@ function build_div_inner (text, result)
         temp.appendChild(original_inner);
     }
     
+    // styling for highlighted stuff and the lookup text
     let style = document.createElement("style");
     style.type = "text/css";
-    let font = settings.hlfont.trim();
+    let font = settings.hlfont.trim().replace(";","").replace("}","");
     if(font != "")
         font += ",";
-    if(settings.font.trim().replace(";","") != "")
-        font += settings.font.trim().replace(";","") + ",";
+    if(settings.font.trim().replace(";","").replace("}","") != "")
+        font += settings.font.trim().replace(";","").replace("}","") + ",";
     style.textContent =
 `.nazeka_main_keb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
 .nazeka_main_reb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
@@ -280,9 +285,6 @@ function build_div_inner (text, result)
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
-        // shouldn't happen but just in case of broken data
-        if(!term.found)
-            continue;
         
         let container = document.createElement("div");
         container.className = "nazeka_word_container";
@@ -299,206 +301,125 @@ function build_div_inner (text, result)
         
         let temptag = document.createElement("span");
         temptag.className = "nazeka_word";
-        let found_kanji = true;
         let original_kana = "";
         if(term.found.reb)
             original_kana = term.found.reb;
         
-        if(term.k_ele)
+        if(term.found.keb)
         {
-            let looked_up_kanji = !!(term.found.keb);
+            let k_ele = term.found;
+            let kanji_text = k_ele.keb;
+            let keb = document.createElement("span");
+            keb.className = "nazeka_main_keb";
+            keb.textContent = kanji_text;
+            temptag.appendChild(keb);
             
-            let r_restr = [];
-            // if we didn't look up kanji, look for the first fitting kanji in the entry (they're ordered sensibly)
-            if(!looked_up_kanji)
+            // list readings
+            let readings = term.r_ele;
+            
+            if(term.deconj)
             {
-                if(term.found.restr && term.found.restr.length > 0)
-                    r_restr = term.found.restr;
-                if(!r_restr)
-                    r_restr = [];
-                
-                // find the first kanji that isn't restricted to readings that aren't the one we looked up
-                for(let j = 0; j < term.k_ele.length; j++)
+                //console.log(term.deconj);
+                let deconj = "";
+                let first = true;
+                for(let form of term.deconj)
                 {
-                    if(term.k_ele[j].restr)
+                    let formtext = "";
+                    let added = 0;
+                    for(let f = form.process.length-1; f >= 0; f--)
                     {
-                        for(let l = 0; l < term.k_ele[j].restr.length; l++)
-                        {
-                            if(term.k_ele[j].restr[l] == text)
-                            {
-                                if(r_restr.length == 0 || r_restr.indexOf(term.k_ele[j].keb) > -1)
-                                {
-                                    term.found = term.k_ele[j];
-                                    //console.log("reassigned found")
-                                    //console.log(term.found);
-                                    found_kanji = true;
-                                    break;
-                                }
-                            }
-                        }
+                        let info = form.process[f];
+                        if(info == "")
+                            continue;
+                        if(info.startsWith("(") && info.endsWith(")") && f != 0)
+                            continue;
+                        if(added > 0)
+                            formtext += "―";
+                        added++;
+                        formtext += info;
                     }
-                    else
+                    if(formtext != "")
                     {
-                        if(r_restr.length == 0 || r_restr.indexOf(term.k_ele[j].keb) > -1)
-                        {
-                            term.found = term.k_ele[j];
-                            //console.log("reassigned found")
-                            //console.log(term.found);
-                            found_kanji = true;
-                            break;
-                        }
+                        if(first)
+                            deconj += "～";
+                        else
+                            deconj += "・";
+                        deconj += formtext;
                     }
+                    first = false;
                 }
+                temptag.appendChild(document.createTextNode(deconj));
             }
-            else
-                found_kanji = true;
-            if(found_kanji)
+            if(k_ele.inf)
             {
-                let k_ele = term.found;
-                let kanji_text = k_ele.keb;
-                let keb = document.createElement("span");
-                keb.className = "nazeka_main_keb";
-                keb.textContent = kanji_text;
-                temptag.appendChild(keb);
-                
-                // list readings
-                let readings = [];
-                // don't list readings if restricted to kanji we didn't look up
-                for(let j = 0; j < term.r_ele.length; j++)
+                let maininfos = document.createElement("span");
+                maininfos.className = "nazeka_main_infos";
+                for(let info of k_ele.inf)
                 {
-                    let r = term.r_ele[j];
-                    let invalid = r.restr != undefined;
-                    if(r.restr)
-                    {
-                        for(let l = 0; l < r.restr.length; l++)
-                            if(r.restr[l] == kanji_text)
-                                invalid = false;
-                    }
-                    if(!invalid)
-                        readings.push(term.r_ele[j]);
-                    
+                    let keb_inf = document.createElement("span");
+                    keb_inf.className = "nazeka_main_inf";
+                    keb_inf.textContent += "(";
+                    keb_inf.textContent += clip(info);
+                    keb_inf.textContent += ")";
+                    maininfos.appendChild(keb_inf);
                 }
-                if(term.deconj)
+                temptag.appendChild(maininfos);
+            }
+            temptag.appendChild(document.createTextNode(" 《"));
+            let e_readings = document.createElement("span");
+            e_readings.className = "nazeka_readings";
+            for(let j = 0; j < readings.length; j++)
+            {
+                e_readings.appendChild(document.createTextNode(readings[j].reb));
+                if(readings[j].inf)
                 {
-                    let deconj = "";
-                    let first = true;
-                    for(let form of term.deconj)
+                    for(let info of readings[j].inf)
                     {
-                        let formtext = "";
-                        let added = 0;
-                        for(let f = form.process.length-1; f >= 0; f--)
-                        {
-                            let info = form.process[f];
-                            if(info == "")
-                                continue;
-                            if(info.startsWith("(") && info.endsWith(")") && f != 0)
-                                continue;
-                            if(added > 0)
-                                formtext += "―";
-                            added++;
-                            formtext += info;
-                        }
-                        if(formtext != "")
-                        {
-                            if(first)
-                                deconj += "～";
-                            else
-                                deconj += "・";
-                            deconj += formtext;
-                        }
-                        first = false;
+                        let reb_inf = document.createElement("span");
+                        reb_inf.className = "nazeka_reb_inf";
+                        reb_inf.textContent += "(";
+                        reb_inf.textContent += clip(info);
+                        reb_inf.textContent += ")";
+                        e_readings.appendChild(reb_inf);
                     }
-                    temptag.appendChild(document.createTextNode(deconj));
                 }
-                if(k_ele.inf)
+                if(j+1 != readings.length)
+                    e_readings.appendChild(document.createTextNode("・"));
+            }
+            temptag.appendChild(e_readings);
+            temptag.appendChild(document.createTextNode("》"));
+            
+            // list alternatives
+            let alternatives = [];
+            for(let j = 0; j < term.k_ele.length; j++)
+                if(term.k_ele[j].keb != kanji_text)
+                    alternatives.push(term.k_ele[j]);
+            
+            if(alternatives.length > 0)
+                temptag.appendChild(document.createTextNode(" (also "));
+            for(let j = 0; j < alternatives.length; j++)
+            {
+                temptag.appendChild(document.createTextNode(alternatives[j].keb));
+                if(alternatives[j].inf)
                 {
-                    let maininfos = document.createElement("span");
-                    maininfos.className = "nazeka_main_infos";
-                    for(let info of k_ele.inf)
+                    for(let info of alternatives[j].inf)
                     {
+                        temptag.appendChild(document.createTextNode(" "));
                         let keb_inf = document.createElement("span");
-                        keb_inf.className = "nazeka_main_inf";
+                        keb_inf.className = "nazeka_keb_inf";
                         keb_inf.textContent += "(";
                         keb_inf.textContent += clip(info);
                         keb_inf.textContent += ")";
-                        maininfos.appendChild(keb_inf);
-                    }
-                    temptag.appendChild(maininfos);
-                }
-                temptag.appendChild(document.createTextNode(" 《"));
-                let e_readings = document.createElement("span");
-                e_readings.className = "nazeka_readings";
-                for(let j = 0; j < readings.length; j++)
-                {
-                    e_readings.appendChild(document.createTextNode(readings[j].reb));
-                    if(readings[j].inf)
-                    {
-                        for(let info of readings[j].inf)
-                        {
-                            let reb_inf = document.createElement("span");
-                            reb_inf.className = "nazeka_reb_inf";
-                            reb_inf.textContent += "(";
-                            reb_inf.textContent += clip(info);
-                            reb_inf.textContent += ")";
-                            e_readings.appendChild(reb_inf);
-                        }
-                    }
-                    if(j+1 != readings.length)
-                        e_readings.appendChild(document.createTextNode("・"));
-                }
-                temptag.appendChild(e_readings);
-                temptag.appendChild(document.createTextNode("》"));
-                
-                // list alternatives
-                let alternatives = [];
-                // don't list spellings if restricted to kana we didn't look up
-                for(let j = 0; j < term.k_ele.length; j++)
-                {
-                    if(term.k_ele[j].keb != kanji_text)
-                    {
-                        let k = term.k_ele[j];
-                        let invalid = !looked_up_kanji && k.restr;
-                        if(!looked_up_kanji && k.restr)
-                        {
-                            for(let l = 0; l < k.restr.length; l++)
-                                if(k.restr[l] == text)
-                                    invalid = false;
-                        }
-                        if(!looked_up_kanji && r_restr.indexOf(k.keb) < 0)
-                            invalid = true;
-                        if(!invalid)
-                            alternatives.push(term.k_ele[j]);
+                        temptag.appendChild(keb_inf);
                     }
                 }
-                
-                if(alternatives.length > 0)
-                    temptag.appendChild(document.createTextNode(" (also "));
-                for(let j = 0; j < alternatives.length; j++)
-                {
-                    temptag.appendChild(document.createTextNode(alternatives[j].keb));
-                    if(alternatives[j].inf)
-                    {
-                        for(let info of alternatives[j].inf)
-                        {
-                            temptag.appendChild(document.createTextNode(" "));
-                            let keb_inf = document.createElement("span");
-                            keb_inf.className = "nazeka_keb_inf";
-                            keb_inf.textContent += "(";
-                            keb_inf.textContent += clip(info);
-                            keb_inf.textContent += ")";
-                            temptag.appendChild(keb_inf);
-                        }
-                    }
-                    if(j+1 < alternatives.length)
-                        temptag.appendChild(document.createTextNode(", "));
-                }
-                if(alternatives.length > 0)
-                    temptag.appendChild(document.createTextNode(")"));
+                if(j+1 < alternatives.length)
+                    temptag.appendChild(document.createTextNode(", "));
             }
+            if(alternatives.length > 0)
+                temptag.appendChild(document.createTextNode(")"));
         }
         else
-            found_kanji = false;
-        if(!found_kanji)
         {
             let main_reb = document.createElement("span");
             main_reb.className = "nazeka_main_reb";
@@ -587,36 +508,8 @@ function build_div_inner (text, result)
         container.appendChild(temptag);
         container.appendChild(document.createElement("br"));
         
-        let goodsenses = [];
-        for(let j = 0; j < term.sense.length; j++)
-        {
-            let sense = term.sense[j];
-            
-            // FIXME: this shows too many senses. it's better than the previous code, which could show too few when looking up kana,
-            // but for looking up さくや for example, it shows both definitions, even though さくや is restricted to a spelling that is restricted to only one definition.
-            if(original_kana != "")
-            {
-                if(sense.stagr)
-                {
-                    let found = false;
-                    for(let l = 0; l < sense.stagr.length; l++)
-                        if(sense.stagr[l] == original_kana)
-                            found = true;
-                    if(!found)
-                        continue;
-                }
-            }
-            else if(sense.stagk && found_kanji)
-            {
-                let found = false;
-                for(let l = 0; l < sense.stagk.length; l++)
-                    if(sense.stagk[l] == text)
-                        found = true;
-                if(!found)
-                    continue;
-            }
-            goodsenses.push(sense);
-        }
+        let goodsenses = term.sense;
+        
         let lastpos = [];
         let definition = document.createElement("div");
         definition.className = "nazeka_definitions";
@@ -716,6 +609,7 @@ function build_div_inner (text, result)
     return temp;
 }
 
+// this are the divs we use to contain the list of lookups. they're all contained in the same inner div from here.
 function build_div_intermediary()
 {
     let middle = document.createElement("div");
@@ -725,6 +619,7 @@ function build_div_intermediary()
     return middle;
 }
 
+// for popups with single lookup results
 function build_div (text, result)
 {
     last_displayed = [{text:text, result:result}];
@@ -732,6 +627,7 @@ function build_div (text, result)
     middle.firstChild.appendChild(build_div_inner(text, result));
     return middle;
 }
+// for popups with multiple lookup results
 function build_div_compound (results)
 {
     last_displayed = results;

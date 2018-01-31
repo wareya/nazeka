@@ -13,7 +13,6 @@ let epwing = [
 let lookup_epwing_kan = new Map();
 let lookup_epwing_kana = new Map();
 
-
 function string_is_kana(str)
 {
     for(let i = 0; i < str.length; i++)
@@ -1042,6 +1041,168 @@ function filter_kana_ish_results(results)
     return newresults;
 }
 
+// https://stackoverflow.com/questions/4459928/how-to-deep-clone-in-javascript
+function copy(orig)
+{
+    let mine = orig;
+
+    mine = Object.assign({}, orig)
+    for(let f in mine)
+    {
+        f = Object.assign({}, f)
+    }
+    return mine;
+}
+// Restrict the listed spellings/readings of a JMdict entry to the ones allowed by the looked-up text.
+function restrict_by_text(entry, text)
+{
+    // deep clone lol (we should probably do this WAY earlier)
+    let term = copy(entry);
+    //console.log(entry);
+    //console.log(term);
+    if(!term.found) // bogus lookup
+        return term;
+    
+    // Example restrictions:
+    //  ゆう: 夕 only
+    //  さくや: 昨夜 only
+    //  evening: 夕・夕べ only
+    //  last night: ゆうべ・さくや only
+    // Derived:
+    //  昨夜： さくや・ゆうべ only
+    //  夕： ゆう・ゆうべ only
+    //  夕べ： ゆうべ only
+    //  evening: ゆう・ゆうべ only
+    //  last night: 夕べ・昨夜 only
+    
+    // if we didn't look up kanji, look for the first fitting kanji spellings in the entry (they're ordered sensibly) if there are kanji spellings
+    term.orig_found = term.found;
+    if(!!(term.found.reb) && term.k_ele) 
+    {
+        let r_restr = undefined;
+        // kanji to which the reb is restricted
+        if(term.found.restr && term.found.restr.length > 0)
+            r_restr = term.found.restr;
+        if(!r_restr)
+            r_restr = [];
+        
+        // find the first kanji-including spelling that isn't restricted to readings that aren't the one we looked up
+        for(let j = 0; j < term.k_ele.length; j++)
+        {
+            // if this spelling is restricted to particular readings
+            if(term.k_ele[j].restr)
+            {
+                for(let l = 0; l < term.k_ele[j].restr.length; l++)
+                {
+                    // if the reading we looked up is one of the ones it's restricted to
+                    // if the reading we looked up isn't restricted to spellings other than this one
+                    if(term.k_ele[j].restr[l] == term.found.reb && (r_restr.length == 0 || r_restr.indexOf(term.k_ele[j].keb) > -1))
+                    {
+                        // pretend we looked up this spelling
+                        term.found = term.k_ele[j];
+                        break;
+                    }
+                }
+            }
+            // if the spelling does not have restrictions
+            // if the reading is not restricted to other spellings
+            else if(r_restr.length == 0 || r_restr.indexOf(term.k_ele[j].keb) > -1)
+            {
+                // pretend we looked up this spelling
+                term.found = term.k_ele[j];
+                break;
+            }
+        }
+    }
+    
+    // eliminate unfitting kanji spellings if we originally looked up a reading
+    if(!!(term.orig_found.reb) && term.k_ele)
+    {
+        let r_restr = undefined;
+        // kanji to which the reb is restricted
+        if(term.orig_found.restr && term.orig_found.restr.length > 0)
+            r_restr = term.orig_found.restr;
+        else
+            r_restr = [];
+        
+        let new_k_ele = [];
+        for(let j = 0; j < term.k_ele.length; j++)
+        {
+            if(r_restr.length > 0 && r_restr.indexOf(term.k_ele[j].keb) < 0)
+                continue;
+            // if this spelling is restricted to particular readings
+            if(term.k_ele[j].restr)
+            {
+                for(let l = 0; l < term.k_ele[j].restr.length; l++)
+                    // if the reading we looked up is one of the ones it's restricted to
+                    // if the reading we looked up isn't restricted to spellings other than this one
+                    if(term.k_ele[j].restr[l] == term.orig_found.reb)
+                        new_k_ele.push(term.k_ele[j]);
+            }
+            // if the spelling does not have restrictions
+            // if the reading is not restricted to other spellings
+            else
+                new_k_ele.push(term.k_ele[j]);
+        }
+        term.k_ele = new_k_ele;
+    }
+    // eliminate unfitting readings if we originally looked up a spelling
+    if(!!(term.orig_found.keb) && term.r_ele)
+    {
+        let k_restr = undefined;
+        // kanji to which the reb is restricted
+        if(term.orig_found.restr && term.orig_found.restr.length > 0)
+            k_restr = term.orig_found.restr;
+        else
+            k_restr = [];
+        
+        let new_r_ele = [];
+        for(let j = 0; j < term.r_ele.length; j++)
+        {
+            if(k_restr.length > 0 && k_restr.indexOf(term.r_ele[j].reb) < 0)
+                continue;
+            if(term.r_ele[j].restr)
+            {
+                for(let l = 0; l < term.r_ele[j].restr.length; l++)
+                    if(term.r_ele[j].restr[l] == term.orig_found.keb)
+                        new_r_ele.push(term.r_ele[j]);
+            }
+            else
+                new_r_ele.push(term.r_ele[j]);
+        }
+        term.r_ele = new_r_ele;
+    }
+    // eliminate unfitting definitions for the original lookup
+    if(term.sense)
+    {
+        let new_sense = [];
+        for(let j = 0; j < term.sense.length; j++)
+        {
+            if(term.orig_found.keb && term.sense[j].stagk)
+            {
+                for(let l = 0; l < term.sense[j].stagk.length; l++)
+                    if(term.sense[j].stagk[l] == term.orig_found.keb)
+                        new_sense.push(term.sense[j]);
+            }
+            else if(term.orig_found.reb && term.sense[j].stagr)
+            {
+                for(let l = 0; l < term.sense[j].stagr.length; l++)
+                    if(term.sense[j].stagr[l] == term.orig_found.reb)
+                        new_sense.push(term.sense[j]);
+            }
+            
+            // if the spelling does not have restrictions
+            // if the reading is not restricted to other spellings
+            else
+                new_sense.push(term.sense[j]);
+        }
+        term.sense = new_sense;
+    }
+    
+    return term;
+}
+
+// Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
 function skip_rereferenced_entries(results)
 {
     let newresults = [];
@@ -1057,7 +1218,7 @@ function skip_rereferenced_entries(results)
             if(seenseq.has(entry.seq))
                 continue;
             seenseq.add(entry.seq);
-            newlookup.push(entry);
+            newlookup.push(restrict_by_text(entry, lookup.text));
         }
         if(newlookup.length > 0)
             newresults.push({text:lookup.text, result:newlookup});
