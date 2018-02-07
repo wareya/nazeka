@@ -847,7 +847,27 @@ function add_epwing_info(lookups)
                     {
                         console.log("looking for epwing possibilities");
                         let possibilities = lookup_epwing_kan.get(text);
-                        // FIXME we want to try epwing matches in the order they match the epwing entry's spellings/readings instead of the order they're in in the map.get() return list
+                        
+                        // FIXME this is disgusting
+                        let priority = [];
+                        for(let reading of entry.r_ele)
+                        {
+                            let rtext = reading.reb;
+                            for(let wing of possibilities)
+                            {
+                                if(epwing[wing]["r"] === rtext)
+                                    priority.push(wing);
+                            }
+                        }
+                        for(let wing of priority)
+                        {
+                            var index = possibilities.indexOf(wing);
+                            if (index > -1)
+                                possibilities.splice(index, 1);
+                        }
+                        possibilities = priority.concat(possibilities);
+                        priority = [];
+                        
                         for(let wing of possibilities)
                         {
                             console.log("checking an epwing possibility");
@@ -859,7 +879,7 @@ function add_epwing_info(lookups)
                                     exact = epwing[wing]["r"].includes(foundtext);
                                     for(let spelling of epwing[wing]["s"])
                                         exact |= spelling.includes(foundtext);
-                                    // FIXME duplicated
+                                    // FIXME duplicated below
                                     if(exact)
                                     {
                                         for(let reading of entry.r_ele)
