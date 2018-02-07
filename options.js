@@ -164,6 +164,12 @@ function defaults()
         default: "",
         label: "Font override (highlighted text only) (without trailing comma)"
     });
+    
+    // other (added procedurally)
+    settings.push({
+        kind: "dummy",
+        label: "Other"
+    });
 }
 defaults();
 
@@ -258,7 +264,6 @@ function buildpage()
         
         let label = document.createElement("label");
         label.for = option.id;
-        label.className = "panel-formElements-item";
         let labelText = document.createTextNode(option.label);
         
         if(option.kind == "checkbox")
@@ -281,6 +286,39 @@ function buildpage()
         container.style.marginBottom = "8px";
         optionsection.appendChild(container);
     }
+    let file = document.createElement("input");
+    file.type = "file";
+    file.id = "file";
+    file.addEventListener("change", () =>
+    {
+        let fname = document.querySelector("#file").files[0];
+        let fr = new FileReader();
+        fr.onload = (e) =>
+        {
+            try
+            {
+                document.querySelector("#import_label").textContent = "Importing...";
+                browser.storage.local.set({"epwing":JSON.parse(e.target.result)});
+                browser.runtime.sendMessage({type:"refreshepwing"});
+                document.querySelector("#import_label").textContent = "Imported. Might take a few seconds to apply.";
+            }
+            catch(e)
+            {
+                console.log(e);
+            }
+        };
+        fr.readAsText(fname);
+    });
+    let label = document.createElement("label");
+    label.for = file.id;
+    label.id = "import_label";
+    label.textContent = "Import thin dictionary";
+    label.style.display = "block";
+    
+    optionsection.appendChild(file);
+    optionsection.appendChild(label);
+    
+    optionsection.appendChild(document.createElement("hr"));
 }
 
 async function restoreOptions()

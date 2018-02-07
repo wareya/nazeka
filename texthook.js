@@ -278,6 +278,8 @@ function build_div_inner (text, result)
 `.nazeka_main_keb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
 .nazeka_main_reb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}\
+.epwing_head{margin: 6px 8px 4px;}
+.epwing_definition{margin: 0 8px;}\
 `;
     temp.appendChild(style);
     
@@ -593,7 +595,39 @@ function build_div_inner (text, result)
         if(term.epwing)
         {
             definition.appendChild(document.createElement("br"));
-            definition.appendChild(document.createTextNode(term.epwing));
+            let epwing_head = document.createElement("div");
+            epwing_head.appendChild(document.createTextNode("―"+term.epwing["z"]+"―"));
+            epwing_head.appendChild(document.createElement("br"));
+            let epwing_head_text = term.epwing["r"];
+            if(term.epwing["s"] && term.epwing["s"][0] != "")
+            {
+                let isfirst = true;
+                epwing_head_text += "【";
+                for(let spelling of term.epwing["s"])
+                {
+                    if(!isfirst)
+                        epwing_head_text += "・";
+                    epwing_head_text += spelling;
+                    isfirst = false;
+                }
+                epwing_head_text += "】";
+            }
+            epwing_head.appendChild(document.createTextNode(epwing_head_text));
+            let epwing_definition = document.createElement("div");
+            let isfirst = true;
+            for(let line of term.epwing["l"])
+            {
+                if(!isfirst)
+                    epwing_definition.appendChild(document.createElement("br"));
+                let def_line = document.createElement("span");
+                def_line.textContent = line;
+                epwing_definition.appendChild(def_line);
+                isfirst = false;
+            }
+            epwing_head.className = "epwing_head";
+            epwing_definition.className = "epwing_definition";
+            definition.appendChild(epwing_head);
+            definition.appendChild(epwing_definition);
         }
         container.appendChild(definition);
         if(settings.corner == 2 || settings.corner == 3)
