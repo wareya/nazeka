@@ -845,8 +845,10 @@ function add_epwing_info(lookups)
                     let text = spelling.keb;
                     if (lookup_epwing_kan.has(text))
                     {
-                        console.log("looking for epwing possibilities");
-                        let possibilities = lookup_epwing_kan.get(text);
+                        let possibilities = copy_gen(lookup_epwing_kan.get(text));
+                        
+                        console.log(text);
+                        console.log(possibilities);
                         
                         // FIXME this is disgusting
                         let priority = [];
@@ -868,58 +870,60 @@ function add_epwing_info(lookups)
                         possibilities = priority.concat(possibilities);
                         priority = [];
                         
+                        console.log(possibilities);
+                        
                         for(let wing of possibilities)
                         {
-                            console.log("checking an epwing possibility");
-                            if(epwing[wing] && epwing[wing]["l"])
+                            let epw = copy(epwing[wing]);
+                            if(epw && epw["l"])
                             {
                                 if(epwing_data == undefined)
                                 {
-                                    epwing_data = epwing[wing];
-                                    exact = epwing[wing]["r"].includes(foundtext);
-                                    for(let spelling of epwing[wing]["s"])
+                                    epwing_data = epw;
+                                    exact = epw["r"].includes(foundtext);
+                                    for(let spelling of epw["s"])
                                         exact |= spelling.includes(foundtext);
                                     // FIXME duplicated below
                                     if(exact)
                                     {
                                         for(let reading of entry.r_ele)
                                         {
-                                            let text = reading.reb;
-                                            if(epwing[wing]["r"].includes(text))
+                                            let rtext = reading.reb;
+                                            if(epw["r"].includes(rtext))
                                                 exact = 2;
                                         }
                                     }
                                 }
                                 else if(exact == 0)
                                 {
-                                    exact |= epwing[wing]["r"].includes(foundtext);
-                                    for(let spelling of epwing[wing]["s"])
+                                    exact |= epw["r"].includes(foundtext);
+                                    for(let spelling of epw["s"])
                                         exact |= spelling.includes(foundtext);
                                     if(exact)
                                     {
                                         for(let reading of entry.r_ele)
                                         {
-                                            let text = reading.reb;
-                                            if(epwing[wing]["r"].includes(text))
+                                            let rtext = reading.reb;
+                                            if(epw["r"].includes(rtext))
                                                 exact = 2;
                                         }
-                                        epwing_data = epwing[wing];
+                                        epwing_data = epw;
                                     }
                                 }
                                 else if(exact == 1)
                                 {
-                                    let maybe_more_exact = epwing[wing]["r"].includes(foundtext);
-                                    for(let spelling of epwing[wing]["s"])
+                                    let maybe_more_exact = epw["r"].includes(foundtext);
+                                    for(let spelling of epw["s"])
                                         maybe_more_exact |= spelling.includes(foundtext);
                                     if(maybe_more_exact)
                                     {
                                         for(let reading of entry.r_ele)
                                         {
                                             let text = reading.reb;
-                                            if(epwing[wing]["r"].includes(text))
+                                            if(epw["r"].includes(text))
                                             {
                                                 exact = 2;
-                                                epwing_data = epwing[wing];
+                                                epwing_data = epw;
                                             }
                                         }
                                     }
@@ -935,33 +939,31 @@ function add_epwing_info(lookups)
                 {
                     let text = reading.reb;
                     
-                    console.log(`checking if lookup ${text} in structure`);
                     if (lookup_epwing_kana.has(text))
                     {
-                        console.log("looking for epwing possibilities");
-                        let possibilities = lookup_epwing_kana.get(text);
+                        let possibilities = copy_gen(lookup_epwing_kana.get(text));
                         for(let wing of possibilities)
                         {
-                            console.log("checking an epwing possibility");
-                            if(epwing[wing] && epwing[wing]["l"])
+                            let epw = copy(epwing[wing]);
+                            if(epw && epw["l"])
                             {
                                 if(epwing_data == undefined)
                                 {
-                                    epwing_data = epwing[wing];
-                                    exact = epwing[wing]["r"].includes(foundtext);
+                                    epwing_data = epw;
+                                    exact = epw["r"].includes(foundtext);
                                 }
                                 else if(exact == 0)
                                 {
-                                    exact |= epwing[wing]["r"].includes(foundtext);
+                                    exact |= epw["r"].includes(foundtext);
                                     if(exact)
-                                        epwing_data = epwing[wing];
+                                        epwing_data = epw;
                                 }
                                 else if(exact == 1)
                                 {
-                                    if(epwing[wing]["s"].length == 1 && epwing[wing]["s"][0] === "" && epwing[wing]["r"].includes(foundtext))
+                                    if(epw["s"].length == 1 && epw["s"][0] === "" && epw["r"].includes(foundtext))
                                     {
                                         exact = 2;
-                                        epwing_data = epwing[wing];
+                                        epwing_data = epw;
                                     }
                                 }
                             }
@@ -1156,6 +1158,10 @@ function copy(orig)
         f = Object.assign({}, f)
     }
     return mine;
+}
+function copy_gen(orig)
+{
+    return orig.slice(0);
 }
 // Restrict the listed spellings/readings of a JMdict entry to the ones allowed by the looked-up text.
 function restrict_by_text(entry, text)
