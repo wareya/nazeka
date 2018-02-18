@@ -1080,17 +1080,14 @@ function has_pri(object)
     return false;
 }
 
-function weird_lookup(entry)
+function weird_lookup(found)
 {
-    if(entry.found && entry.found.inf)
+    if(found && found.inf)
     {
-        for(let info of entry.found.inf)
+        for(let info of found.inf)
         {
             if(["ik", "iK", "io"].includes(clip(info)))
-            {
-                entry.priority -= 50;
-                break;
-            }
+                return true;
         }
     }
 }
@@ -1106,7 +1103,7 @@ function sort_results(text, results)
         let result_kana = is_kana(entry);
         entry.priority = (entry.seq-1000000)/-10000000; // divided by one more order of magnitude
         
-        if(weird_lookup(entry))
+        if(weird_lookup(entry.found))
             entry.priority -= 50;
         if(reading_kana == result_kana)
             entry.priority += 100;
@@ -1116,6 +1113,12 @@ function sort_results(text, results)
             entry.priority += 12;
         if(reading_kana == prefers_kana(entry))
             entry.priority += 10;
+        // moves さき below まえ for 前
+        if(entry.k_ele && entry.k_ele.length == 1 && !weird_lookup(entry.k_ele[0]))
+            entry.priority += 4;
+        // moves まえ above ぜん for 前
+        if(entry.sense && entry.sense.length >= 6)
+            entry.priority += 1;
         if(entry.sense && entry.sense.length >= 3)
             entry.priority += 3;
         // FIXME: affects words with only one obscure/rare/obsolete sense
