@@ -292,22 +292,21 @@ function buildpage()
     file.addEventListener("change", () =>
     {
         let fname = document.querySelector("#file").files[0];
-        let fr = new FileReader();
-        fr.onload = (e) =>
+        let reader = new FileReader();
+        reader.onload = async(e) =>
         {
             try
             {
-                document.querySelector("#import_label").textContent = "Importing...";
-                browser.storage.local.set({"epwing":JSON.parse(e.target.result)});
+                browser.storage.local.set({"epwing":JSON.stringify(JSON.parse(e.target.result))});
                 browser.runtime.sendMessage({type:"refreshepwing"});
                 document.querySelector("#import_label").textContent = "Imported. Might take a few seconds to apply.";
             }
-            catch(e)
+            catch(except)
             {
-                console.log(e);
+                console.log(except.stack);
             }
         };
-        fr.readAsText(fname);
+        reader.readAsText(fname);
     });
     let label = document.createElement("label");
     label.for = file.id;

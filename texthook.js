@@ -188,7 +188,7 @@ function display_div (middle, x, y, time)
         outer.style.bottom = (newy+settings.yoffset)+"px";
         outer.style.right = "unset";
         outer.style.left = (newx+settings.xoffset)+"px";
-        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" on very wide pages (e.g. pages of vertical text)
+        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of vertical text)
         outer.style.marginLeft = "unset";
     }
     else if(corner == 1)
@@ -206,7 +206,7 @@ function display_div (middle, x, y, time)
         outer.style.bottom = "unset";
         outer.style.right = "unset";
         outer.style.left = (newx+settings.xoffset)+"px";
-        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" on very wide pages (e.g. pages of vertical text)
+        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of vertical text)
         outer.style.marginLeft = "unset";
     }
 }
@@ -316,8 +316,7 @@ function build_div_inner (text, result)
             keb.textContent = kanji_text;
             temptag.appendChild(keb);
             
-            // list readings
-            let readings = term.r_ele;
+            // deconjugations
             
             if(term.deconj)
             {
@@ -367,6 +366,10 @@ function build_div_inner (text, result)
                 }
                 temptag.appendChild(maininfos);
             }
+            
+            // list readings
+            let readings = term.r_ele;
+            
             temptag.appendChild(document.createTextNode(" 《"));
             let e_readings = document.createElement("span");
             e_readings.className = "nazeka_readings";
@@ -935,6 +938,7 @@ function update(event)
             try
             {
                 let display = getComputedStyle(current_node).display;
+                // break out of elements neither inline nor ruby
                 if(display != "inline" && display != "ruby")
                     break;
             } catch(err) {}
@@ -955,10 +959,30 @@ function update(event)
                 try
                 {
                     let display = getComputedStyle(next_node).display;
-                    if(display == "ruby")
+                    if(display == "ruby-text")
                         continue;
+                    
                     if(display == "inline")
                         text += next_node.textContent;
+                    // BUG: this should technically be recursive, not a special case, but it won't affect any real webpages
+                    if(display == "ruby")
+                    {
+                        for(let child of next_node.childNodes)
+                        {
+                            try
+                            {
+                                let display = getComputedStyle(child).display;
+                                if(display == "ruby-text")
+                                    continue;
+                                if(display == "inline")
+                                    text += child.textContent;
+                            }
+                            catch(err)
+                            {
+                                text += child.textContent;
+                            }
+                        }
+                    }
                 }
                 catch(err)
                 {

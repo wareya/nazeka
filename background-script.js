@@ -14,7 +14,8 @@ let lookup_epwing_kana = new Map();
 
 async function refresh_epwing()
 {
-    epwing = (await browser.storage.local.get("epwing"))["epwing"];
+    let myjson = (await browser.storage.local.get("epwing"))["epwing"];
+    epwing = JSON.parse(myjson);
     lookup_epwing_kan = new Map();
     lookup_epwing_kana = new Map();
     for (let i = 1; i < epwing.length; i++)
