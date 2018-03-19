@@ -165,11 +165,13 @@ function defaults()
         label: "Font override (highlighted text only) (without trailing comma)"
     });
     
-    // other (added procedurally)
+    // other (added imperatively)
+    /*
     settings.push({
         kind: "dummy",
         label: "Other"
     });
+    */
 }
 defaults();
 
@@ -286,6 +288,8 @@ function buildpage()
         container.style.marginBottom = "8px";
         optionsection.appendChild(container);
     }
+    
+    /*
     let file = document.createElement("input");
     file.type = "file";
     file.id = "file";
@@ -316,6 +320,7 @@ function buildpage()
     
     optionsection.appendChild(file);
     optionsection.appendChild(label);
+    */
     
     optionsection.appendChild(document.createElement("hr"));
 }
