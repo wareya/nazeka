@@ -166,12 +166,10 @@ function defaults()
     });
     
     // other (added imperatively)
-    /*
     settings.push({
         kind: "dummy",
         label: "Other"
     });
-    */
 }
 defaults();
 
@@ -289,7 +287,6 @@ function buildpage()
         optionsection.appendChild(container);
     }
     
-    /*
     let file = document.createElement("input");
     file.type = "file";
     file.id = "file";
@@ -315,12 +312,11 @@ function buildpage()
     let label = document.createElement("label");
     label.for = file.id;
     label.id = "import_label";
-    label.textContent = "Import thin dictionary";
+    label.textContent = "Import processed dictionary (instructions coming later)";
     label.style.display = "block";
     
     optionsection.appendChild(file);
     optionsection.appendChild(label);
-    */
     
     optionsection.appendChild(document.createElement("hr"));
 }
