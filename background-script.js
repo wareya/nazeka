@@ -848,8 +848,8 @@ function add_epwing_info(lookups)
                     {
                         let possibilities = copy_gen(lookup_epwing_kan.get(text));
                         
-                        console.log(text);
-                        console.log(possibilities);
+                        //console.log(text);
+                        //console.log(possibilities);
                         
                         // FIXME this is disgusting
                         let priority = [];
@@ -871,7 +871,7 @@ function add_epwing_info(lookups)
                         possibilities = priority.concat(possibilities);
                         priority = [];
                         
-                        console.log(possibilities);
+                        //console.log(possibilities);
                         
                         for(let wing of possibilities)
                         {
@@ -1573,6 +1573,16 @@ function clipboard_hook(tab)
     document.execCommand("paste");
 }
 
+let platform = "";
+async function get_real_platform()
+{
+    let platformInfo = await browser.runtime.getPlatformInfo();
+    if(platformInfo)
+        platform = platformInfo.os;
+    console.log(`platform is ${platform}`);
+}
+get_real_platform();
+
 //console.log("setting message listener");
 browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
 {
@@ -1580,6 +1590,10 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     if (req.type == "search")
     {
         sendResponse(lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives));
+    }
+    else if (req.type == "platform")
+    {
+        sendResponse(platform);
     }
     else if (req.type == "fixicon")
     {

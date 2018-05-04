@@ -6,6 +6,14 @@ function reset()
 {
     browser.storage.local.set({cards:[]});
     document.body.querySelector("#field").textContent = "";
+    document.body.querySelector("#reset").value = "Reset";
+    document.body.querySelector("#reset").addEventListener("click", ask_reset);
+}
+
+function ask_reset()
+{
+    document.body.querySelector("#reset").value = "Click again to make Nazeka to forget ALL your mined words.";
+    document.body.querySelector("#reset").addEventListener("click", reset);
 }
 
 async function init_page()
@@ -22,13 +30,26 @@ async function init_page()
             text += "\t";
             text += card.definitions.replace("\t", "\\t");
             text += "\t";
+            try
+            {   text += card.lookup.replace("\t", "\\t");
+                text += "\t";
+            } catch(e) {}
+            try
+            {   text += card.sentence.replace("\t", "\\t");
+                text += "\t";
+            } catch(e) {}
+            try
+            {   text += card.index.replace("\t", "\\t");
+                text += "\t";
+            } catch(e) {}
             text += card.seq.replace("\t", "\\t");
+            text.replace("\n", "\\n").replace("\r", "");
             text += "\n";
         }
         let element = document.body.querySelector("#field");
         element.textContent = text;
     }
-    document.body.querySelector("#reset").addEventListener("click", reset);
+    document.body.querySelector("#reset").addEventListener("click", ask_reset);
 }
 
 if (document.readyState == "complete")

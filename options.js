@@ -165,6 +165,19 @@ function defaults()
         label: "Font override (highlighted text only) (without trailing comma)"
     });
     
+    settings.push({
+        id: "ignore_linebreaks",
+        kind: "checkbox",
+        default: false,
+        label: "Ignore hard line breaks"
+    });
+    settings.push({
+        id: "sticky",
+        kind: "checkbox",
+        default: false,
+        label: "Sticky mode"
+    });
+    
     // other (added imperatively)
     settings.push({
         kind: "dummy",

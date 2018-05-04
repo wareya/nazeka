@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "nazeka",
-    "version": "0.1.8",
+    "version": "0.1.9pre2",
     "author": "Wareya",
     "homepage_url": "https://github.com/wareya/nazeka",
     "description": "A rikai replacement.",
@@ -25,6 +25,9 @@
     },
 
     "web_accessible_resources": [
+        "img/closebutton24.png",
+        "img/leftarrow24.png",
+        "img/rightarrow24.png",
         "dict/JMdict1.json",
         "dict/JMdict2.json",
         "dict/JMdict3.json",

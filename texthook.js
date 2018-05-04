@@ -40,8 +40,21 @@ font: "",
 hlfont: "",
 corner: 0,
 xoffset: 5,
-yoffset: 22
+yoffset: 22,
+ignore_linebreaks: false,
+sticky: false
 };
+
+let platform = "win";
+
+async function get_real_platform()
+{
+    let my_platform = await browser.runtime.sendMessage({type:"platform"});
+    while(my_platform == "")
+        my_platform = await browser.runtime.sendMessage({type:"platform"});
+    platform = my_platform;
+}
+get_real_platform();
 
 let last_time_display = Date.now();
 
@@ -50,7 +63,7 @@ let div_class = "nazeka_fGKRTDGFGgr9atT";
 
 // the popup is inserted into the page as a screen-relative div, we never delete it because modifying the root DOM of very long pages is expensive, we hide it instead
 let last_displayed = undefined;
-function delete_div ()
+function delete_div()
 {
     last_displayed = undefined;
     let other = document.body.getElementsByClassName(div_class);
@@ -62,9 +75,28 @@ function delete_div ()
     }
 }
 
+function set_sticky_styles(mydiv)
+{
+    mydiv.style.position = "fixed";
+    mydiv.style.left = "unset";
+    mydiv.style.right= "unset";
+    mydiv.style.bottom = "unset";
+    mydiv.style.top = "10px";
+    if(settings.corner != 1 && settings.corner != 3)
+        mydiv.style.right = "10px";
+    else
+        mydiv.style.left = "10px";
+    mydiv.style.marginRight = "unset";
+    mydiv.style.maxHeight = "calc(100vh - 20px)";
+    mydiv.style.overflowY = "scroll";
+    mydiv.style.marginLeft = "unset";
+    mydiv.style.marginTop = "unset";
+    mydiv.style.marginBottom = "10px";
+}
+
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
-function display_div (middle, x, y, time)
+function display_div(middle, x, y, time)
 {
     let font = settings.font.trim().replace(";","").replace("}","");
     if(font != "")
@@ -104,7 +136,7 @@ function display_div (middle, x, y, time)
     else
         styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 100000;`;
     
-    styletext += "writing-mode: horizontal-tb; line-height: initial;";
+    styletext += "writing-mode: horizontal-tb; line-height: initial; white-space: initial;";
     
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
@@ -133,81 +165,100 @@ function display_div (middle, x, y, time)
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
     
-    let corner = settings.corner;
-    
-    let buffer = 25;
-    if(corner != 1 && corner != 3)
+    if(settings.sticky && platform != "android" && document.body.getElementsByClassName("nazeka_mining_ui").length == 0)
+        set_sticky_styles(outer);
+    else
     {
-        let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) + mydoc.defaultView.scrollX;
-        if(newx + mywidth > pretend_doc_width-buffer)
+        let corner = settings.corner;
+        
+        let buffer = 25;
+        if(corner != 1 && corner != 3)
         {
-            if(corner == 4)// && Math.abs(newx + mywidth - pretend_doc_width) > mywidth/2)
-                corner = 1;
-            else
+            let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) + mydoc.defaultView.scrollX;
+            if(newx + mywidth > pretend_doc_width-buffer)
             {
-                newx -= (newx + mywidth - pretend_doc_width);
-                newx -= buffer;
-                if(newx < mydoc.defaultView.scrollX)
-                    newx = mydoc.defaultView.scrollX;
+                if(corner == 4)// && Math.abs(newx + mywidth - pretend_doc_width) > mywidth/2)
+                    corner = 1;
+                else
+                {
+                    newx -= (newx + mywidth - pretend_doc_width);
+                    newx -= buffer;
+                    if(newx < mydoc.defaultView.scrollX)
+                        newx = mydoc.defaultView.scrollX;
+                }
             }
         }
-    }
-    if(corner == 1 || corner == 3) // don't use else here, we might get here because of "corner = 1" a few lines above
-    {
-        let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) - mydoc.defaultView.scrollX;
-        newx = mydoc.defaultView.innerWidth - newx;
-        if(newx + mywidth > pretend_doc_width-buffer)
+        if(corner == 1 || corner == 3) // don't use else here, we might get here because of "corner = 1" a few lines above
         {
-            newx += (newx + mywidth - pretend_doc_width);
-            newx += buffer;
-            // this is wrong but it can't be fixed without invoking cthulhu
-            if(newx > mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5)
-                newx = mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5;
+            let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) - mydoc.defaultView.scrollX;
+            newx = mydoc.defaultView.innerWidth - newx;
+            if(newx + mywidth > pretend_doc_width-buffer)
+            {
+                newx += (newx + mywidth - pretend_doc_width);
+                newx += buffer;
+                // this is wrong but it can't be fixed without invoking cthulhu
+                if(newx > mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5)
+                    newx = mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5;
+            }
         }
-    }
-    
-    if(corner == 2 || corner == 3)
-    {
-        newy = mydoc.defaultView.innerHeight - newy;
-        if(newy < 0)
-            newy = 0;
-    }
-    
-    if(corner == 3)
-    {
-        outer.style.top = "unset";
-        outer.style.bottom = (newy+settings.yoffset)+"px";
-        outer.style.right = (newx-settings.xoffset)+"px";
-        outer.style.left = "unset";
-        outer.style.marginRight = "unset";
-        outer.style.marginLeft = "unset";
-    }
-    else if(corner == 2)
-    {
-        outer.style.top = "unset";
-        outer.style.bottom = (newy+settings.yoffset)+"px";
-        outer.style.right = "unset";
-        outer.style.left = (newx+settings.xoffset)+"px";
-        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of vertical text)
-        outer.style.marginLeft = "unset";
-    }
-    else if(corner == 1)
-    {
-        outer.style.top = (newy+settings.yoffset)+"px";
-        outer.style.bottom = "unset";
-        outer.style.right = (newx-settings.xoffset)+"px";
-        outer.style.left = "unset";
-        outer.style.marginRight = "unset";
-        outer.style.marginLeft = "unset";
-    }
-    else // 0 or invalid
-    {
-        outer.style.top = (newy+settings.yoffset)+"px";
-        outer.style.bottom = "unset";
-        outer.style.right = "unset";
-        outer.style.left = (newx+settings.xoffset)+"px";
-        outer.style.marginRight = "-10000000000000000px"; // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of vertical text)
-        outer.style.marginLeft = "unset";
+        
+        if(corner == 2 || corner == 3)
+        {
+            newy = mydoc.defaultView.innerHeight - newy;
+            if(newy < 0)
+                newy = 0;
+        }
+        
+        if(corner == 3)
+        {
+            outer.style.top = "unset";
+            outer.style.bottom = (newy+settings.yoffset)+"px";
+            outer.style.right = (newx-settings.xoffset)+"px";
+            outer.style.left = "unset";
+            outer.style.marginRight = "unset";
+            outer.style.marginLeft = "unset";
+        }
+        else if(corner == 2)
+        {
+            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+            outer.style.top = "0px";
+            outer.style.left = "0px";
+            let width = outer.offsetWidth;
+            
+            outer.style.top = "unset";
+            outer.style.bottom = (newy+settings.yoffset)+"px";
+            outer.style.right = "unset";
+            outer.style.left = (newx+settings.xoffset)+"px";
+            outer.style.marginRight = "unset";
+            outer.style.marginLeft = "unset";
+            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+            outer.style.width = (width)+"px";
+        }
+        else if(corner == 1)
+        {
+            outer.style.top = (newy+settings.yoffset)+"px";
+            outer.style.bottom = "unset";
+            outer.style.right = (newx-settings.xoffset)+"px";
+            outer.style.left = "unset";
+            outer.style.marginRight = "unset";
+            outer.style.marginLeft = "unset";
+        }
+        else // 0 or invalid
+        {
+            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+            outer.style.top = "0px";
+            outer.style.left = "0px";
+            let width = outer.offsetWidth;
+            
+            outer.style.top = (newy+settings.yoffset)+"px";
+            outer.style.bottom = "unset";
+            outer.style.right = "unset";
+            outer.style.left = (newx+settings.xoffset)+"px";
+            outer.style.marginRight = "unset";
+            outer.style.marginLeft = "unset";
+            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+            outer.style.width = (width)+"px";
+        }
     }
 }
 
@@ -237,7 +288,7 @@ function clip(str)
 
 // Here we actually build the content of the lookup popup, based on the text we looked up and the list of lookups from the background script
 // note that we can get multiple lookups and this function only handles a single lookup
-function build_div_inner (text, result)
+function build_div_inner (text, result, moreText, index, first_of_many = false)
 {
     //console.log("building div for " + text);
     //console.log(result);
@@ -250,12 +301,67 @@ function build_div_inner (text, result)
         let original = document.createElement("div");
         original.className = "nazeka_original";
         //original.textContent = "Looked up ";
+        let moreText_start = moreText.substring(0, index)
+        let moreText_end = moreText.substring(index + text.length);
+        if(moreText_start.length > 5)
+        {
+            moreText_start = "…"+moreText_start.substring(moreText_start.length-3);
+        }
+        if(moreText_end.length > 5)
+        {
+            moreText_end = moreText_end.substring(0, 3)+"…";
+        }
+        //console.log(moreText);
+        //console.log(index);
+        //console.log(text);
+        
         let original_inner = document.createElement("span");
         original_inner.className = "nazeka_lookup";
         original_inner.textContent = text;
+        original_inner.style.fontWeight = "bold";
+        original_inner.style.color = `${settings.hlcolor}`;
+        original.appendChild(document.createTextNode(moreText_start));
         original.appendChild(original_inner);
+        original.appendChild(document.createTextNode(moreText_end));
         
+        if(first_of_many && (platform == "android" || (settings.sticky && document.body.getElementsByClassName("nazeka_mining_ui").length == 0)))
+        {
+            let buttons = document.createElement("div");
+            let left_arrow = document.createElement("img");
+            let right_arrow = document.createElement("img");
+            left_arrow.src = browser.extension.getURL("img/leftarrow24.png");
+            right_arrow.src = browser.extension.getURL("img/rightarrow24.png");
+            left_arrow.onclick = lookup_left;
+            right_arrow.onclick = lookup_right;
+            left_arrow.style.marginTop = "-3px";
+            right_arrow.style.marginTop = "-3px";
+            buttons.appendChild(left_arrow);
+            buttons.appendChild(right_arrow);
+            
+            if(platform == "android")
+            {
+                let close_button = document.createElement("img");
+                close_button.src = browser.extension.getURL("img/closebutton24.png");
+                close_button.onclick = manual_close;
+                close_button.style.marginTop = "-3px";
+                buttons.appendChild(close_button);
+            }
+            buttons.style.float = "right";
+            original.appendChild(buttons);
+        }
         temp.appendChild(original);
+        
+        let original_sentence = document.createElement("span");
+        original_sentence.className = "nazeka_lookup_sentence";
+        original_sentence.textContent = moreText;
+        original_sentence.style.display = "none";
+        temp.appendChild(original_sentence);
+        
+        let original_index = document.createElement("span");
+        original_index.className = "nazeka_lookup_index";
+        original_index.textContent = `${index}`;
+        original_index.style.display = "none";
+        temp.appendChild(original_index);
     }
     else
     {
@@ -264,6 +370,18 @@ function build_div_inner (text, result)
         original_inner.textContent = text;
         original_inner.style.display = "none";
         temp.appendChild(original_inner);
+        
+        let original_sentence = document.createElement("span");
+        original_sentence.className = "nazeka_lookup_sentence";
+        original_sentence.textContent = moreText;
+        original_sentence.style.display = "none";
+        temp.appendChild(original_sentence);
+        
+        let original_index = document.createElement("span");
+        original_index.className = "nazeka_lookup_index";
+        original_index.textContent = `${index}`;
+        original_index.style.display = "none";
+        temp.appendChild(original_index);
     }
     
     // styling for highlighted stuff and the lookup text
@@ -657,26 +775,28 @@ function build_div_intermediary()
 }
 
 // for popups with single lookup results
-function build_div (text, result)
+function build_div (text, result, moreText, index)
 {
     last_displayed = [{text:text, result:result}];
     let middle = build_div_intermediary();
-    middle.firstChild.appendChild(build_div_inner(text, result));
+    middle.firstChild.appendChild(build_div_inner(text, result, moreText, index));
     return middle;
 }
 // for popups with multiple lookup results
-function build_div_compound (results)
+function build_div_compound (results, moreText, index)
 {
     last_displayed = results;
     //console.log("Displaying:");
     //print_object(result);
     let middle = build_div_intermediary();
+    let first = true;
     for(let lookup of results)
     {
         if(settings.corner == 2 || settings.corner == 3)
-            middle.firstChild.insertBefore(build_div_inner(lookup.text, lookup.result), middle.firstChild.children[0]);
+            middle.firstChild.insertBefore(build_div_inner(lookup.text, lookup.result, moreText, index, first), middle.firstChild.children[0]);
         else
-            middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result));
+            middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result, moreText, index, first));
+        first = false;
     }
     return middle;
 }
@@ -716,8 +836,16 @@ async function settings_init()
         getvar("xoffset", 5);
         getvar("yoffset", 22);
         
+        getvar("ignore_linebreaks", false);
+        getvar("sticky", false);
+        
         if(!settings.enabled && exists_div())
             delete_div();
+        if(!settings.enabled)
+        {
+            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+        }
     } catch(err) {} // options not stored yet
 }
 
@@ -735,6 +863,11 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     }
     if(!settings.enabled && exists_div())
         delete_div();
+    if(!settings.enabled)
+    {
+        while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+            document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+    }
 });
 
 // look up words on a timer loop that only uses the most recent lookup request and ignores all the others
@@ -742,6 +875,10 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 let lookup_timer = undefined;
 let lookup_queue = [];
 //let lookup_rate = 8;
+
+let last_lookup = [];
+
+let last_manual_interaction = Date.now();
 
 let lookup_loop_cancel = false;
 let lookup_last_time = Date.now();
@@ -756,6 +893,7 @@ async function lookup_loop()
         //console.log("queue not empty");
         let lookup = lookup_queue.pop();
         lookup_queue = [];
+        last_lookup = lookup;
         //console.log("asking background to search the dictionary");
         let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div(), alternatives_mode:settings.alternatives_mode, strict_alternatives:settings.strict_alternatives});
         //console.log("got response");
@@ -763,13 +901,13 @@ async function lookup_loop()
         {
             if(!response.length)
             {
-                let mydiv = build_div(response.text, response.result);
+                let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
                 if(mydiv)
                     display_div(mydiv, lookup[3], lookup[4]);
             }
             else
             {
-                let mydiv = build_div_compound(response);
+                let mydiv = build_div_compound(response, lookup[5], lookup[6]);
                 if(mydiv)
                     display_div(mydiv, lookup[3], lookup[4]);
             }
@@ -793,10 +931,10 @@ async function lookup_loop()
 
 lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
 
-function lookup_enqueue(text, x, y, x2, y2)
+function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 {
     //console.log("trying to enqueue lookup");
-    lookup_queue = [[text, x, y, x2, y2]];
+    lookup_queue = [[text, x, y, x2, y2, moreText, index]];
     //console.log("enqueued lookup");
     if(!lookup_timer || lookup_last_time+settings.lookuprate*100 < Date.now())
     {
@@ -808,14 +946,201 @@ function lookup_enqueue(text, x, y, x2, y2)
 
 function lookup_cancel()
 {
-    //console.log("cancelling lookup");
+    lookup_queue = [];
+    if(!settings.sticky || platform == "android")
+        delete_div();
+}
+
+function manual_close()
+{
     lookup_queue = [];
     delete_div();
+    last_manual_interaction = Date.now();
+}
+
+function lookup_cancel_force()
+{
+    lookup_queue = [];
+    delete_div();
+}
+
+let japanesePunctuation = "、。「」｛｝（）【】『』〈〉《》：・／…︙‥︰＋＝－÷？！．～―";
+
+function lookup_left()
+{
+    if(!exists_div()) return;
+    let text = last_lookup[5];
+    let index = last_lookup[6];
+    if (index <= 0) return;
+    index--;
+    while (index > 0 && (text.codePointAt(index) < 0x100 || japanesePunctuation.includes(text.charAt(index))))
+        index--;
+    text = text.substring(index);
+    
+    lookup_queue = [[text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]];
+    last_manual_interaction = Date.now();
+}
+
+function lookup_right()
+{
+    if(!exists_div()) return;
+    let text = last_lookup[5];
+    let index = last_lookup[6];
+    if (index >= text.length-1) return;
+    index++;
+    while (index < text.length-1 && (text.codePointAt(index) < 0x100 || japanesePunctuation.includes(text.charAt(index))))
+        index++;
+    text = text.substring(index);
+    
+    lookup_queue = [[text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]];
+    last_manual_interaction = Date.now();
 }
 
 let time_of_last = Date.now();
 
 let seach_x_offset = -3;
+
+function grab_more_text(textNode, direction = 1)
+{
+    if(direction > 0)
+        direction = 1;
+    else
+        direction = -1;
+    let text = "";
+    let current_node = textNode;
+    while(text.length < settings.length || (direction < 0 && !text.includes("。") && !text.includes("\n")))
+    {
+        if(current_node == undefined) break;
+        try
+        {
+            let display = getComputedStyle(current_node).display;
+            // break out of elements neither inline nor ruby
+            if(display != "inline" && display != "ruby")
+                break;
+        } catch(err) {}
+        
+        let parent = current_node.parentNode;
+        if(parent == undefined) break;
+        let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
+        if(i < 0) break;
+        i += direction;
+        while(i < current_node.parentNode.childNodes.length && i >= 0)
+        {
+            let next_node = current_node.parentNode.childNodes[i];
+            i += direction;
+            let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
+            
+            if(tagname == "br" && !settings.ignore_linebreaks)
+                break;
+            if(tagname == "rt" || tagname == "rp")
+                continue;
+            // next_node might not be an Element
+            try
+            {
+                let ttext = "";
+                
+                let display = getComputedStyle(next_node).display;
+                if(display == "ruby-text")
+                    continue;
+                
+                if(display == "inline")
+                {
+                    if(direction > 0)
+                        ttext += next_node.textContent;
+                    else
+                        ttext = next_node.textContent + ttext;
+                }
+                // BUG: this should technically be recursive, not a special case, but it won't affect any real webpages
+                if(display == "ruby")
+                {
+                    let subtext = "";
+                    for(let child of next_node.childNodes)
+                    {
+                        try
+                        {
+                            let display = getComputedStyle(child).display;
+                            //if(display == "ruby-text")
+                            //    continue;
+                            if(display == "inline")
+                            {
+                                subtext += child.textContent;
+                            }
+                        }
+                        catch(err)
+                        {
+                            subtext += child.textContent;
+                        }
+                    }
+                    if(direction > 0)
+                        ttext += subtext;
+                    else
+                        ttext = subtext + ttext;
+                }
+                if(direction > 0)
+                    text += ttext;
+                else
+                    text = ttext + text;
+            }
+            catch(err)
+            {
+                if(direction > 0)
+                    text += next_node.textContent;
+                else
+                    text = next_node.textContent + text;
+            }
+        }
+        if(text.length < settings.length || direction < 0)
+            current_node = current_node.parentNode;
+    }
+    return text;
+}
+
+
+function grab_text(textNode, offset, elemental)
+{
+    //console.log("found text");
+    let text = "";
+    let moreText = "";
+    if(elemental)
+    {
+        moreText = textNode.value;
+        text = moreText.substring(offset, textNode.value.length);
+    }
+    else
+    {
+        moreText = textNode.textContent;
+        text = moreText.substring(offset, textNode.textContent.length);
+    }
+    
+    text += grab_more_text(textNode);
+    moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
+    
+    //console.log("more (orig): " + moreText);
+    //console.log("less (orig): " + text);
+    
+    let index = moreText.lastIndexOf(text);
+    
+    let leftwards = 0;
+    let rightwards = 0;
+    
+    while(moreText[index + leftwards] != "。" && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
+        leftwards--;
+    leftwards++;
+    
+    while(moreText[index + rightwards] != "。" && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
+        rightwards++;
+    
+    moreText = moreText.substring(index+leftwards, index+rightwards);
+    text = text.substring(0, rightwards);
+    
+    index = -leftwards;
+    
+    //console.log("more: " + moreText);
+    //console.log("less: " + text);
+    
+    // grab text from later and surrounding DOM nodes
+    return [text, moreText, index];
+}
 
 function update(event)
 {
@@ -827,6 +1152,9 @@ function update(event)
         //console.log(Date.now() + " vs " + time_of_last);
         return;
     }
+    
+    if(platform == "android" && Date.now() - last_manual_interaction < 150)
+        return;
     
     //console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
@@ -871,6 +1199,12 @@ function update(event)
         };
         
         hitpage(event.clientX+seach_x_offset, event.clientY);
+        if (platform == "android" && exists_div())
+        {
+            let ele = document.body.getElementsByClassName(div_class)[0];
+            if(ele.contains(textNode))
+                return;
+        }
         // try without the offset
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
             hitpage(event.clientX, event.clientY);
@@ -893,7 +1227,11 @@ function update(event)
                         continue;
                     }
                 }
-            } catch(err) {}
+            }
+            catch(err)
+            {
+                console.log(err);
+            }
         }
     }
     for(let toreset of nodeResetList)
@@ -918,83 +1256,20 @@ function update(event)
         
         // FIXME: Doesn't work to reject in all cases
         let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
+        //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
         if(!hit)
         {
             lookup_cancel();
             return;
         }
-        //console.log("found text");
-        let text = "";
-        if(elemental)
-            text = textNode.value.substring(offset, textNode.value.length);
-        else
-            text = textNode.textContent.substring(offset, textNode.textContent.length);
         
-        // grab text from later and surrounding DOM nodes
-        let current_node = textNode;
-        while(text.length < settings.length)
-        {
-            if(current_node == undefined) break;
-            try
-            {
-                let display = getComputedStyle(current_node).display;
-                // break out of elements neither inline nor ruby
-                if(display != "inline" && display != "ruby")
-                    break;
-            } catch(err) {}
-            
-            let parent = current_node.parentNode;
-            if(parent == undefined) break;
-            let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
-            if(i < 0) break;
-            i++;
-            while(i < current_node.parentNode.childNodes.length)
-            {
-                let next_node = current_node.parentNode.childNodes[i++];
-                let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
-                
-                if(tagname == "rt" || tagname == "rp")
-                    continue;
-                // next_node might not be an Element
-                try
-                {
-                    let display = getComputedStyle(next_node).display;
-                    if(display == "ruby-text")
-                        continue;
-                    
-                    if(display == "inline")
-                        text += next_node.textContent;
-                    // BUG: this should technically be recursive, not a special case, but it won't affect any real webpages
-                    if(display == "ruby")
-                    {
-                        for(let child of next_node.childNodes)
-                        {
-                            try
-                            {
-                                let display = getComputedStyle(child).display;
-                                if(display == "ruby-text")
-                                    continue;
-                                if(display == "inline")
-                                    text += child.textContent;
-                            }
-                            catch(err)
-                            {
-                                text += child.textContent;
-                            }
-                        }
-                    }
-                }
-                catch(err)
-                {
-                    text += next_node.textContent;
-                }
-            }
-            if(text.length < settings.length)
-                current_node = current_node.parentNode;
-            
-        }
+        let found = grab_text(textNode, offset, elemental);
+        let text = found[0];
+        let moreText = found[1];
+        let index = found[2];
         
-        text = text.trim();
+        //text = text.trim();
+        
         //print_object(text);
         text = text.substring(0, Math.min(text.length, settings.length));
         
@@ -1003,7 +1278,7 @@ function update(event)
         if(text != "")
         {
             //console.log("calling lookup_enqueue");
-            lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY);
+            lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY, moreText, index);
         }
         else
         {
@@ -1067,6 +1342,9 @@ function mine(highlight)
     if(readings_elements.length)
         readings = readings_elements[0].textContent;
     let definitions = word.getElementsByClassName("nazeka_definitions")[0].textContent;
+    let lookup = word.parentElement.querySelector(".nazeka_lookup");
+    let sentence = word.parentElement.querySelector(".nazeka_lookup_sentence");
+    let index = word.parentElement.querySelector(".nazeka_lookup_index");
     let seq = word.getAttribute("nazeka_seq");
     
     //console.log(front);
@@ -1074,62 +1352,85 @@ function mine(highlight)
     //console.log(definitions);
     //console.log(seq);
     
-    mine_to_storage({front: front, readings: readings, definitions: definitions, seq: seq});
+    mine_to_storage({front: front, readings: readings, definitions: definitions, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
 }
 
 function keytest(event)
 {
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
         return;
-    if(!exists_div())
-        return;
     if(event.key == "m")
     {
-        while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-            document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-        //console.log("mining request");
-        let mydiv = document.body.getElementsByClassName(div_class)[0].cloneNode(true);
-        delete_div();
-        mydiv.style.position = "fixed";
-        mydiv.style.left = "unset";
-        mydiv.style.bottom = "unset";
-        mydiv.style.top = "10px";
-        mydiv.style.right = "10px";
-        mydiv.style.marginRight = "unset";
-        mydiv.style.marginLeft = "unset";
-        mydiv.style.marginTop = "unset";
-        mydiv.style.marginBottom = "unset";
-        mydiv.className = "nazeka_mining_ui";
-        let newheader = document.createElement("div");
-        newheader.textContent = "Mining UI. Press the given entry's highlighted part to mine it, or this message to cancel.";
-        newheader.addEventListener("click", ()=>
+        if(document.body.getElementsByClassName("nazeka_mining_ui").length)
         {
             while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+            {
+                console.log("deleting");
                 document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-        });
-        mydiv.firstChild.firstChild.prepend(newheader);
-        mydiv.style.zIndex = 100000-1;
-        
-        for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
+            }
+            console.log("deleted");
+        }
+        else
         {
-            keb.addEventListener("click", (event)=>
+            if(!exists_div())
+                return;
+            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            //console.log("mining request");
+            let mydiv = document.body.getElementsByClassName(div_class)[0].cloneNode(true);
+            delete_div();
+            set_sticky_styles(mydiv);
+            mydiv.className = "nazeka_mining_ui";
+            let newheader = document.createElement("div");
+            newheader.textContent = "Mining UI. Press the given entry's highlighted spelling to mine it, or this message to cancel.";
+            newheader.addEventListener("click", ()=>
             {
-                mine(event.target);
                 while(document.body.getElementsByClassName("nazeka_mining_ui").length)
                     document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             });
-        }
-        for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
-        {
-            reb.addEventListener("click", (event)=>
+            mydiv.firstChild.firstChild.prepend(newheader);
+            mydiv.style.zIndex = 100000-1;
+            
+            for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
             {
-                mine(event.target);
-                while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                    document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-            });
+                keb.addEventListener("click", (event)=>
+                {
+                    mine(event.target);
+                    while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                        document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                });
+            }
+            for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
+            {
+                reb.addEventListener("click", (event)=>
+                {
+                    mine(event.target);
+                    while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+                        document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                });
+            }
+            
+            document.body.appendChild(mydiv);
         }
-        
-        document.body.appendChild(mydiv);
+    }
+    if(event.key == "n")
+    {
+        lookup_cancel_force();
+    }
+    if(event.key == "b")
+    {
+        settings.sticky = !settings.sticky;
+        browser.storage.local.set({"sticky":settings.sticky});
+    }
+    if(!exists_div())
+        return;
+    if(event.keyCode == 37) // left
+    {
+        lookup_left();
+    }
+    if(event.keyCode == 39) // right
+    {
+        lookup_right();
     }
 }
 
