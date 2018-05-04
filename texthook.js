@@ -132,9 +132,9 @@ function display_div(middle, x, y, time)
     styletext += "position: absolute; top: 0; left: 0; ";
     
     if(settings.superborder)
-        styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 100000;`;
+        styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 1000000000000000000000;`;
     else
-        styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 100000;`;
+        styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 1000000000000000000000;`;
     
     styletext += "writing-mode: horizontal-tb; line-height: initial; white-space: initial;";
     
@@ -1224,7 +1224,7 @@ function update(event)
                         nodeIsBad = true;
                         nodeResetList.push([textNode, style.getPropertyValue("z-index")]);
                         nodeResetSeen.add(textNode);
-                        textNode.style.zIndex = -100000000;
+                        textNode.style.zIndex = -1000000000000000000000;
                         continue;
                     }
                 }
@@ -1312,7 +1312,7 @@ function message(text)
 {
     if(!text) return;
     let mydiv = document.createElement("div");
-    mydiv.style = "background-color: rgba(0, 0, 0, 0.5); color: white; width: 200px; position: fixed; right: 25px; bottom: 25px; z-index: 100000; padding: 5px; border-radius: 3px;"
+    mydiv.style = "background-color: rgba(0, 0, 0, 0.5); color: white; width: 200px; position: fixed; right: 25px; bottom: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
     mydiv.textContent = text;
     document.body.appendChild(mydiv);
     
@@ -1390,7 +1390,7 @@ function keytest(event)
                     document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             });
             mydiv.firstChild.firstChild.prepend(newheader);
-            mydiv.style.zIndex = 100000-1;
+            mydiv.style.zIndex = 1000000000000000000000-1;
             
             for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
             {
