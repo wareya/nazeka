@@ -999,7 +999,7 @@ function lookup_right()
 
 let time_of_last = Date.now();
 
-let seach_x_offset = -3;
+let search_x_offset = -3;
 
 function grab_more_text(textNode, direction = 1)
 {
@@ -1199,7 +1199,7 @@ function update(event)
             }
         };
         
-        hitpage(event.clientX+seach_x_offset, event.clientY);
+        hitpage(event.clientX+search_x_offset , event.clientY);
         if (platform == "android" && exists_div())
         {
             let ele = document.body.getElementsByClassName(div_class)[0];
