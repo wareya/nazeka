@@ -467,6 +467,7 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     }
                     first = false;
                 }
+                temptag.appendChild(document.createElement("wbr"));
                 temptag.appendChild(document.createTextNode(deconj));
             }
             if(k_ele.inf)
