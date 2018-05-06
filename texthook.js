@@ -1358,6 +1358,8 @@ function mine(highlight)
 
 function keytest(event)
 {
+    if(event.target != document.body)
+        return;
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
         return;
     if(event.key == "m")
@@ -1414,6 +1416,8 @@ function keytest(event)
             document.body.appendChild(mydiv);
         }
     }
+    if(!exists_div())
+        return;
     if(event.key == "n")
     {
         lookup_cancel_force();
@@ -1423,8 +1427,6 @@ function keytest(event)
         settings.sticky = !settings.sticky;
         browser.storage.local.set({"sticky":settings.sticky});
     }
-    if(!exists_div())
-        return;
     if(event.keyCode == 37) // left
     {
         lookup_left();
