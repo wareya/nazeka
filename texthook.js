@@ -107,16 +107,31 @@ function display_div(middle, x, y, time)
     let find_root = window;
     let newx = x;
     let newy = y;
+    let mydoc = document;
     while(find_root.parent && find_root.parent != find_root)
     {
         let rect = find_root.frameElement.getBoundingClientRect();
-        let sx = find_root.scrollX;
-        let sy = find_root.scrollY;
+        //let rx = find_root.offsetLeft;//rect.x;
+        //let ry = find_root.offsetTop;//rect.y;
+        let rx = rect.x;
+        let ry = rect.y;
+        let sx1 = find_root.parent.scrollX;
+        let sy1 = find_root.parent.scrollY;
+        let sx2 = find_root.scrollX;
+        let sy2 = find_root.scrollY;
         find_root = find_root.parent;
-        newx += (rect.x - sx);
-        newy += (rect.y - sy);
+        console.log(ry);
+        console.log(sy1);
+        console.log(sy2);
+        console.log(newy);
+        newx += (rx + sx1 - sx2);
+        newy += (ry + sy1 - sy2);
+        console.log(newy);
+        try
+        {
+            mydoc = find_root.document;
+        } catch(err) {console.log("asgaergsdf");}
     }
-    let mydoc = find_root.document;
     
     let styletext = "";
     if(settings.fixedwidth)
@@ -265,11 +280,17 @@ function display_div(middle, x, y, time)
 function exists_div()
 {
     let find_root = window;
+    let mydoc = document;
     while(find_root.parent && find_root.parent != find_root)
+    {
         find_root = find_root.parent;
-    let mydoc = find_root.document;
+        try
+        {
+            mydoc = find_root.document;
+        } catch(err) {console.log("vbjdrtyhf");}
+    }
     
-    let other = document.body.getElementsByClassName(div_class);
+    let other = mydoc.body.getElementsByClassName(div_class);
     return (other.length > 0 && other[0].style.display != "none");
 }
 
@@ -1358,6 +1379,7 @@ function mine(highlight)
 
 function keytest(event)
 {
+    console.log("asdf");
     if(event.target != document.body)
         return;
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
