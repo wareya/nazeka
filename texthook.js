@@ -120,17 +120,20 @@ function display_div(middle, x, y, time)
         let sx2 = find_root.scrollX;
         let sy2 = find_root.scrollY;
         find_root = find_root.parent;
-        console.log(ry);
-        console.log(sy1);
-        console.log(sy2);
-        console.log(newy);
         newx += (rx + sx1 - sx2);
         newy += (ry + sy1 - sy2);
-        console.log(newy);
         try
         {
             mydoc = find_root.document;
-        } catch(err) {console.log("asgaergsdf");}
+        } catch(err) {}
+    }
+    // compensate for body being relative if it is, because our popup is absolute
+    let relative_body = getComputedStyle(mydoc.body).position == "relative";
+    if(relative_body)
+    {
+        let rect = mydoc.body.getBoundingClientRect();
+        newx -= rect.x;
+        newy -= rect.y;
     }
     
     let styletext = "";
@@ -287,7 +290,7 @@ function exists_div()
         try
         {
             mydoc = find_root.document;
-        } catch(err) {console.log("vbjdrtyhf");}
+        } catch(err) {}
     }
     
     let other = mydoc.body.getElementsByClassName(div_class);
@@ -1277,6 +1280,7 @@ function update(event)
             rect = textNode.parentNode.getBoundingClientRect();
         
         // FIXME: Doesn't work to reject in all cases
+        
         let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
         //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
         if(!hit)
