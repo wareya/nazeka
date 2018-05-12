@@ -72,6 +72,7 @@ function delete_div()
         other[0].style.display = "none";
         if(other[0].children.length > 0)
             other[0].children[0].innerHTML = "";
+        other[0].style.position = "relative";
     }
 }
 
@@ -134,6 +135,9 @@ function display_div(middle, x, y, time)
         let rect = mydoc.body.getBoundingClientRect();
         newx -= rect.x;
         newy -= rect.y;
+        // overcompensate for scrolling
+        newx -= mydoc.scrollingElement.scrollLeft;
+        newy -= mydoc.scrollingElement.scrollTop;
     }
     
     let styletext = "";
