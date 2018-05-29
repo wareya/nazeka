@@ -1004,6 +1004,7 @@ function lookup_cancel_force()
 }
 
 let japanesePunctuation = "、。「」｛｝（）【】『』〈〉《》：・／…︙‥︰＋＝－÷？！．～―";
+let japaneseSeparators = "。？！";
 
 function lookup_left()
 {
@@ -1162,11 +1163,11 @@ function grab_text(textNode, offset, elemental)
     let leftwards = 0;
     let rightwards = 0;
     
-    while(moreText[index + leftwards] != "。" && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
+    while(!japaneseSeparators.includes(moreText[index + leftwards]) && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
         leftwards--;
     leftwards++;
     
-    while(moreText[index + rightwards] != "。" && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
+    while(!japaneseSeparators.includes(moreText[index + rightwards]) && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
         rightwards++;
     
     moreText = moreText.substring(index+leftwards, index+rightwards);
@@ -1381,7 +1382,7 @@ function mine(highlight)
     let readings_elements = word.getElementsByClassName("nazeka_readings");
     if(readings_elements.length)
         readings = readings_elements[0].textContent;
-    let definitions = word.getElementsByClassName("nazeka_definitions")[0].textContent;
+    let definitions = word.getElementsByClassName("nazeka_definitions")[0].innerText; // innerText retains newlines, which we actually want
     let lookup = word.parentElement.querySelector(".nazeka_lookup");
     let sentence = word.parentElement.querySelector(".nazeka_lookup_sentence");
     let index = word.parentElement.querySelector(".nazeka_lookup_index");

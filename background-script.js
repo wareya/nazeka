@@ -560,7 +560,7 @@ rules.push({type: "onlyfinalrule", dec_end:"る", con_end:"ん", dec_tag:"vk", c
 
 //rules.push({type: "stdrule", dec_end:"", con_end:"たい", dec_tag:"stem-ren", con_tag:"adj-i", detail:"want"});
 
-// FIXME implement un-deconjugation to show the actual reading of the deconjugated word - this is what furigana rules are for
+// FIXME implement un-deconjugation to show the actual reading of the deconjugated word e.g. of 来る or 得る - this is what furigana rules are for
 
 // return deconjugated form if stdrule applies to form, return otherwise
 function stdrule_deconjugate_inner(my_form, my_rule)

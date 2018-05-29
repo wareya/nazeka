@@ -24,26 +24,28 @@ async function init_page()
         let text = "";
         for(let card of data)
         {
-            text += card.front.replace("\t", "\\t");
+            text += card.front.replace(/\t/g, "\\t");
             text += "\t";
-            text += card.readings.replace("\t", "\\t");
+            text += card.readings.replace(/\t/g, "\\t");
             text += "\t";
-            text += card.definitions.replace("\t", "\\t");
+            text += card.definitions.trim().replace(/\t/g, "\\t");
             text += "\t";
             try
-            {   text += card.lookup.replace("\t", "\\t");
+            {   text += card.lookup.replace(/\t/g, "\\t");
                 text += "\t";
             } catch(e) {}
             try
-            {   text += card.sentence.replace("\t", "\\t");
+            {   text += card.sentence.replace(/\t/g, "\\t");
                 text += "\t";
             } catch(e) {}
             try
-            {   text += card.index.replace("\t", "\\t");
+            {   text += card.index.replace(/\t/g, "\\t");
                 text += "\t";
             } catch(e) {}
-            text += card.seq.replace("\t", "\\t");
-            text.replace("\n", "\\n").replace("\r", "");
+            text += card.seq.replace(/\t/g, "\\t");
+            console.log(text);
+            text = text.replace(/\n/g, "\\n").replace(/\r/g, "");
+            console.log(text);
             text += "\n";
         }
         let element = document.body.querySelector("#field");
