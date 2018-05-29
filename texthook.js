@@ -49,9 +49,17 @@ let platform = "win";
 
 async function get_real_platform()
 {
-    let my_platform = await browser.runtime.sendMessage({type:"platform"});
-    while(my_platform == "")
+    
+    let my_platform = undefined;
+    try {
         my_platform = await browser.runtime.sendMessage({type:"platform"});
+    }catch(err){}
+    while(my_platform == "")
+    {
+        try {
+            my_platform = await browser.runtime.sendMessage({type:"platform"});
+        }catch(err){}
+    }
     platform = my_platform;
 }
 get_real_platform();
@@ -487,16 +495,18 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     }
                     if(formtext != "")
                     {
+                        temptag.appendChild(document.createElement("wbr"));
                         if(first)
-                            deconj += "～";
+                            deconj = "～";
                         else
-                            deconj += "・";
-                        deconj += formtext;
+                            deconj = "・";
+                        temptag.appendChild(document.createTextNode(deconj));
+                        temptag.appendChild(document.createElement("wbr"));
+                        deconj = formtext;
+                        temptag.appendChild(document.createTextNode(deconj));
                     }
                     first = false;
                 }
-                temptag.appendChild(document.createElement("wbr"));
-                temptag.appendChild(document.createTextNode(deconj));
             }
             if(k_ele.inf)
             {
@@ -1422,7 +1432,9 @@ function keytest(event)
                     document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             });
             mydiv.firstChild.firstChild.prepend(newheader);
-            mydiv.style.zIndex = 1000000000000000000000-1;
+            mydiv.style.zIndex = 1000000000000000000000;
+            // do not compound! z-index can be range limited by the browser
+            mydiv.style.zIndex -= 1;
             
             for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
             {

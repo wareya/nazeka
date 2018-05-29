@@ -69,6 +69,8 @@ let dictsloaded = 0;
 
 function builddict()
 {
+    console.log("load");
+    console.log(this);
     if (this.readyState === 4)
     {
         if (this.status === 200)
@@ -81,6 +83,32 @@ function builddict()
     }
 }
 
+/*
+function handle_error()
+{
+    console.log("error");
+    console.log(this.responseURL);
+}
+
+function handle_progress()
+{
+    console.log("progress");
+    console.log(this.responseURL);
+}
+
+function handle_abort()
+{
+    console.log("abort");
+    console.log(this.responseURL);
+}
+
+function handle_timeout()
+{
+    console.log("timeout");
+    console.log(this.responseURL);
+}
+*/
+
 // Having a >4MB flat text file with stupid adhoc formatting is okay
 // but having a >4MB json file with nothing weird in it isn't
 // Thanks, linter team!
@@ -88,10 +116,17 @@ function load_part_of_dictionary(filename)
 {
     let req = new XMLHttpRequest();
     req.addEventListener("load", builddict);
+    /*
+    req.addEventListener("error", handle_error);
+    req.addEventListener("progress", handle_progress);
+    req.addEventListener("abort", handle_abort);
+    req.addEventListener("timeout", handle_timeout);
+    */
     req.open("GET", browser.extension.getURL(filename));
     req.send();
     return req;
 }
+
 load_part_of_dictionary("dict/JMdict1.json");
 load_part_of_dictionary("dict/JMdict2.json");
 load_part_of_dictionary("dict/JMdict3.json");
@@ -102,6 +137,7 @@ load_part_of_dictionary("dict/JMdict7.json");
 load_part_of_dictionary("dict/JMdict8.json");
 load_part_of_dictionary("dict/JMdict9.json");
 load_part_of_dictionary("dict/JMdict10.json");
+load_part_of_dictionary("dict/JMdict11.json");
 
 function buildlookups()
 {
@@ -142,7 +178,7 @@ function buildlookups()
 let waiter = undefined;
 function waittobuildlookups()
 {
-    if(dictsloaded == 10)
+    if(dictsloaded == 11)
     {
         clearInterval(waiter);
         waiter = undefined;
@@ -388,11 +424,11 @@ rules.push({type: "stdrule", dec_end:"", con_end:"さ", dec_tag:"stem-adj-base",
 // rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem-ren", con_tag:"stem-past", detail:"past"}); // unusual but real but don't necessarily want it yet
 rules.push({type: "stdrule", dec_end:"", con_end:"た", dec_tag:"stem-ren-less", con_tag:"stem-past", detail:"past"});
 rules.push({type: "stdrule", dec_end:"", con_end:"だ", dec_tag:"stem-ren-less-v", con_tag:"stem-past", detail:"past"});
-//rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren", con_tag:"stem-te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
+// rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren", con_tag:"stem-te", detail:"(te form)"}); // unusual but real but don't necessarily want it yet
 rules.push({type: "stdrule", dec_end:"", con_end:"った", dec_tag:"stem-ka", con_tag:"stem-past", detail:"past"});
 
-// we want some te forms to only apply to verbs, not adjectives
-// FIXME: need a way to not break ～ないでください, ~ないでいく, etc
+// we may want some te forms to only apply to verbs, not adjectives
+// FIXME: need a way to not break ～ないでください, ~ないでいく, etc before we actually do it
 rules.push({type: "stdrule", dec_end:"", con_end:"て", dec_tag:"stem-ren-less", con_tag:"stem-te-verbal", detail:"(te form)"});
 rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem-ren-less-v", con_tag:"stem-te-verbal", detail:"(te form)"});
 // tag alias
@@ -404,6 +440,7 @@ rules.push({type: "stdrule", dec_end:"", con_end:"で", dec_tag:"stem-ku", con_t
 
 // doesn't have anywhere else to go
 rules.push({type: "rewriterule", dec_end:"です", con_end:"でした", dec_tag:"exp", con_tag:"stem-past", detail:"past"});
+rules.push({type: "rewriterule", dec_end:"です", con_end:"でして", dec_tag:"exp", con_tag:"stem-te-verbal", detail:"(te form)"});
 // TODO: add te form of です? or would it be too confusing to have?
 // e.g. it would let people find "でしている" in "自分でしている" as です instead of で + conjugated する
 
@@ -465,11 +502,12 @@ rules.push({type: "contextrule", contextrule: "saspecial", dec_end:"", con_end:"
 ////////////////////
 
 // mere te auxiliaries
-rules.push({type: "stdrule", dec_end:"", con_end:"しまう", dec_tag:"stem-te", con_tag:"v5u", detail:"completely/end up/perfect"});
+rules.push({type: "stdrule", dec_end:"", con_end:"しまう", dec_tag:"stem-te", con_tag:"v5u", detail:"finish/completely/end up"});
 // personal te auxiliaries
 rules.push({type: "stdrule", dec_end:"", con_end:"ください", dec_tag:"stem-te", con_tag:"adj-i", detail:"polite request"});
 rules.push({type: "stdrule", dec_end:"", con_end:"あげる", dec_tag:"stem-te", con_tag:"v5r", detail:"do for someone"});
-// garmmatical aspect forms
+// grammatical aspect forms
+// FIXME: add the てる とる etc. conjugations; though the てる conjugation needs a bunch of annoying traps
 rules.push({type: "stdrule", dec_end:"", con_end:"いる", dec_tag:"stem-te", con_tag:"v1", detail:"teiru"});
 rules.push({type: "stdrule", dec_end:"", con_end:"おる", dec_tag:"stem-te", con_tag:"v5r", detail:"teoru"});
 rules.push({type: "stdrule", dec_end:"", con_end:"ある", dec_tag:"stem-te", con_tag:"v5r-i", detail:"tearu"});
@@ -509,6 +547,7 @@ rules.push({type: "stdrule", dec_end:"でしまう", con_end:"じまう", dec_ta
 rules.push({type: "stdrule", dec_end:"ては", con_end:"ちゃ", dec_tag:"stem-te", con_tag:"uninflectable", detail:"(contraction)"});
 rules.push({type: "stdrule", dec_end:"では", con_end:"じゃ", dec_tag:"stem-te", con_tag:"uninflectable", detail:"(contraction)"});
 
+rules.push({type: "onlyfinalrule", dec_end:"ければ", con_end:"けりゃ", dec_tag:"uninflectable", con_tag:"uninflectable", detail:"(contraction)"});
 rules.push({type: "onlyfinalrule", dec_end:"ければ", con_end:"きゃ", dec_tag:"uninflectable", con_tag:"uninflectable", detail:"(contraction)"});
 
 // other
@@ -1106,7 +1145,7 @@ function sort_results(text, results)
         
         if(weird_lookup(entry.found))
             entry.priority -= 50;
-        if(reading_kana == result_kana)
+        if(reading_kana == result_kana && !entry.deconj) // !entry.deconj fixes なって
             entry.priority += 100;
         if(has_pri(entry))
             entry.priority += 30;
@@ -1128,6 +1167,7 @@ function sort_results(text, results)
         // FIXME: prefer short deconjugations to long deconjugations, not just no deconjugations to any deconjugations
         if(entry.deconj)
             entry.priority -= 1;
+        console.log(entry);
     }
     
     results.sort((a,b)=>
