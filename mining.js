@@ -21,9 +21,10 @@ async function init_page()
     let data = (await browser.storage.local.get("cards")).cards;
     if(data)
     {
-        let text = "";
+        let fulltext = "";
         for(let card of data)
         {
+            let text = "";
             text += card.front.replace(/\t/g, "\\t");
             text += "\t";
             text += card.readings.replace(/\t/g, "\\t");
@@ -47,9 +48,10 @@ async function init_page()
             text = text.replace(/\n/g, "\\n").replace(/\r/g, "");
             console.log(text);
             text += "\n";
+            fulltext += text;
         }
         let element = document.body.querySelector("#field");
-        element.textContent = text;
+        element.textContent = fulltext;
     }
     document.body.querySelector("#reset").addEventListener("click", ask_reset);
 }
