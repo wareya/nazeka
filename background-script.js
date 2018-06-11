@@ -1126,7 +1126,7 @@ function weird_lookup(found)
     {
         for(let info of found.inf)
         {
-            if(["ik", "iK", "io"].includes(clip(info)))
+            if(["ik", "iK", "io", "ok", "oK"].includes(clip(info)))
                 return true;
         }
     }

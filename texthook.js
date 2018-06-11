@@ -1084,7 +1084,8 @@ function grab_more_text(textNode, direction = 1)
         
         if(iters > 100)
         {
-            //console.log(current_node);
+            console.log("too many iterations");
+            console.log(current_node);
             break;
         }
         
