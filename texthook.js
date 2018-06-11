@@ -24,6 +24,7 @@ enabled: false,
 compact: true,
 usetextfields: true,
 length: 25,
+contextlength: 100, // nonconfigurable
 fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
@@ -42,7 +43,8 @@ corner: 0,
 xoffset: 5,
 yoffset: 22,
 ignore_linebreaks: false,
-sticky: false
+sticky: false,
+popup_follows_mouse: true
 };
 
 let platform = "win";
@@ -77,10 +79,14 @@ function delete_div()
     let other = document.body.getElementsByClassName(div_class);
     if(other.length > 0)
     {
+        other[0].innerHTML = "";
+        other[0].removeAttribute('style');
+        /*
         other[0].style.display = "none";
         if(other[0].children.length > 0)
             other[0].children[0].innerHTML = "";
         other[0].style.position = "relative";
+        */
     }
 }
 
@@ -105,7 +111,7 @@ function set_sticky_styles(mydiv)
 
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
-function display_div(middle, x, y, time)
+function display_div(middle, x, y)
 {
     let font = settings.font.trim().replace(";","").replace("}","");
     if(font != "")
@@ -173,14 +179,18 @@ function display_div(middle, x, y, time)
     if(other.length > 0)
     {
         outer = other[0];
-        outer.replaceChild(middle, other[0].firstChild);
+        if(!outer.firstChild)
+            outer.appendChild(middle);
+        else if(outer.firstChild != middle)
+            outer.replaceChild(middle, outer.firstChild);
         outer.style.display = "block";
     }
     else
     {
         outer = mydoc.createElement("div");
         outer.className = div_class;
-        outer.appendChild(middle);
+        if(!outer.firstChild || outer.firstChild != middle)
+            outer.appendChild(middle);
         mydoc.body.appendChild(outer);
     }
     
@@ -306,7 +316,7 @@ function exists_div()
     }
     
     let other = mydoc.body.getElementsByClassName(div_class);
-    return (other.length > 0 && other[0].style.display != "none");
+    return (other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "");
 }
 
 
@@ -814,8 +824,10 @@ function build_div_intermediary()
 }
 
 // for popups with single lookup results
+let lastMoreText = "";
 function build_div (text, result, moreText, index)
 {
+    lastMoreText = moreText;
     last_displayed = [{text:text, result:result}];
     let middle = build_div_intermediary();
     middle.firstChild.appendChild(build_div_inner(text, result, moreText, index));
@@ -824,6 +836,7 @@ function build_div (text, result, moreText, index)
 // for popups with multiple lookup results
 function build_div_compound (results, moreText, index)
 {
+    lastMoreText = moreText;
     last_displayed = results;
     //console.log("Displaying:");
     //print_object(result);
@@ -936,7 +949,7 @@ async function lookup_loop()
         //console.log("asking background to search the dictionary");
         let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div(), alternatives_mode:settings.alternatives_mode, strict_alternatives:settings.strict_alternatives});
         //console.log("got response");
-        if(response)
+        if(response && response != "itsthesame")
         {
             if(!response.length)
             {
@@ -951,6 +964,9 @@ async function lookup_loop()
                     display_div(mydiv, lookup[3], lookup[4]);
             }
         }
+        //else if(response != "itsthesame" && settings.popup_follows_mouse && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(0, lookup[0].length-2))))
+        else if(response != "itsthesame" && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(1, lookup[0].length-2))))
+            lookup_cancel();
     }
     let t_end = Date.now();
     let t_to_wait = settings.lookuprate - (t_end - t_start);
@@ -1048,23 +1064,36 @@ function grab_more_text(textNode, direction = 1)
         direction = -1;
     let text = "";
     let current_node = textNode;
-    while(text.length < settings.length || (direction < 0 && !text.includes("。") && !text.includes("\n")))
+    let iters = 0;
+    while(text.length < settings.contextlength
+        && !text.includes("。") && !text.includes("！") && !text.includes("‼") && !text.includes("？")　&& !text.includes("??") && !text.includes("…")
+        && (!text.includes("\n") || settings.ignore_linebreaks))
     {
+        iters += 1;
         if(current_node == undefined) break;
+        // don't search up parent element if current element isn't inline-like
         try
         {
             let display = getComputedStyle(current_node).display;
             // break out of elements neither inline nor ruby
-            if(display != "inline" && display != "ruby")
+            if(display != "inline" && display != "ruby" && current_node.tagName.toLowerCase() != "span")
+            {
                 break;
-        } catch(err) {}
+            }
+        }catch(err){}
+        
+        if(iters > 100)
+        {
+            //console.log(current_node);
+            break;
+        }
         
         let parent = current_node.parentNode;
-        if(parent == undefined) break;
+        if(parent == undefined || parent == current_node) break;
         let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
         if(i < 0) break;
         i += direction;
-        while(i < current_node.parentNode.childNodes.length && i >= 0)
+        while(i < current_node.parentNode.childNodes.length && i >= 0 && text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))
         {
             let next_node = current_node.parentNode.childNodes[i];
             i += direction;
@@ -1083,7 +1112,7 @@ function grab_more_text(textNode, direction = 1)
                 if(display == "ruby-text")
                     continue;
                 
-                if(display == "inline")
+                if(display == "inline" || (next_node.tagName?next_node.tagName.toLowerCase() == "span":false))
                 {
                     if(direction > 0)
                         ttext += next_node.textContent;
@@ -1101,7 +1130,7 @@ function grab_more_text(textNode, direction = 1)
                             let display = getComputedStyle(child).display;
                             //if(display == "ruby-text")
                             //    continue;
-                            if(display == "inline")
+                            if(display == "inline" || (child.tagName?child.tagName.toLowerCase() == "span":false))
                             {
                                 subtext += child.textContent;
                             }
@@ -1129,8 +1158,10 @@ function grab_more_text(textNode, direction = 1)
                     text = next_node.textContent + text;
             }
         }
-        if(text.length < settings.length || direction < 0)
+        if(text.length < settings.contextlength)
             current_node = current_node.parentNode;
+        else
+            break;
     }
     return text;
 }
@@ -1154,6 +1185,11 @@ function grab_text(textNode, offset, elemental)
     
     text += grab_more_text(textNode);
     moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
+    
+    if(settings.ignore_linebreaks)
+        text = text.replace(/\n/g, "");
+    if(settings.ignore_linebreaks)
+        moreText = moreText.replace(/\n/g, "");
     
     //console.log("more (orig): " + moreText);
     //console.log("less (orig): " + text);
@@ -1179,6 +1215,7 @@ function grab_text(textNode, offset, elemental)
     //console.log("less: " + text);
     
     // grab text from later and surrounding DOM nodes
+    text = moreText.substring(index);
     return [text, moreText, index];
 }
 
@@ -1186,10 +1223,18 @@ function update(event)
 {
     if(!settings.enabled) return;
     
+    if(settings.popup_follows_mouse && exists_div() && !settings.sticky)
+    {
+        let other = document.body.getElementsByClassName(div_class)[0];
+        //let middle = other.firstChild.cloneNode(true);
+        let middle = other.firstChild;
+        if(middle)
+            display_div(middle, event.pageX, event.pageY);
+        //move_div(event.pageX, event.pageY);
+    }
+    
     if(Date.now() - time_of_last < settings.lookuprate)
     {
-        //console.log("too soon, returning");
-        //console.log(Date.now() + " vs " + time_of_last);
         return;
     }
     
@@ -1251,15 +1296,16 @@ function update(event)
         };
         
         hitpage(event.clientX, search_x_offset, event.clientY);
-        if (platform == "android" && exists_div())
+        // try without the offset
+        if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
+            hitpage(event.clientX, 0, event.clientY);
+        
+        if ((platform == "android" || settings.sticky) && exists_div())
         {
             let ele = document.body.getElementsByClassName(div_class)[0];
             if(ele.contains(textNode))
                 return;
         }
-        // try without the offset
-        if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
-            hitpage(event.clientX, 0, event.clientY);
         
         if(!(textNode == undefined))
         {
@@ -1410,7 +1456,6 @@ function mine(highlight)
 
 function keytest(event)
 {
-    console.log("asdf");
     if(event.target != document.body)
         return;
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)

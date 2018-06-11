@@ -69,8 +69,8 @@ let dictsloaded = 0;
 
 function builddict()
 {
-    console.log("load");
-    console.log(this);
+    //console.log("load");
+    //console.log(this);
     if (this.readyState === 4)
     {
         if (this.status === 200)
@@ -1167,7 +1167,7 @@ function sort_results(text, results)
         // FIXME: prefer short deconjugations to long deconjugations, not just no deconjugations to any deconjugations
         if(entry.deconj)
             entry.priority -= 1;
-        console.log(entry);
+        //console.log(entry);
     }
     
     results.sort((a,b)=>
@@ -1389,7 +1389,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
     //if(time < last_time_lookup+20) // reduces lag buildup
     //    return;
     if(text == last_lookup && divexisted)// || time < last_time_lookup+100)) // helps reduce double-lookups
-        return;
+        return "itsthesame";
     last_lookup = text;
     last_time_lookup = time;
     

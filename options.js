@@ -59,6 +59,12 @@ function defaults()
         default: true,
         label: "Strict matching for alternative matches"
     });
+    settings.push({
+        id: "popup_follows_mouse",
+        kind: "checkbox",
+        default: true,
+        label: "Popup follows mouse (even if it doesn't update)"
+    });
     
     // display
     settings.push({
