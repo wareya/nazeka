@@ -1224,21 +1224,33 @@ function update(event)
     {
         nodeIsBad = false;
         
-        let hitpage = function(x, y)
+        let hitpage = function(x, searchoffset, y)
         {
+            let xoffset = 0;
+            let yoffset = 0;
+            let ele = document.elementFromPoint(x, y);
+            if(ele && window.getComputedStyle(ele).writingMode.includes("vertical"))
+                yoffset = searchoffset;
+            else
+                xoffset = searchoffset;
             let range = undefined;
             if (document.caretPositionFromPoint)
-                range = document.caretPositionFromPoint(x, y);
+                range = document.caretPositionFromPoint(x+xoffset, y+yoffset);
             else if (document.caretRangeFromPoint)
-                range = document.caretRangeFromPoint(x, y);
+                range = document.caretRangeFromPoint(x+xoffset, y+yoffset);
             if(range)
             {
                 textNode = range.offsetNode;
                 offset = range.offset;
             }
+            if(!ele.contains(textNode))
+            {
+                textNode = undefined;
+                offset = undefined;
+            }
         };
         
-        hitpage(event.clientX+search_x_offset , event.clientY);
+        hitpage(event.clientX, search_x_offset, event.clientY);
         if (platform == "android" && exists_div())
         {
             let ele = document.body.getElementsByClassName(div_class)[0];
@@ -1247,7 +1259,7 @@ function update(event)
         }
         // try without the offset
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
-            hitpage(event.clientX, event.clientY);
+            hitpage(event.clientX, 0, event.clientY);
         
         if(!(textNode == undefined))
         {
