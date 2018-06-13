@@ -1,3 +1,5 @@
+// Copyright 2017; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
 'use strict';
 
 let settings = [];
@@ -29,6 +31,12 @@ function defaults()
         label: "Show original text"
     });
     settings.push({
+        id: "popup_follows_mouse",
+        kind: "checkbox",
+        default: true,
+        label: "Popup follows mouse (even if it doesn't update)"
+    });
+    settings.push({
         id: "length",
         kind: "number",
         min: 6,
@@ -58,12 +66,6 @@ function defaults()
         kind: "checkbox",
         default: true,
         label: "Strict matching for alternative matches"
-    });
-    settings.push({
-        id: "popup_follows_mouse",
-        kind: "checkbox",
-        default: true,
-        label: "Popup follows mouse (even if it doesn't update)"
     });
     
     // display
@@ -170,7 +172,6 @@ function defaults()
         default: "",
         label: "Font override (highlighted text only) (without trailing comma)"
     });
-    
     settings.push({
         id: "ignore_linebreaks",
         kind: "checkbox",
@@ -182,6 +183,36 @@ function defaults()
         kind: "checkbox",
         default: false,
         label: "Sticky mode"
+    });
+    
+    // reader
+    settings.push({
+        kind: "dummy",
+        label: "Reader"
+    });
+    settings.push({
+        id: "reader_width",
+        kind: "number",
+        min: 100,
+        max: 10000,
+        step: 1,
+        default: 806,
+        label: "Reader window default width"
+    });
+    settings.push({
+        id: "reader_height",
+        kind: "number",
+        min: 50,
+        max: 10000,
+        step: 1,
+        default: 300,
+        label: "Reader window default height"
+    });
+    settings.push({
+        id: "reader_reverse",
+        kind: "checkbox",
+        default: false,
+        label: "Reader insert at bottom (not recommended)"
     });
     
     // other (added imperatively)

@@ -2,6 +2,44 @@
 
 'use strict';
 
+// updated by a timer looping function, based on local storage set by the options page
+// we only use a tiny number of settings here
+
+let settings = {
+reader_width: 800,
+reader_height: 300
+};
+
+async function settings_init()
+{
+    try
+    {
+        async function getvar(name, defval)
+        {
+            let temp = (await browser.storage.local.get(name))[name];
+            if(temp == undefined)
+                temp = defval;
+            settings[name] = temp;
+        }
+        getvar("reader_width", 800);
+        getvar("reader_height", 300);
+    } catch(err) {} // options not stored yet
+}
+
+settings_init();
+
+browser.storage.onChanged.addListener((updates, storageArea) =>
+{
+    if(storageArea != "local") return;
+    for(let setting of Object.entries(updates))
+    {
+        let option = setting[0];
+        let value = setting[1];
+        if(Object.keys(settings).includes(option))
+            settings[option] = value.newValue;
+    }
+});
+
 // We use JMdict converted to JSON. It's like 32MB so we don't want to load it for every tab.
 // So we need to use a background script and send messages to it from the content script.
 // Unfortunately webextensions don't have an easy way to load files, even from in the extension.
@@ -1553,7 +1591,9 @@ function open_reader(info, tab)
     {
         browser.windows.create({
             url:browser.extension.getURL("reader.html"),
-            type:"popup"
+            type:"popup",
+            width:settings.reader_width,
+            height:settings.reader_height
         });
     } catch(err) {}
 }

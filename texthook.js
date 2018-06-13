@@ -890,6 +890,7 @@ async function settings_init()
         
         getvar("ignore_linebreaks", false);
         getvar("sticky", false);
+        getvar("popup_follows_mouse", true);
         
         if(!settings.enabled && exists_div())
             delete_div();
@@ -1315,14 +1316,14 @@ function update(event)
             {
                 if(textNode.nodeType == 1 && !nodeResetSeen.has(textNode) && !acceptable_element(textNode))
                 {
-                    let style = window.getComputedStyle(textNode);
+                    let style = getComputedStyle(textNode)
                     let bg_color = style.getPropertyValue("background-color"); 
                     if(bg_color == "rgba(0, 0, 0, 0)")
                     {
                         nodeIsBad = true;
-                        nodeResetList.push([textNode, style.getPropertyValue("z-index")]);
+                        nodeResetList.unshift([textNode, style.getPropertyValue("z-index")]);
                         nodeResetSeen.add(textNode);
-                        textNode.style.zIndex = -1000000000000000000000;
+                        textNode.style.zIndex = "-1000000000000000000000";
                         continue;
                     }
                 }
