@@ -369,6 +369,9 @@ function buildpage()
     optionsection.appendChild(label);
     
     optionsection.appendChild(document.createElement("hr"));
+    
+    let abbrlink = document.getElementById("abbrlink");
+    abbrlink.onclick = function(e){browser.windows.create({url:browser.extension.getURL('jmdictabbreviations.html'),type:'popup'}); e.preventDefault();};
 }
 
 async function restoreOptions()
