@@ -165,7 +165,7 @@ function display_div(middle, x, y)
         styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
         styletext += "min-width: 150px; "
     }
-    styletext += "position: absolute; top: 0; left: 0; ";
+    styletext += "position: absolute; top: 0; left: 0; transition: unset; ";
     
     if(settings.superborder)
         styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 1000000000000000000000;`;
@@ -1225,7 +1225,7 @@ function update(event)
 {
     if(!settings.enabled) return;
     
-    if(settings.popup_follows_mouse && exists_div() && !settings.sticky)
+    if(settings.popup_follows_mouse && exists_div() && !settings.sticky && platform != "android")
     {
         let other = document.body.getElementsByClassName(div_class)[0];
         //let middle = other.firstChild.cloneNode(true);
@@ -1290,7 +1290,7 @@ function update(event)
                 textNode = range.offsetNode;
                 offset = range.offset;
             }
-            if(!ele.contains(textNode))
+            if(ele && !ele.contains(textNode) && platform != "android" && !settings.sticky) // sticky mode and android need to break out on parent detection
             {
                 textNode = undefined;
                 offset = undefined;
