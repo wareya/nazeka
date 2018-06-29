@@ -76,16 +76,16 @@ let last_displayed = undefined;
 function delete_div()
 {
     last_displayed = undefined;
-    let other = document.body.getElementsByClassName(div_class);
-    if(other.length > 0)
+    let other = get_div();
+    if(other)
     {
-        other[0].innerHTML = "";
-        other[0].removeAttribute('style');
+        other.innerHTML = "";
+        other.removeAttribute('style');
         /*
-        other[0].style.display = "none";
-        if(other[0].children.length > 0)
-            other[0].children[0].innerHTML = "";
-        other[0].style.position = "relative";
+        other.style.display = "none";
+        if(other.children.length > 0)
+            other.children[0].innerHTML = "";
+        other.style.position = "relative";
         */
     }
 }
@@ -109,6 +109,22 @@ function set_sticky_styles(mydiv)
     mydiv.style.marginBottom = "10px";
 }
 
+function get_doc()
+{
+    let find_root = window;
+    let mydoc = document;
+    while(find_root.parent && find_root.parent != find_root && find_root.parent.document.body.tagName != "FRAMESET")
+    {
+        find_root = find_root.parent;
+        try
+        {
+            mydoc = find_root.document;
+        }
+        catch(err) {}
+    }
+    return mydoc;
+}
+
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
 function display_div(middle, x, y)
@@ -123,7 +139,7 @@ function display_div(middle, x, y)
     let newx = x;
     let newy = y;
     let mydoc = document;
-    while(find_root.parent && find_root.parent != find_root)
+    while(find_root.parent && find_root.parent != find_root && find_root.parent.document.body.tagName != "FRAMESET")
     {
         let rect = find_root.frameElement.getBoundingClientRect();
         //let rx = find_root.offsetLeft;//rect.x;
@@ -205,7 +221,7 @@ function display_div(middle, x, y)
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
     
-    if(settings.sticky && platform != "android" && document.body.getElementsByClassName("nazeka_mining_ui").length == 0)
+    if(settings.sticky && platform != "android" && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)
         set_sticky_styles(outer);
     else
     {
@@ -319,6 +335,26 @@ function exists_div()
     return (other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "");
 }
 
+function get_div()
+{
+    let find_root = window;
+    let mydoc = document;
+    while(find_root.parent && find_root.parent != find_root)
+    {
+        find_root = find_root.parent;
+        try
+        {
+            mydoc = find_root.document;
+        } catch(err) {}
+    }
+    
+    let other = mydoc.body.getElementsByClassName(div_class);
+    if(other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "")
+        return other[0];
+    else
+        return undefined;
+}
+
 
 // In JMdict, part-of-speech tags are XML entities.
 // We processed JMdict's XML with entity processing disabled so we can just use the bare tags (e.g. "v1", not "ichidan verb").
@@ -370,7 +406,7 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
         
-        if(first_of_many && (platform == "android" || (settings.sticky && document.body.getElementsByClassName("nazeka_mining_ui").length == 0)))
+        if(first_of_many && (platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)))
         {
             let buttons = document.createElement("div");
             let left_arrow = document.createElement("img");
@@ -896,8 +932,8 @@ async function settings_init()
             delete_div();
         if(!settings.enabled)
         {
-            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
         }
     } catch(err) {} // options not stored yet
 }
@@ -918,8 +954,8 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
         delete_div();
     if(!settings.enabled)
     {
-        while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-            document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+        while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+            get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
     }
 });
 
@@ -1227,7 +1263,7 @@ function update(event)
     
     if(settings.popup_follows_mouse && exists_div() && !settings.sticky && platform != "android")
     {
-        let other = document.body.getElementsByClassName(div_class)[0];
+        let other = get_div();
         //let middle = other.firstChild.cloneNode(true);
         let middle = other.firstChild;
         if(middle)
@@ -1304,7 +1340,7 @@ function update(event)
         
         if ((platform == "android" || settings.sticky) && exists_div())
         {
-            let ele = document.body.getElementsByClassName(div_class)[0];
+            let ele = get_div();
             if(ele.contains(textNode))
                 return;
         }
@@ -1464,12 +1500,12 @@ function keytest(event)
         return;
     if(event.key == "m")
     {
-        if(document.body.getElementsByClassName("nazeka_mining_ui").length)
+        if(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
         {
-            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
+            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
             {
                 console.log("deleting");
-                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             }
             console.log("deleted");
         }
@@ -1477,10 +1513,10 @@ function keytest(event)
         {
             if(!exists_div())
                 return;
-            while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             //console.log("mining request");
-            let mydiv = document.body.getElementsByClassName(div_class)[0].cloneNode(true);
+            let mydiv = get_div().cloneNode(true);
             delete_div();
             set_sticky_styles(mydiv);
             mydiv.className = "nazeka_mining_ui";
@@ -1488,8 +1524,8 @@ function keytest(event)
             newheader.textContent = "Mining UI. Press the given entry's highlighted spelling to mine it, or this message to cancel.";
             newheader.addEventListener("click", ()=>
             {
-                while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                    document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+                    get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             });
             mydiv.firstChild.firstChild.prepend(newheader);
             mydiv.style.zIndex = 1000000000000000000000;
@@ -1501,8 +1537,8 @@ function keytest(event)
                 keb.addEventListener("click", (event)=>
                 {
                     mine(event.target);
-                    while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                        document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                    while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+                        get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
                 });
             }
             for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
@@ -1510,12 +1546,12 @@ function keytest(event)
                 reb.addEventListener("click", (event)=>
                 {
                     mine(event.target);
-                    while(document.body.getElementsByClassName("nazeka_mining_ui").length)
-                        document.body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                    while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+                        get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
                 });
             }
             
-            document.body.appendChild(mydiv);
+            get_doc().body.appendChild(mydiv);
         }
     }
     if(!exists_div())
