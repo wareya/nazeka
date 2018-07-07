@@ -43,7 +43,8 @@ xoffset: 5,
 yoffset: 22,
 ignore_linebreaks: false,
 sticky: false,
-popup_follows_mouse: true
+popup_follows_mouse: true,
+popup_requires_key: 0 // 0: none; 1: ctrl; 2: shift
 };
 
 let platform = "win";
@@ -126,8 +127,12 @@ function get_doc()
 
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
+let last_display_x = 0;
+let last_display_y = 0;
 function display_div(middle, x, y)
 {
+    last_display_x = x;
+    last_display_y = y;
     let font = settings.font.trim().replace(";","").replace("}","");
     if(font != "")
         font += ",";
@@ -954,6 +959,7 @@ async function settings_init()
         getvar("ignore_linebreaks", false);
         getvar("sticky", false);
         getvar("popup_follows_mouse", true);
+        getvar("popup_requires_key", 0);
         
         if(!settings.enabled && exists_div())
             delete_div();
@@ -1284,8 +1290,23 @@ function grab_text(textNode, offset, elemental)
     return [text, moreText, index];
 }
 
+let last_seen_event = undefined;
+let shift_down = false;
+let ctrl_down = false;
 function update(event)
 {
+    if(!event) return;
+    last_seen_event = event;
+    
+    if((settings.popup_requires_key == 2 && !shift_down)
+    || (settings.popup_requires_key == 1 && !ctrl_down))
+    {
+        function sqr(n) {return n*n;}
+        if(Math.sqrt(sqr(last_display_x-event.pageX) + sqr(last_display_y-event.pageY)) > 20)
+            lookup_cancel();
+        return;
+    }
+    
     if(!settings.enabled) return;
     
     if(settings.popup_follows_mouse && exists_div() && !settings.sticky && platform != "android")
@@ -1523,6 +1544,18 @@ function keytest(event)
 {
     if(event.target != document.body)
         return;
+    if(settings.popup_requires_key == 2 && event.key == "Shift")
+    {
+        shift_down = true;
+        update(last_seen_event);
+        return;
+    }
+    if(settings.popup_requires_key == 1 && event.key == "Control")
+    {
+        ctrl_down = true;
+        update(last_seen_event);
+        return;
+    }
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
         return;
     if(event.key == "m")
@@ -1592,17 +1625,29 @@ function keytest(event)
         settings.sticky = !settings.sticky;
         browser.storage.local.set({"sticky":settings.sticky});
     }
-    if(event.keyCode == 37) // left
+    if(event.key == "ArrowLeft")
     {
         lookup_left();
     }
-    if(event.keyCode == 39) // right
+    if(event.key == "ArrowRight")
     {
         lookup_right();
     }
 }
 
+function keyuntest(event)
+{
+    if(event.key == "Shift")
+        shift_down = false;
+    if(event.key == "Control")
+        ctrl_down = false;
+    if(event.key == "Alt")
+        alt_down = false;
+    
+}
+
 window.addEventListener("mousemove", update);
 window.addEventListener("keydown", keytest);
+window.addEventListener("keyup", keyuntest);
 document.addEventListener("touchstart", update_touch);
 

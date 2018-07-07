@@ -67,6 +67,13 @@ function defaults()
         default: true,
         label: "Strict matching for alternative matches"
     });
+    settings.push({
+        id: "popup_requires_key",
+        kind: "combobox",
+        options: ["None", "Ctrl", "Shift"],
+        default: 0,
+        label: "Popup requires key"
+    });
     
     // display
     settings.push({
@@ -127,7 +134,7 @@ function defaults()
         kind: "combobox",
         options: ["Top left", "Top right", "Bottom left", "Bottom right", "Top auto"],
         default: 0,
-        label: "Popup positioning corner (note: for \"bottom\" corners, order of definitions is reversed, but \"original text\" still shows up at top of each lookup's definitions, not bottom) (\"top auto\" feels very bad unless \"position as though fixed width\" is also enabled)"
+        label: "Popup positioning corner (note: \"bottom ___\" and \"top auto\" have problems due to web technology being a bad fit for mouseover dictionaries)"
     });
     
     // theme
