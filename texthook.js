@@ -10,9 +10,7 @@
  * - VNstats frequency data
  * - Integrate frequency into priority handling
  * - Load deconjugation rules from an advanced setting, with a reset button
- * - Mining support features
  * ? Export/import settings with json
- * ? List definitions of shorter text strings if they're not pure kana (in addition to main definitions)
  * 
  */
 
@@ -37,6 +35,7 @@ lookuprate: 8,
 bgcolor: "#111111",
 fgcolor: "#CCCCCC",
 hlcolor: "#99DDFF",
+hlcolor2: "#99FF99",
 font: "",
 hlfont: "",
 corner: 0,
@@ -475,13 +474,23 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
     if(settings.font.trim().replace(";","").replace("}","") != "")
         font += settings.font.trim().replace(";","").replace("}","") + ",";
     style.textContent =
-`.nazeka_main_keb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
-.nazeka_main_reb{font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;font-size:18px;color:${settings.hlcolor}}\
-.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}\
+`.nazeka_main_keb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_main_reb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_word * {vertical-align: middle}
+.nazeka_sub_keb{font-size:16px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
+.nazeka_sub_reb{font-size:16px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor2}}
+.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
 .epwing_head{margin: 6px 8px 4px;}
-.epwing_definition{margin: 0 8px;}\
+.epwing_definition{margin: 0 8px;}
 `;
     temp.appendChild(style);
+    
+    function makespan(text)
+    {
+        let s = document.createElement("span");
+        s.textContent = text;
+        return s;
+    }
     
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     for(let i = 0; i < result.length; i++)
@@ -515,6 +524,90 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
             keb.className = "nazeka_main_keb";
             keb.textContent = kanji_text;
             temptag.appendChild(keb);
+            if(k_ele.inf)
+            {
+                let maininfos = document.createElement("span");
+                maininfos.className = "nazeka_main_infos";
+                for(let info of k_ele.inf)
+                {
+                    let keb_inf = document.createElement("span");
+                    keb_inf.className = "nazeka_main_inf";
+                    keb_inf.textContent += "(";
+                    keb_inf.textContent += clip(info);
+                    keb_inf.textContent += ")";
+                    maininfos.appendChild(keb_inf);
+                }
+                temptag.appendChild(maininfos);
+            }
+            
+            // list readings
+            let readings = term.r_ele;
+            
+            temptag.appendChild(document.createElement("wbr"));
+            let e_readings = document.createElement("span");
+            e_readings.appendChild(makespan("《"));
+            e_readings.className = "nazeka_readings";
+            for(let j = 0; j < readings.length; j++)
+            {
+                let subreb = document.createElement("span");
+                subreb.className = "nazeka_sub_reb";
+                subreb.textContent = readings[j].reb;
+                e_readings.appendChild(subreb);
+                if(readings[j].inf)
+                {
+                    for(let info of readings[j].inf)
+                    {
+                        let reb_inf = document.createElement("span");
+                        reb_inf.className = "nazeka_reb_inf";
+                        reb_inf.textContent += "(";
+                        reb_inf.textContent += clip(info);
+                        reb_inf.textContent += ")";
+                        e_readings.appendChild(reb_inf);
+                    }
+                }
+                if(j+1 != readings.length)
+                {
+                    e_readings.appendChild(document.createElement("wbr"));
+                    e_readings.appendChild(makespan("、"));
+                }
+            }
+            e_readings.appendChild(makespan("》"));
+            temptag.appendChild(e_readings);
+            
+            // list alternatives
+            let alternatives = [];
+            for(let j = 0; j < term.k_ele.length; j++)
+                if(term.k_ele[j].keb != kanji_text)
+                    alternatives.push(term.k_ele[j]);
+            
+            if(alternatives.length > 0)
+            {
+                temptag.appendChild(makespan(" (also "));
+            }
+            for(let j = 0; j < alternatives.length; j++)
+            {
+                let subkeb = document.createElement("span");
+                subkeb.className = "nazeka_sub_keb";
+                subkeb.textContent = alternatives[j].keb;
+                temptag.appendChild(subkeb);
+                if(alternatives[j].inf)
+                {
+                    for(let info of alternatives[j].inf)
+                    {
+                        temptag.appendChild(makespan(" "));
+                        let keb_inf = document.createElement("span");
+                        keb_inf.className = "nazeka_keb_inf";
+                        keb_inf.textContent += "(";
+                        keb_inf.textContent += clip(info);
+                        keb_inf.textContent += ")";
+                        temptag.appendChild(keb_inf);
+                    }
+                }
+                if(j+1 < alternatives.length)
+                    temptag.appendChild(makespan(", "));
+            }
+            if(alternatives.length > 0)
+                temptag.appendChild(makespan(")"));
             
             // deconjugations
             
@@ -541,91 +634,24 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     }
                     if(formtext != "")
                     {
-                        temptag.appendChild(document.createElement("wbr"));
                         if(first)
+                        {
+                            temptag.appendChild(document.createElement("wbr"));
                             deconj = "～";
+                        }
                         else
-                            deconj = "・";
-                        temptag.appendChild(document.createTextNode(deconj));
+                        {
+                            temptag.appendChild(document.createElement("wbr"));
+                            deconj = "；";
+                        }
+                        temptag.appendChild(makespan(deconj));
                         temptag.appendChild(document.createElement("wbr"));
                         deconj = formtext;
-                        temptag.appendChild(document.createTextNode(deconj));
+                        temptag.appendChild(makespan(deconj));
                     }
                     first = false;
                 }
             }
-            if(k_ele.inf)
-            {
-                let maininfos = document.createElement("span");
-                maininfos.className = "nazeka_main_infos";
-                for(let info of k_ele.inf)
-                {
-                    let keb_inf = document.createElement("span");
-                    keb_inf.className = "nazeka_main_inf";
-                    keb_inf.textContent += "(";
-                    keb_inf.textContent += clip(info);
-                    keb_inf.textContent += ")";
-                    maininfos.appendChild(keb_inf);
-                }
-                temptag.appendChild(maininfos);
-            }
-            
-            // list readings
-            let readings = term.r_ele;
-            
-            temptag.appendChild(document.createTextNode(" 《"));
-            let e_readings = document.createElement("span");
-            e_readings.className = "nazeka_readings";
-            for(let j = 0; j < readings.length; j++)
-            {
-                e_readings.appendChild(document.createTextNode(readings[j].reb));
-                if(readings[j].inf)
-                {
-                    for(let info of readings[j].inf)
-                    {
-                        let reb_inf = document.createElement("span");
-                        reb_inf.className = "nazeka_reb_inf";
-                        reb_inf.textContent += "(";
-                        reb_inf.textContent += clip(info);
-                        reb_inf.textContent += ")";
-                        e_readings.appendChild(reb_inf);
-                    }
-                }
-                if(j+1 != readings.length)
-                    e_readings.appendChild(document.createTextNode("・"));
-            }
-            temptag.appendChild(e_readings);
-            temptag.appendChild(document.createTextNode("》"));
-            
-            // list alternatives
-            let alternatives = [];
-            for(let j = 0; j < term.k_ele.length; j++)
-                if(term.k_ele[j].keb != kanji_text)
-                    alternatives.push(term.k_ele[j]);
-            
-            if(alternatives.length > 0)
-                temptag.appendChild(document.createTextNode(" (also "));
-            for(let j = 0; j < alternatives.length; j++)
-            {
-                temptag.appendChild(document.createTextNode(alternatives[j].keb));
-                if(alternatives[j].inf)
-                {
-                    for(let info of alternatives[j].inf)
-                    {
-                        temptag.appendChild(document.createTextNode(" "));
-                        let keb_inf = document.createElement("span");
-                        keb_inf.className = "nazeka_keb_inf";
-                        keb_inf.textContent += "(";
-                        keb_inf.textContent += clip(info);
-                        keb_inf.textContent += ")";
-                        temptag.appendChild(keb_inf);
-                    }
-                }
-                if(j+1 < alternatives.length)
-                    temptag.appendChild(document.createTextNode(", "));
-            }
-            if(alternatives.length > 0)
-                temptag.appendChild(document.createTextNode(")"));
         }
         else
         {
@@ -663,7 +689,7 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     }
                     first = false;
                 }
-                temptag.appendChild(document.createTextNode(deconj));
+                temptag.appendChild(makespan(deconj));
             }
             // FIXME wrapper span
             if(term.found.inf)
@@ -690,15 +716,15 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     alternatives.push(term.r_ele[j]);
             
             if(alternatives.length > 0)
-                temptag.appendChild(document.createTextNode(" (also "));
+                temptag.appendChild(makespan(" (also "));
             for(let j = 0; j < alternatives.length; j++)
             {
-                temptag.appendChild(document.createTextNode(alternatives[j].reb));
+                temptag.appendChild(makespan(alternatives[j].reb));
                 if(alternatives[j].inf)
                 {
                     for(let info of alternatives[j].inf)
                     {
-                        temptag.appendChild(document.createTextNode(" "));
+                        temptag.appendChild(makespan(" "));
                         let reb_inf = document.createElement("span");
                         reb_inf.className = "nazeka_reb_inf";
                         reb_inf.textContent += "(";
@@ -708,10 +734,10 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
                     }
                 }
                 if(j+1 < alternatives.length)
-                    temptag.appendChild(document.createTextNode(", "));
+                    temptag.appendChild(makespan(", "));
             }
             if(alternatives.length > 0)
-                temptag.appendChild(document.createTextNode(")"));
+                temptag.appendChild(makespan(")"));
         }
         container.appendChild(temptag);
         container.appendChild(document.createElement("br"));
@@ -914,6 +940,7 @@ async function settings_init()
         getvar("bgcolor", "#111111");
         getvar("fgcolor", "#CCCCCC");
         getvar("hlcolor", "#99DDFF");
+        getvar("hlcolor2", "#66DD44");
         getvar("font", "");
         getvar("hlfont", "");
         
@@ -1521,7 +1548,7 @@ function keytest(event)
             set_sticky_styles(mydiv);
             mydiv.className = "nazeka_mining_ui";
             let newheader = document.createElement("div");
-            newheader.textContent = "Mining UI. Press the given entry's highlighted spelling to mine it, or this message to cancel.";
+            newheader.textContent = "Mining UI. Press the given entry's main spelling to mine it, or click this message to cancel.";
             newheader.addEventListener("click", ()=>
             {
                 while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)

@@ -158,7 +158,13 @@ function defaults()
         id: "hlcolor",
         kind: "color",
         default: "#99DDFF",
-        label: "Highlight color"
+        label: "Main highlight color"
+    });
+    settings.push({
+        id: "hlcolor2",
+        kind: "color",
+        default: "#99FF99",
+        label: "Reading highlight color"
     });
     settings.push({
         id: "font",
