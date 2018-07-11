@@ -482,8 +482,8 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
 `.nazeka_main_keb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
 .nazeka_main_reb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
 .nazeka_word * {vertical-align: middle}
-.nazeka_sub_keb{font-size:16px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
-.nazeka_sub_reb{font-size:16px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor2}}
+.nazeka_sub_keb{font-size:15px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
+.nazeka_sub_reb{font-size:15px;white-space:nowrap;color:${settings.hlcolor2}}
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
 .epwing_head{margin: 6px 8px 4px;}
 .epwing_definition{margin: 0 8px;}
