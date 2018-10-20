@@ -1125,7 +1125,10 @@ function lookup_right()
 let time_of_last = Date.now();
 
 let search_x_offset = -3;
-
+function isInline()
+{
+	return display == "inline" || display == "ruby" || display == "ruby-base";
+}
 function grab_more_text(textNode, direction = 1)
 {
     if(direction > 0)
@@ -1146,7 +1149,8 @@ function grab_more_text(textNode, direction = 1)
         {
             let display = getComputedStyle(current_node).display;
             // break out of elements neither inline nor ruby
-            if(display != "inline" && display != "ruby" && current_node.tagName.toLowerCase() != "span")
+				//console.log(display);
+            if(!isInline() && current_node.tagName.toLowerCase() != "span")
             {
                 break;
             }
@@ -1183,7 +1187,7 @@ function grab_more_text(textNode, direction = 1)
                 if(display == "ruby-text")
                     continue;
                 
-                if(display == "inline" || (next_node.tagName?next_node.tagName.toLowerCase() == "span":false))
+                if(isInline() || (next_node.tagName?next_node.tagName.toLowerCase() == "span":false))
                 {
                     if(direction > 0)
                         ttext += next_node.textContent;
@@ -1201,7 +1205,7 @@ function grab_more_text(textNode, direction = 1)
                             let display = getComputedStyle(child).display;
                             //if(display == "ruby-text")
                             //    continue;
-                            if(display == "inline" || (child.tagName?child.tagName.toLowerCase() == "span":false))
+                            if(isInline() || (child.tagName?child.tagName.toLowerCase() == "span":false))
                             {
                                 subtext += child.textContent;
                             }
@@ -1256,7 +1260,9 @@ function grab_text(textNode, offset, elemental)
     
     text += grab_more_text(textNode);
     moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
-    
+    text = text.replace(/\((?:.)*?\)/gm, '');
+    moreText = moreText.replace(/\((?:.)*?\)/gm, '');
+    //console.log(moreText);
     if(settings.ignore_linebreaks)
         text = text.replace(/\n/g, "");
     if(settings.ignore_linebreaks)
