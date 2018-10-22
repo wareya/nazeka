@@ -44,7 +44,10 @@ yoffset: 22,
 ignore_linebreaks: false,
 sticky: false,
 popup_follows_mouse: true,
-popup_requires_key: 0 // 0: none; 1: ctrl; 2: shift
+popup_requires_key: 0, // 0: none; 1: ctrl; 2: shift
+x_dodge: 1,
+y_dodge: 0,
+sticky_maxheight: 0,
 };
 
 let platform = "win";
@@ -102,7 +105,10 @@ function set_sticky_styles(mydiv)
     else
         mydiv.style.left = "10px";
     mydiv.style.marginRight = "unset";
-    mydiv.style.maxHeight = "calc(100vh - 20px)";
+    if(settings.sticky_maxheight == 0)
+        mydiv.style.maxHeight = "calc(100vh - 20px)";
+    else
+        mydiv.style.maxHeight = Math.round(Number(settings.sticky_maxheight))+"px";
     mydiv.style.overflowY = "scroll";
     mydiv.style.marginLeft = "unset";
     mydiv.style.marginTop = "unset";
@@ -162,6 +168,7 @@ function display_div(middle, x, y)
             mydoc = find_root.document;
         } catch(err) {}
     }
+    
     // compensate for body being relative if it is, because our popup is absolute
     let relative_body = getComputedStyle(mydoc.body).position == "relative";
     if(relative_body)
@@ -174,15 +181,19 @@ function display_div(middle, x, y)
         newy -= mydoc.scrollingElement.scrollTop;
     }
     
+    let basewidth = Math.round(Number(settings.width));
+    if(settings.x_dodge != 1 && basewidth > mydoc.documentElement.getBoundingClientRect().width/2 - settings.xoffset - 5)
+        basewidth = Math.max(150, Math.round(mydoc.documentElement.getBoundingClientRect().width/2 - settings.xoffset - 5));
+    
     let styletext = "";
     if(settings.fixedwidth)
     {
-        styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
-        styletext += "min-width: " + Math.round(Number(settings.width)) + "px; "
+        styletext += "max-width: " + basewidth + "px; "
+        styletext += "min-width: " + basewidth + "px; "
     }
     else
     {
-        styletext += "max-width: " + Math.round(Number(settings.width)) + "px; "
+        styletext += "max-width: " + basewidth + "px; "
         styletext += "min-width: 150px; "
     }
     styletext += "position: absolute; top: 0; left: 0; transition: unset; ";
@@ -221,7 +232,7 @@ function display_div(middle, x, y)
     
     outer.style = styletext;
     
-    let mywidth = settings.width*settings.scale;
+    let mywidth = basewidth*settings.scale;
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
     
@@ -231,27 +242,6 @@ function display_div(middle, x, y)
         set_sticky_styles(outer);
     else
     {
-        
-        let buffer = settings.xoffset+5;
-        
-        if(mywidth+buffer*2 < mydoc.documentElement.getBoundingClientRect().width)
-        {
-            if((corner == 0 || corner == 2) && newx+mywidth+buffer > mydoc.documentElement.getBoundingClientRect().right)
-            {
-                if(corner == 0)
-                    corner = 1;
-                else if(corner == 2)
-                    corner = 3;
-            }
-            if((corner == 1 || corner == 3) && newx-mywidth-buffer < mydoc.documentElement.getBoundingClientRect().left)
-            {
-                if(corner == 1)
-                    corner = 0;
-                else if(corner == 3)
-                    corner = 2;
-            }
-        }
-        
         if(corner == 1 || corner == 3)
         {
             newx -= mywidth;
@@ -261,7 +251,9 @@ function display_div(middle, x, y)
             newx += settings.xoffset;
         
         if(corner == 2 || corner == 3)
-            newy = newy - outer.getBoundingClientRect().height;
+            newy = newy - outer.getBoundingClientRect().height - settings.yoffset;
+        else
+            newy = newy + settings.yoffset;
         
         // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
         outer.style.top = "0px";
@@ -269,10 +261,7 @@ function display_div(middle, x, y)
         let width = outer.offsetWidth;
         //
         
-        if(corner == 3 || corner == 2)
-            outer.style.top = (newy-settings.yoffset)+"px";
-        else
-            outer.style.top = (newy+settings.yoffset)+"px";
+        outer.style.top = (newy)+"px";
         outer.style.bottom = "unset";
         outer.style.right = "unset";
         outer.style.left = (newx)+"px";
@@ -284,20 +273,49 @@ function display_div(middle, x, y)
         //
     }
     
-    let localrect = outer.getBoundingClientRect();
+    let localrect;
     
-    if(localrect.bottom-5 > window.innerHeight)
+    let dodged_vertically = false;
+    
+    // dodge top/bottom
+    localrect = outer.getBoundingClientRect();
+    if(localrect.bottom+5 > mydoc.body.clientHeight)
     {
-        newy -= localrect.bottom-5 - window.innerHeight;
+        if(settings.y_dodge == 1) // slide
+            newy -= localrect.bottom+5 - mydoc.body.clientHeight;
+        else // flip
+            newy -= localrect.height + settings.yoffset*2;
+        outer.style.top = (newy)+"px";
+        dodged_vertically = true;
+    }
+    localrect = outer.getBoundingClientRect();
+    if(localrect.top-5 < 0 && (!dodged_vertically || corner == 0 || corner == 1)) // (prefer running off the top when using "bottom" alignments)
+    {
+        if(settings.y_dodge == 1)
+            newy -= localrect.top-5;
+        else
+            newy += localrect.height + settings.yoffset*2;
         outer.style.top = (newy)+"px";
     }
     
+    // dodge left/right
     localrect = outer.getBoundingClientRect();
-    
-    if(localrect.top-5 < 0)
+    if(localrect.right+5 > mydoc.body.clientWidth)
     {
-        newy -= localrect.top-5;
-        outer.style.top = (newy)+"px";
+        if(settings.x_dodge == 1)
+            newx -= localrect.right+5 - mydoc.body.clientWidth;
+        else
+            newx -= localrect.width + settings.xoffset*2;
+        outer.style.left = (newx)+"px";
+    }
+    localrect = outer.getBoundingClientRect();
+    if(localrect.left-5 < 0)
+    {
+        if(settings.x_dodge == 1)
+            newx -= localrect.left-5;
+        else
+            newx += localrect.width + settings.xoffset*2;
+        outer.style.left = (newx)+"px";
     }
 }
 
@@ -939,6 +957,10 @@ async function settings_init()
         getvar("sticky", false);
         getvar("popup_follows_mouse", true);
         getvar("popup_requires_key", 0);
+        
+        getvar("x_dodge", 1);
+        getvar("y_dodge", 0);
+        getvar("sticky_maxheight", 0);
         
         if(!settings.enabled && exists_div())
             delete_div();

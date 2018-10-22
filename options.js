@@ -74,6 +74,12 @@ function defaults()
         default: 0,
         label: "Popup requires key"
     });
+    settings.push({
+        id: "ignore_linebreaks",
+        kind: "checkbox",
+        default: false,
+        label: "Ignore hard line breaks"
+    });
     
     // display
     settings.push({
@@ -115,7 +121,15 @@ function defaults()
         max: 10000,
         step: 1,
         default: 600,
-        label: "Lookup popup width (before scaling)"
+        label: "Lookup popup width (before scaling) (limited to half the browser window width)"
+    });
+    settings.push({
+        id: "sticky_maxheight",
+        kind: "number",
+        min: 0,
+        max: 10000,
+        default: 0,
+        label: "Maximum height of Sticky and Mining UI modes - 0 is full screen"
     });
     settings.push({
         id: "fixedwidth",
@@ -134,7 +148,21 @@ function defaults()
         kind: "combobox",
         options: ["Top left", "Top right", "Bottom left", "Bottom right"],
         default: 0,
-        label: "Popup positioning corner"
+        label: "Which corner of the popup follows the mouse"
+    });
+    settings.push({
+        id: "x_dodge",
+        kind: "combobox",
+        options: ["Flip", "Push"],
+        default: 1,
+        label: "How to keep the popup on the screen horizontally"
+    });
+    settings.push({
+        id: "y_dodge",
+        kind: "combobox",
+        options: ["Flip", "Push"],
+        default: 0,
+        label: "How to keep the popup on the screen vertically (at least one of these two options should be \"Push\")"
     });
     
     // theme
@@ -184,12 +212,6 @@ function defaults()
         kind: "text",
         default: "",
         label: "Font override (highlighted text only) (without trailing comma)"
-    });
-    settings.push({
-        id: "ignore_linebreaks",
-        kind: "checkbox",
-        default: false,
-        label: "Ignore hard line breaks"
     });
     settings.push({
         id: "sticky",
@@ -423,6 +445,7 @@ This format can be extended in the future if it becomes desirable to include mor
     optionsection.appendChild(document.createElement("hr"));
     
     let backup_save = document.createElement("button");
+    backup_save.type = "button";
     backup_save.innerText = "Save Backup";
     backup_save.addEventListener("click", (async function ()
     {
