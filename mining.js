@@ -44,9 +44,7 @@ async function init_page()
                 text += "\t";
             } catch(e) {}
             text += card.seq.replace(/\t/g, "\\t");
-            console.log(text);
             text = text.replace(/\n/g, "\\n").replace(/\r/g, "");
-            console.log(text);
             text += "\n";
             fulltext += text;
         }

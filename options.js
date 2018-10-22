@@ -352,10 +352,10 @@ function buildpage()
     
     let file = document.createElement("input");
     file.type = "file";
-    file.id = "file";
+    file.id = "epwing_file";
     file.addEventListener("change", () =>
     {
-        let fname = document.querySelector("#file").files[0];
+        let fname = document.querySelector("#epwing_file").files[0];
         let reader = new FileReader();
         reader.onload = async(e) =>
         {
@@ -375,11 +375,103 @@ function buildpage()
     let label = document.createElement("label");
     label.for = file.id;
     label.id = "import_label";
-    label.textContent = "Import processed dictionary (instructions coming later)";
+    label.textContent = "Import JSON dictionary.";
     label.style.display = "block";
+    
+    let dict_explanation = document.createElement("p");
+    dict_explanation.innerHTML = 
+`JSON dictionaries have the following format:
+<pre style='font-family:monospace !important' lang='en-US'>[
+    "The Worst Dictionary Ever",
+    {
+        "r":"あ",
+        "s":[
+            "亜",
+            "亞"
+        ],
+        "l":[
+            "this is a single line of a definition"
+        ]
+    },
+    {
+        "r":"ああ",
+        "s":[
+            ""
+        ],
+        "l":[
+            "1) yep",
+            "　　1 - this is a multi-line, multi-part definition",
+            "　　2 - dictionaries are crazy",
+            "2) why is this word in a dictionary?"
+        ]
+    },
+    //...
+]</pre>
+JSON dictionaries are JSON files consisting of a single array. The first entry is a string, the name of the dictionary. All remaining entries are objects, each containing the three keys "r", "s", and "l".<br>
+"r" maps to a single string, the reading of that entry.<br>
+"s" maps to an array listing strings that are all the possible spellings of the current entry. If the only spelling is the reading, there is a single blank string in the array of spellings.<br>
+"l" maps to an array of strings, each of which are one of the lines of the definition, in order.<br>
+This format is designed to be a sane generic mapping for EPWing dictionaries, after all the metadata is stripped out, and all "gaiji" encodings have been converted to unicode already.<br>
+You can currently only have one JSON dictionary at a time and cannot manage the one you have imported aside from replacing it.<br>
+Unfortunately, EPWING dictionaries can't be converted to this format in a general way. Someone has to write a script for every single EPWING dictionary out there, one at a time.<br>
+This format can be extended in the future if it becomes desirable to include more information, like pitch accent data, from dictionaries that have it.`;
     
     optionsection.appendChild(file);
     optionsection.appendChild(label);
+    optionsection.appendChild(dict_explanation);
+    
+    optionsection.appendChild(document.createElement("hr"));
+    
+    let backup_save = document.createElement("button");
+    backup_save.innerText = "Save Backup";
+    backup_save.addEventListener("click", (async function ()
+    {
+        let blob = new Blob([JSON.stringify((await browser.storage.local.get()))], {type: 'text/plain'});
+        let url = window.URL.createObjectURL(blob);
+
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = "nazeka_data_backup.json";
+        console.log("trying to virtually click this a element:");
+        console.log(a);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        window.URL.revokeObjectURL(url);
+    }));
+    optionsection.appendChild(backup_save);
+    optionsection.appendChild(document.createElement("br"));
+    
+    let backup_load = document.createElement("input");
+    backup_load.type = "file";
+    backup_load.id = "backup_file";
+    backup_load.addEventListener("change", () =>
+    {
+        let fname = document.querySelector("#backup_file").files[0];
+        let reader = new FileReader();
+        reader.onload = async(e) =>
+        {
+            try
+            {
+                browser.storage.local.set(JSON.parse(e.target.result));
+                browser.runtime.sendMessage({type:"refreshepwing"});
+                document.querySelector("#backup_load_label").textContent = "Loaded backup. Might take a few seconds to apply.";
+            }
+            catch(except)
+            {
+                console.log(except.stack);
+            }
+        };
+        reader.readAsText(fname);
+    });
+    let backup_load_label = document.createElement("label");
+    backup_load_label.for = backup_save.id;
+    backup_load_label.id = "backup_load_label";
+    backup_load_label.textContent = "Import Backup.";
+    backup_load_label.style.display = "block";
+    optionsection.appendChild(backup_load);
+    optionsection.appendChild(backup_load_label);
     
     optionsection.appendChild(document.createElement("hr"));
     
