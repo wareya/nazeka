@@ -225,100 +225,79 @@ function display_div(middle, x, y)
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
     
+    let corner = settings.corner;
+    
     if(settings.sticky && platform != "android" && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)
         set_sticky_styles(outer);
     else
     {
-        let corner = settings.corner;
         
-        let buffer = 25;
-        if(corner != 1 && corner != 3)
+        let buffer = settings.xoffset+5;
+        
+        if(mywidth+buffer*2 < mydoc.documentElement.getBoundingClientRect().width)
         {
-            let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) + mydoc.defaultView.scrollX;
-            if(newx + mywidth > pretend_doc_width-buffer)
+            if((corner == 0 || corner == 2) && newx+mywidth+buffer > mydoc.documentElement.getBoundingClientRect().right)
             {
-                if(corner == 4)// && Math.abs(newx + mywidth - pretend_doc_width) > mywidth/2)
+                if(corner == 0)
                     corner = 1;
-                else
-                {
-                    newx -= (newx + mywidth - pretend_doc_width);
-                    newx -= buffer;
-                    if(newx < mydoc.defaultView.scrollX)
-                        newx = mydoc.defaultView.scrollX;
-                }
+                else if(corner == 2)
+                    corner = 3;
             }
-        }
-        if(corner == 1 || corner == 3) // don't use else here, we might get here because of "corner = 1" a few lines above
-        {
-            let pretend_doc_width = Math.max(mywidth, mydoc.defaultView.innerWidth) - mydoc.defaultView.scrollX;
-            newx = mydoc.defaultView.innerWidth - newx;
-            if(newx + mywidth > pretend_doc_width-buffer)
+            if((corner == 1 || corner == 3) && newx-mywidth-buffer < mydoc.documentElement.getBoundingClientRect().left)
             {
-                newx += (newx + mywidth - pretend_doc_width);
-                newx += buffer;
-                // this is wrong but it can't be fixed without invoking cthulhu
-                if(newx > mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5)
-                    newx = mydoc.defaultView.innerWidth-mydoc.defaultView.scrollX-mywidth-buffer+5;
+                if(corner == 1)
+                    corner = 0;
+                else if(corner == 3)
+                    corner = 2;
             }
         }
+        
+        if(corner == 1 || corner == 3)
+        {
+            newx -= mywidth;
+            newx -= settings.xoffset;
+        }
+        else
+            newx += settings.xoffset;
         
         if(corner == 2 || corner == 3)
-        {
-            newy = mydoc.defaultView.innerHeight - newy;
-            if(newy < 0)
-                newy = 0;
-        }
+            newy = newy - outer.getBoundingClientRect().height;
         
-        if(corner == 3)
-        {
-            outer.style.top = "unset";
-            outer.style.bottom = (newy+settings.yoffset)+"px";
-            outer.style.right = (newx-settings.xoffset)+"px";
-            outer.style.left = "unset";
-            outer.style.marginRight = "unset";
-            outer.style.marginLeft = "unset";
-        }
-        else if(corner == 2)
-        {
-            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
-            outer.style.top = "0px";
-            outer.style.left = "0px";
-            let width = outer.offsetWidth;
-            
-            outer.style.top = "unset";
-            outer.style.bottom = (newy+settings.yoffset)+"px";
-            outer.style.right = "unset";
-            outer.style.left = (newx+settings.xoffset)+"px";
-            outer.style.marginRight = "unset";
-            outer.style.marginLeft = "unset";
-            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
-            outer.style.width = (width)+"px";
-        }
-        else if(corner == 1)
-        {
+        // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+        outer.style.top = "0px";
+        outer.style.left = "0px";
+        let width = outer.offsetWidth;
+        //
+        
+        if(corner == 3 || corner == 2)
+            outer.style.top = (newy-settings.yoffset)+"px";
+        else
             outer.style.top = (newy+settings.yoffset)+"px";
-            outer.style.bottom = "unset";
-            outer.style.right = (newx-settings.xoffset)+"px";
-            outer.style.left = "unset";
-            outer.style.marginRight = "unset";
-            outer.style.marginLeft = "unset";
-        }
-        else // 0 or invalid
-        {
-            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
-            outer.style.top = "0px";
-            outer.style.left = "0px";
-            let width = outer.offsetWidth;
-            
-            outer.style.top = (newy+settings.yoffset)+"px";
-            outer.style.bottom = "unset";
-            outer.style.right = "unset";
-            outer.style.left = (newx+settings.xoffset)+"px";
-            outer.style.marginRight = "unset";
-            outer.style.marginLeft = "unset";
-            // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
-            outer.style.width = (width)+"px";
-        }
+        outer.style.bottom = "unset";
+        outer.style.right = "unset";
+        outer.style.left = (newx)+"px";
+        outer.style.marginRight = "unset";
+        outer.style.marginLeft = "unset";
+        
+        // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
+        outer.style.width = (width)+"px";
+        //
+    }
+    
+    let localrect = outer.getBoundingClientRect();
+    
+    if(localrect.bottom-5 > window.innerHeight)
+    {
+        newy -= localrect.bottom-5 - window.innerHeight;
+        outer.style.top = (newy)+"px";
+    }
+    
+    localrect = outer.getBoundingClientRect();
+    
+    if(localrect.top-5 < 0)
+    {
+        newy -= localrect.top-5;
+        outer.style.top = (newy)+"px";
     }
 }
 
@@ -1332,6 +1311,7 @@ function update(event)
     //console.log("searching for text");
     let textNode;
     let offset;
+    let hitrect;
     
     let nodeResetList = [];
     let nodeResetSeen = new Set();
@@ -1364,20 +1344,41 @@ function update(event)
                 yoffset = searchoffset;
             else
                 xoffset = searchoffset;
-            let range = undefined;
             if (document.caretPositionFromPoint)
-                range = document.caretPositionFromPoint(x+xoffset, y+yoffset);
-            else if (document.caretRangeFromPoint)
-                range = document.caretRangeFromPoint(x+xoffset, y+yoffset);
-            if(range)
             {
-                textNode = range.offsetNode;
-                offset = range.offset;
+                let caretdata = document.caretPositionFromPoint(x+xoffset, y+yoffset);
+                if(caretdata)
+                {
+                    textNode = caretdata.offsetNode;
+                    offset = caretdata.offset;
+                    
+                    let range = document.createRange();
+                    range.selectNode(textNode);
+                    hitrect = range.getBoundingClientRect();
+                    range.detach();
+                }
+            }
+            else if (document.caretRangeFromPoint)
+            {
+                let range = document.caretRangeFromPoint(x+xoffset, y+yoffset);
+                if(range)
+                {
+                    textNode = range.startContainer;
+                    offset = range.startOffset;
+                    hitrect = range.getBoundingClientRect();
+                }
             }
             if(ele && !ele.contains(textNode) && platform != "android" && !settings.sticky) // sticky mode and android need to break out on parent detection
             {
                 textNode = undefined;
                 offset = undefined;
+                hitrect = undefined;
+            }
+            if(x > hitrect.right+5 || x < hitrect.left-5 || y > hitrect.bottom+5 || y < hitrect.top-5)
+            {
+                textNode = undefined;
+                offset = undefined;
+                hitrect = undefined;
             }
         };
         
@@ -1641,8 +1642,6 @@ function keyuntest(event)
         shift_down = false;
     if(event.key == "Control")
         ctrl_down = false;
-    if(event.key == "Alt")
-        alt_down = false;
     
 }
 

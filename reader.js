@@ -61,6 +61,8 @@ function update(text)
         target.insertBefore(newnode, document.body.firstChild);
     else
         target.appendChild(newnode);
+    
+    document.getElementById("linecount").innerText = parseInt(document.getElementById("linecount").innerText)+1;
 }
 
 let text_previous = "";
