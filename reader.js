@@ -6,7 +6,8 @@
 // we only use a tiny number of settings here
 
 let settings = {
-reader_reverse: false
+reader_reverse: false,
+reader_leeway: 200
 };
 
 async function settings_init()
@@ -21,6 +22,7 @@ async function settings_init()
             settings[name] = temp;
         }
         getvar("reader_reverse", false);
+        getvar("reader_leeway", 200);
     } catch(err) {} // options not stored yet
 }
 
@@ -60,7 +62,17 @@ function update(text)
     if(!settings.reader_reverse)
         target.insertBefore(newnode, document.body.firstChild);
     else
+    {
         target.appendChild(newnode);
+        
+        if(settings.reader_leeway != 0)
+        {
+            let scroll_end_distance = -document.body.scrollHeight + -document.body.clientHeight + 2*document.body.offsetHeight - document.body.scrollTop;
+
+            if (scroll_end_distance < settings.reader_leeway)
+                window.scrollTo(0, document.body.scrollHeight);
+        }
+    }
     
     document.getElementById("linecount").innerText = parseInt(document.getElementById("linecount").innerText)+1;
 }

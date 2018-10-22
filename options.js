@@ -249,6 +249,15 @@ function defaults()
         default: false,
         label: "Reader insert at bottom (not recommended)"
     });
+    settings.push({
+        id: "reader_reverse",
+        kind: "number",
+        min: 0,
+        max: 10000,
+        step: 1,
+        default: 200,
+        label: "Reader autoscroll leeway (when \"insert at bottom\" is enabled) (0 disables)"
+    });
     
     // other (added imperatively)
     settings.push({
