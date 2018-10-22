@@ -132,9 +132,9 @@ function defaults()
     settings.push({
         id: "corner",
         kind: "combobox",
-        options: ["Top left", "Top right", "Bottom left", "Bottom right", "Top auto"],
+        options: ["Top left", "Top right", "Bottom left", "Bottom right"],
         default: 0,
-        label: "Popup positioning corner (note: \"top auto\" has problems due to web technology being a bad fit for mouseover dictionaries)"
+        label: "Popup positioning corner"
     });
     
     // theme
