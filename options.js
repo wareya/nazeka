@@ -247,7 +247,7 @@ function defaults()
         id: "reader_reverse",
         kind: "checkbox",
         default: false,
-        label: "Reader insert at bottom (not recommended)"
+        label: "Reader insert at bottom"
     });
     settings.push({
         id: "reader_reverse",
