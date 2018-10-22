@@ -1,8 +1,8 @@
 Nazeka is a rikai replacement.
 
-*Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have, and hasn't been tested enough to identify performance problems.*
+*Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.*
 
-This is my first nontrivial javascript work and there are probably a lot of obvious peeves to have with the code.
+This is my first nontrivial javascript work and the code is probably terrible.
 
 Options:
 
@@ -22,6 +22,8 @@ Options:
 - Font override: font override for the whole popup, max priority but will fall back to default fonts for characters not in the font override
 - Font override (highlighted text only): for the main spelling of a definition
 
+Nazeka has added more options since this was written.
+
 Building:
 
 Build process requires python and lxml, or an existing copy of the extension to rip JMdict#.json from.
@@ -31,4 +33,4 @@ Build process requires python and lxml, or an existing copy of the extension to 
 - Place under dict/ so that [...]/dict/JMdict.json exists in that location relative to [...]/manifest.json
 - Package as an extension for your browser of choice, or load it as a temporary/indev extension using your browser's development tools
 
-Copyright 2017; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+Copyright 2017~2018; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
