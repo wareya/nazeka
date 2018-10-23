@@ -279,10 +279,10 @@ function display_div(middle, x, y)
     
     // dodge top/bottom
     localrect = outer.getBoundingClientRect();
-    if(localrect.bottom+5 > mydoc.body.clientHeight)
+    if(localrect.bottom+5 > mydoc.documentElement.clientHeight)
     {
         if(settings.y_dodge == 1) // slide
-            newy -= localrect.bottom+5 - mydoc.body.clientHeight;
+            newy -= localrect.bottom+5 - mydoc.documentElement.clientHeight;
         else // flip
             newy -= localrect.height + settings.yoffset*2;
         outer.style.top = (newy)+"px";
@@ -300,10 +300,10 @@ function display_div(middle, x, y)
     
     // dodge left/right
     localrect = outer.getBoundingClientRect();
-    if(localrect.right+5 > mydoc.body.clientWidth)
+    if(localrect.right+5 > mydoc.documentElement.clientWidth)
     {
         if(settings.x_dodge == 1)
-            newx -= localrect.right+5 - mydoc.body.clientWidth;
+            newx -= localrect.right+5 - mydoc.documentElement.clientWidth;
         else
             newx -= localrect.width + settings.xoffset*2;
         outer.style.left = (newx)+"px";
