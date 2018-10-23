@@ -105,8 +105,6 @@ let lookup_kana = new Map();
 
 let dictsloaded = 0;
 
-let lookup_audio = new Set();
-
 function builddict()
 {
     if (this.readyState === 4)
@@ -121,6 +119,9 @@ function builddict()
     }
 }
 
+let lookup_audio = new Set();
+let lookup_audio_broken = new Map();
+
 function build_audio_table()
 {
     if (this.readyState === 4)
@@ -131,10 +132,18 @@ function build_audio_table()
             let j = 0;
             while ((j = this.responseText.indexOf("\n", i)) !== -1)
             {
-                lookup_audio.add(this.responseText.substring(i, j));
+                let text = this.responseText.substring(i, j);
+                if(!text.includes(","))
+                    lookup_audio.add(text);
+                else
+                    lookup_audio_broken.set(text.split(",")[1], text.split(",")[0]);
                 i = j + 1;
             }
-            lookup_audio.add(this.responseText.substring(i));
+            let text = this.responseText.substring(i, j);
+            if(!text.includes(","))
+                lookup_audio.add(text);
+            else
+                lookup_audio_broken.set(text.split(",")[1], text.split(",")[0]);
         }
         else
             console.error(xhr.statusText);
@@ -1405,9 +1414,9 @@ function add_extra_info(results)
                 for(let r of entry.r_ele)
                 {
                     if(lookup_audio.has(r.reb))
-                    {
                         entry.has_audio.push(r.reb);
-                    }
+                    else if(lookup_audio_broken.has(r.reb))
+                        entry.has_audio.push(lookup_audio_broken.get(r.reb));
                 }
             }
             else if(entry.k_ele)
@@ -1418,9 +1427,9 @@ function add_extra_info(results)
                     {
                         let test_string = r.reb + ";" + k.keb;
                         if(lookup_audio.has(test_string))
-                        {
                             entry.has_audio.push(test_string);
-                        }
+                        else if(lookup_audio_broken.has(test_string))
+                            entry.has_audio.push(lookup_audio_broken.get(test_string));
                     }
                 }
             }
