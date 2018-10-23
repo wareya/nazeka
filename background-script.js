@@ -105,10 +105,10 @@ let lookup_kana = new Map();
 
 let dictsloaded = 0;
 
+let lookup_audio = new Set();
+
 function builddict()
 {
-    //console.log("load");
-    //console.log(this);
     if (this.readyState === 4)
     {
         if (this.status === 200)
@@ -121,31 +121,25 @@ function builddict()
     }
 }
 
-/*
-function handle_error()
+function build_audio_table()
 {
-    console.log("error");
-    console.log(this.responseURL);
+    if (this.readyState === 4)
+    {
+        if (this.status === 200)
+        {
+            let i = 0;
+            let j = 0;
+            while ((j = this.responseText.indexOf("\n", i)) !== -1)
+            {
+                lookup_audio.add(this.responseText.substring(i, j));
+                i = j + 1;
+            }
+            lookup_audio.add(this.responseText.substring(i));
+        }
+        else
+            console.error(xhr.statusText);
+    }
 }
-
-function handle_progress()
-{
-    console.log("progress");
-    console.log(this.responseURL);
-}
-
-function handle_abort()
-{
-    console.log("abort");
-    console.log(this.responseURL);
-}
-
-function handle_timeout()
-{
-    console.log("timeout");
-    console.log(this.responseURL);
-}
-*/
 
 // Having a >4MB flat text file with stupid adhoc formatting is okay
 // but having a >4MB json file with nothing weird in it isn't
@@ -154,12 +148,15 @@ function load_part_of_dictionary(filename)
 {
     let req = new XMLHttpRequest();
     req.addEventListener("load", builddict);
-    /*
-    req.addEventListener("error", handle_error);
-    req.addEventListener("progress", handle_progress);
-    req.addEventListener("abort", handle_abort);
-    req.addEventListener("timeout", handle_timeout);
-    */
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+
+function load_jdic_audio_table(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", build_audio_table);
     req.open("GET", browser.extension.getURL(filename));
     req.send();
     return req;
@@ -176,6 +173,8 @@ load_part_of_dictionary("dict/JMdict8.json");
 load_part_of_dictionary("dict/JMdict9.json");
 load_part_of_dictionary("dict/JMdict10.json");
 load_part_of_dictionary("dict/JMdict11.json");
+
+load_jdic_audio_table("dict/jdic audio.txt");
 
 function buildlookups()
 {
@@ -1394,6 +1393,42 @@ function restrict_by_text(entry, text)
     return term;
 }
 
+function add_extra_info(results)
+{
+    for(let lookup of results)
+    {
+        for(let entry of lookup.result)
+        {
+            entry.has_audio = [];
+            if(!entry.k_ele || entry.k_ele.length == 0)
+            {
+                for(let r of entry.r_ele)
+                {
+                    if(lookup_audio.has(r.reb))
+                    {
+                        entry.has_audio.push(r.reb);
+                    }
+                }
+            }
+            else if(entry.k_ele)
+            {
+                for(let k of entry.k_ele)
+                {
+                    for(let r of entry.r_ele)
+                    {
+                        let test_string = r.reb + ";" + k.keb;
+                        if(lookup_audio.has(test_string))
+                        {
+                            entry.has_audio.push(test_string);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return add_epwing_info(results);
+}
+
 // Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
 function skip_rereferenced_entries(results)
 {
@@ -1415,7 +1450,7 @@ function skip_rereferenced_entries(results)
         if(newlookup.length > 0)
             newresults.push({text:lookup.text, result:newlookup});
     }
-    return add_epwing_info(newresults); // add epwing entries now
+    return add_extra_info(newresults); // add extra information like epwing results and audio data now
 }
 
 let last_lookup = "";

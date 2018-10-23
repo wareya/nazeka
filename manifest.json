@@ -40,12 +40,12 @@
         "dict/JMdict9.json",
         "dict/JMdict10.json",
         "dict/JMdict11.json",
+        "dict/jdic audio.txt",
         "reader.js",
         "reader.html",
         "mining.js",
         "mining.html",
-        "jmdictabbreviations.html",
-        "etc/popupbase.css"
+        "jmdictabbreviations.html"
     ],
 
     "content_scripts": [

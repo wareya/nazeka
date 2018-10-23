@@ -371,7 +371,7 @@ function clip(str)
 
 // Here we actually build the content of the lookup popup, based on the text we looked up and the list of lookups from the background script
 // note that we can get multiple lookups and this function only handles a single lookup
-function build_div_inner (text, result, moreText, index, first_of_many = false)
+function build_div_inner(text, result, moreText, index, first_of_many = false)
 {
     //console.log("building div for " + text);
     //console.log(result);
@@ -511,6 +511,18 @@ function build_div_inner (text, result, moreText, index, first_of_many = false)
             text = term.found.reb;
         else
             continue; // shouldn't happen, but again, just in case of broken data
+        
+        if(term.has_audio.length > 0)
+        {
+            for(let audio of term.has_audio)
+            {
+                let audio_data_holder = document.createElement("div");
+                audio_data_holder.className = "nazeka_audioref";
+                audio_data_holder.style.display = "none";
+                audio_data_holder.innerText += audio+"\n";
+                container.appendChild(audio_data_holder);
+            }
+        }
         
         let temptag = document.createElement("span");
         temptag.className = "nazeka_word";
@@ -1396,7 +1408,7 @@ function update(event)
                 offset = undefined;
                 hitrect = undefined;
             }
-            if(x > hitrect.right+5 || x < hitrect.left-5 || y > hitrect.bottom+5 || y < hitrect.top-5)
+            if(hitrect && (x > hitrect.right+5 || x < hitrect.left-5 || y > hitrect.bottom+5 || y < hitrect.top-5))
             {
                 textNode = undefined;
                 offset = undefined;
@@ -1541,8 +1553,32 @@ async function mine_to_storage(object)
     browser.storage.local.set({cards:cards});
 }
 
+async function try_to_play_audio(object)
+{
+    if(!exists_div())
+        return;
+    let mydiv = get_div().querySelector(".nazeka_audioref");
+    if(mydiv)
+    {
+        let text = mydiv.innerText;
+        let url;
+        if(text.includes(";"))
+        {
+            let fields = text.split(";");
+            url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
+        }
+        else
+            url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + text + "&kanji=" + text;
+        let audio = new Audio(url);
+        audio.volume = 0.2;
+        audio.play();
+    }
+}
+
 function mine(highlight)
 {
+    // TODO mine audio information
+    
     let front = highlight.textContent;
     let word = highlight.parentElement.parentElement;
     let readings = "";
@@ -1554,11 +1590,6 @@ function mine(highlight)
     let sentence = word.parentElement.querySelector(".nazeka_lookup_sentence");
     let index = word.parentElement.querySelector(".nazeka_lookup_index");
     let seq = word.getAttribute("nazeka_seq");
-    
-    //console.log(front);
-    //console.log(readings);
-    //console.log(definitions);
-    //console.log(seq);
     
     mine_to_storage({front: front, readings: readings, definitions: definitions, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
 }
@@ -1647,6 +1678,10 @@ function keytest(event)
     {
         settings.sticky = !settings.sticky;
         browser.storage.local.set({"sticky":settings.sticky});
+    }
+    if(event.key == "p")
+    {
+        try_to_play_audio();
     }
     if(event.key == "ArrowLeft")
     {
