@@ -131,6 +131,13 @@ function get_doc()
     return mydoc;
 }
 
+function getViewportSize(mydoc)
+{
+    if (mydoc.compatMode == "CSS1Compat")
+        return { w: mydoc.documentElement.clientWidth, h: mydoc.documentElement.clientHeight };
+    return { w: mydoc.body.clientWidth, h: mydoc.body.clientHeight };
+}
+
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
 let last_display_x = 0;
@@ -274,15 +281,15 @@ function display_div(middle, x, y)
     }
     
     let localrect;
-    
     let dodged_vertically = false;
+    let viewport = getViewportSize(mydoc);
     
     // dodge top/bottom
     localrect = outer.getBoundingClientRect();
-    if(localrect.bottom+5 > mydoc.documentElement.clientHeight)
+    if(localrect.bottom+5 > viewport.h)
     {
         if(settings.y_dodge == 1) // slide
-            newy -= localrect.bottom+5 - mydoc.documentElement.clientHeight;
+            newy -= localrect.bottom+5 - viewport.h;
         else // flip
             newy -= localrect.height + settings.yoffset*2;
         outer.style.top = (newy)+"px";
@@ -300,10 +307,10 @@ function display_div(middle, x, y)
     
     // dodge left/right
     localrect = outer.getBoundingClientRect();
-    if(localrect.right+5 > mydoc.documentElement.clientWidth)
+    if(localrect.right+5 > viewport.w)
     {
         if(settings.x_dodge == 1)
-            newx -= localrect.right+5 - mydoc.documentElement.clientWidth;
+            newx -= localrect.right+5 - viewport.w;
         else
             newx -= localrect.width + settings.xoffset*2;
         outer.style.left = (newx)+"px";
