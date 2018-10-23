@@ -86,7 +86,6 @@ function defaults()
         kind: "dummy",
         label: "Display"
     });
-    
     settings.push({
         id: "scale",
         kind: "number",
@@ -170,7 +169,6 @@ function defaults()
         kind: "dummy",
         label: "Theme"
     });
-    
     settings.push({
         id: "superborder",
         kind: "checkbox",
@@ -257,6 +255,57 @@ function defaults()
         step: 1,
         default: 200,
         label: "Reader autoscroll leeway (when \"insert at bottom\" is enabled) (0 disables)"
+    });
+    
+    // hotkeys
+    settings.push({
+        kind: "dummy",
+        label: "Hotkeys (KeyboardEvent.key values)"
+    });
+    settings.push({
+        id: "hotkey_mine",
+        kind: "text",
+        default: "m",
+        label: "Mining UI hotkey"
+    });
+    settings.push({
+        id: "hotkey_close",
+        kind: "text",
+        default: "n",
+        label: "Close popup"
+    });
+    settings.push({
+        id: "hotkey_sticky",
+        kind: "text",
+        default: "b",
+        label: "Toggle sticky mode (useful for very long definition lists)"
+    });
+    settings.push({
+        id: "hotkey_audio",
+        kind: "text",
+        default: "p",
+        label: "Play audio from jpod101 if available"
+    });
+    settings.push({
+        id: "hotkey_nudge_left",
+        kind: "text",
+        default: "ArrowLeft",
+        label: "Nudge lookup text left"
+    });
+    settings.push({
+        id: "hotkey_nudge_right",
+        kind: "text",
+        default: "ArrowRight",
+        label: "Nudge lookup text right"
+    });
+    settings.push({
+        id: "volume",
+        kind: "number",
+        min: 0.0,
+        max: 1.0,
+        step: 0.05,
+        default: 0.2,
+        label: "Audio playback volume (press \"p\" while popup is open)"
     });
     
     // other (added imperatively)

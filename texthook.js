@@ -48,6 +48,13 @@ popup_requires_key: 0, // 0: none; 1: ctrl; 2: shift
 x_dodge: 1,
 y_dodge: 0,
 sticky_maxheight: 0,
+hotkey_mine: "m",
+hotkey_close: "n",
+hotkey_sticky: "b",
+hotkey_audio: "p",
+hotkey_nudge_left: "ArrowLeft",
+hotkey_nudge_right: "ArrowRight",
+volume: 0.2,
 };
 
 let platform = "win";
@@ -981,6 +988,14 @@ async function settings_init()
         getvar("y_dodge", 0);
         getvar("sticky_maxheight", 0);
         
+        getvar("hotkey_mine", "m");
+        getvar("hotkey_close", "n");
+        getvar("hotkey_sticky", "b");
+        getvar("hotkey_audio", "p");
+        getvar("hotkey_nudge_left", "ArrowLeft");
+        getvar("hotkey_nudge_right", "ArrowRight");
+        getvar("volume", 0.2);
+        
         if(!settings.enabled && exists_div())
             delete_div();
         if(!settings.enabled)
@@ -1092,7 +1107,7 @@ function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 function lookup_cancel()
 {
     lookup_queue = [];
-    if(!settings.sticky || platform == "android")
+    if(!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0 || platform == "android")
         delete_div();
 }
 
@@ -1329,7 +1344,7 @@ function update(event)
     
     if(!settings.enabled) return;
     
-    if(settings.popup_follows_mouse && exists_div() && !settings.sticky && platform != "android")
+    if(settings.popup_follows_mouse && exists_div() && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
     {
         let other = get_div();
         //let middle = other.firstChild.cloneNode(true);
@@ -1409,7 +1424,7 @@ function update(event)
                     hitrect = range.getBoundingClientRect();
                 }
             }
-            if(ele && !ele.contains(textNode) && platform != "android" && !settings.sticky) // sticky mode and android need to break out on parent detection
+            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0)) // sticky mode and android need to break out on parent detection
             {
                 textNode = undefined;
                 offset = undefined;
@@ -1428,7 +1443,7 @@ function update(event)
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
             hitpage(event.clientX, 0, event.clientY);
         
-        if ((platform == "android" || settings.sticky) && exists_div())
+        if ((platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)) && exists_div())
         {
             let ele = get_div();
             if(ele.contains(textNode))
@@ -1577,7 +1592,7 @@ async function try_to_play_audio(object)
         else
             url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + text + "&kanji=" + text;
         let audio = new Audio(url);
-        audio.volume = 0.2;
+        audio.volume = settings.volume;
         audio.play();
     }
 }
@@ -1619,7 +1634,7 @@ function keytest(event)
     }
     if(event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
         return;
-    if(event.key == "m")
+    if(event.key == settings.hotkey_mine)
     {
         if(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
         {
@@ -1677,24 +1692,24 @@ function keytest(event)
     }
     if(!exists_div())
         return;
-    if(event.key == "n")
+    if(event.key == settings.hotkey_close)
     {
         lookup_cancel_force();
     }
-    if(event.key == "b")
+    if(event.key == settings.hotkey_sticky)
     {
         settings.sticky = !settings.sticky;
         browser.storage.local.set({"sticky":settings.sticky});
     }
-    if(event.key == "p")
+    if(event.key == settings.hotkey_audio)
     {
         try_to_play_audio();
     }
-    if(event.key == "ArrowLeft")
+    if(event.key == settings.hotkey_nudge_left)
     {
         lookup_left();
     }
-    if(event.key == "ArrowRight")
+    if(event.key == settings.hotkey_nudge_right)
     {
         lookup_right();
     }
