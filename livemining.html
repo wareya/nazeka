@@ -32,9 +32,7 @@
 
 <input type="button" id="loadfields" value="Reset">
 
-<h2>Fields Help</h2>
-
-<p>Behavior notes:</p>
+<h2>Behavior notes</h2>
 
 <ul>
 <li>The "found spelling" is the spelling you clicked on to mine the word. You can only mine by clicking on the main highlighted spelling.</li>
@@ -47,7 +45,7 @@
 <li>Not all words have audio.</li>
 </ul>
 
-<p>About formatting identities:</p>
+<h2>About formatters</h2>
 
 <p style="white-space:pre-line;font-family: monospace"
 >nothing - Nothing.
@@ -71,13 +69,13 @@ If you use the "audio" field, then the audio file is downloaded from jpod101's s
 
 The "audio_kanji" and "audio_reading" fields are for people with the JDIC audio pack, or recovering the audio manually if you mined while your internet was down, or for people who want to play the audio file from jpod101's servers directly so they don't need to store it as a media file. (Not sure whether Anki currently supports that, but it should be possible in the future.)
 
-jmdict - JMDict numeric ID
+jmdict_id - JMDict numeric ID
 url - URL of the page the card was mined from (if it was the reader page, it will look like jibberish)
 time_unix  - Time when card was mined (unix timestamp, milliseconds, can be converted to a localized date within Anki by using javascript in the card model/template)
 time_local - Time when card was mined (localized date, depends on browser and OS)
 
-readings_raw  - The unfiltered list of readings associated with the given word. Restriction information, like さくや not being a reading of 夕べ, is stripped.
-spellings_raw - The unfiltered list of spellings associated with the given word. Restriction information is stripped.
+readings_raw  - The unfiltered list of readings associated with the given word. Tags and restriction information, like さくや not being a reading of 夕べ, are stripped.
+spellings_raw - The unfiltered list of spellings associated with the given word. Tags and restriction information are stripped.
 </p>
 
 <h2>Advanced</h2>

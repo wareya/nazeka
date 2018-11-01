@@ -254,7 +254,7 @@ function defaults()
         label: "Reader insert at bottom"
     });
     settings.push({
-        id: "reader_reverse",
+        id: "reader_leeway",
         kind: "number",
         min: 0,
         max: 10000,
