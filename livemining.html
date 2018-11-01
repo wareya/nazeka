@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Nazeka: Configuration for Live Mining</title>
+<script type="text/javascript" src="livemining.js"></script>
+</head>
+<body>
+<h2>Configuration for Live Mining</h2>
+<p>Live Mining requires <a href="https://apps.ankiweb.net/">Anki</a> and the <a href="https://ankiweb.net/shared/info/2055492159">Ankiconnect</a> plugin.</p>
+
+<p>If Live Mining is enabled, then when you mine notes to the mining storage, Nazeka will also attempt to connect to Ankiconnect and tell it to insert a new note.</p>
+
+<p><b>Nazeka will NOT show any error indications</b> if Ankiconnect fails to insert the new note (such as <b>if Anki or Ankiconnect isn't running</b>, or the card model/template changed since configuration).</p>
+
+<h2>Deck and Model</h2>
+<input type="text" value="Default" id="deckname"><br>
+<label for="deckname">Deck name. Must be exact.</label><br>
+<input type="text" value="Basic" id="modelname"><br>
+<label for="modelname">Card model/template name. Must be exact.</label><br>
+
+<h2>Fields</h2>
+<input type="button" id="autofields" value="Populate"><br>
+<label for="autofields">Button will connect to Ankiconnect and automatically populate a list of field inputs based on card model/template name, overwriting EVERYTHING that is currently here.</label><br>
+
+<div id="containfields">
+(Unpopulated)
+</div>
+
+<input type="button" id="applyfields" value="Apply">
+
+<input type="button" id="loadfields" value="Reset">
+
+<h2>Fields Help</h2>
+
+<p>Behavior notes:</p>
+
+<ul>
+<li>The "found spelling" is the spelling you clicked on to mine the word. You can only mine by clicking on the main highlighted spelling.</li>
+<li>If you moused over non-kana, the "found spelling" is the matching non-kana spelling, and only the readings compatible with the "found spelling" are listed.</li>
+<li>if you moused over kana, the "found spelling" is JMDict's favorite spelling, and all readings are listed (this part may change in the future).</li>
+<li>If you moused over kana but there was no non-kana spelling, the reading from which the word was found is moved into the "found spelling" slot, <b>and removed from the base list of readings</b>.</li>
+<li>The readings are filtered to be limited to the ones compatible with the "found spelling".</li>
+<li>If you have a JSON dictionary imported, its definition will be appended to the JMDict definition.</li>
+<li>Sentence detection is very lazy and will have weird cutoffs in certain situations.</li>
+<li>Not all words have audio.</li>
+</ul>
+
+<p>About formatting identities:</p>
+
+<p style="white-space:pre-line;font-family: monospace"
+>nothing - Nothing.
+
+found_spelling - The spelling you clicked on to mine the word (e.g. "行く") (this is always the "found spelling" described above)
+readings - Readings (this is the list of readings you see in the mining UI when mining the word)
+
+definitions - Definition (HTML; has spans with class names, newlines are &lt;br&gt; tags)
+definitions_raw - Definition (plaintext, linebreaks are LF characters; only for templates with special CSS or JS)
+
+found_text - Text the word was found as (e.g. "行きます"). Also known as "found text".
+context - The sentence you found the word in. Sentence boundaries are a guess, so it might be cut off funny and need manual editing inside of anki.
+context_left   - The left half of the sentence you found the word in, until the found text.
+context_right - The right half of the sentence you found the word in, after the found text.
+
+audio_anki - anki audio tag (e.g. "[sound:nazeka_audio_ねにもつ_根に持つ.mp3]"), downloaded by Nazeka, sent to anki with Ankiconnect's storeMediaFile command; added even if the storeMediaFile command fails; not all words have audio, may be blank
+audio_kanji   - spelling portion of audio file's name, does no downloading of files. if there are no spellings, it's identical to audio_reading. may be blank.
+audio_reading -  reading portion of audio file's name, does no downloading of files. may be blank.
+
+If you use the "audio" field, then the audio file is downloaded from jpod101's servers when you mine the card, and sent to Anki's media folder with Ankiconnect's storeMediaFile action. This only works when you're connected to the internet.
+
+The "audio_kanji" and "audio_reading" fields are for people with the JDIC audio pack, or recovering the audio manually if you mined while your internet was down, or for people who want to play the audio file from jpod101's servers directly so they don't need to store it as a media file. (Not sure whether Anki currently supports that, but it should be possible in the future.)
+
+jmdict - JMDict numeric ID
+url - URL of the page the card was mined from (if it was the reader page, it will look like jibberish)
+time_unix  - Time when card was mined (unix timestamp, milliseconds, can be converted to a localized date within Anki by using javascript in the card model/template)
+time_local - Time when card was mined (localized date, depends on browser and OS)
+
+readings_raw  - The unfiltered list of readings associated with the given word. Restriction information, like さくや not being a reading of 夕べ, is stripped.
+spellings_raw - The unfiltered list of spellings associated with the given word. Restriction information is stripped.
+</p>
+
+<h2>Advanced</h2>
+<input type="text" value="http://localhost:8765/" id="host"><br>
+<label for="host">Ankiconnect host (default: http://localhost:8765/)  (You probably don't want to change this!)</label><br>
+</body>
+</html>

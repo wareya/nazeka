@@ -55,6 +55,7 @@ hotkey_audio: "p",
 hotkey_nudge_left: "ArrowLeft",
 hotkey_nudge_right: "ArrowRight",
 volume: 0.2,
+live_mining: false
 };
 
 let platform = "win";
@@ -526,6 +527,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         else
             continue; // shouldn't happen, but again, just in case of broken data
         
+        
         if(term.has_audio.length > 0)
         {
             for(let audio of term.has_audio)
@@ -537,6 +539,29 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 container.appendChild(audio_data_holder);
             }
         }
+        
+        // for mining
+        
+        let reading_data_holder = document.createElement("div");
+        reading_data_holder.className = "nazeka_mining_readings";
+        reading_data_holder.style.display = "none";
+        let reading_data_list = new Array();
+        for(let r of term.r_ele)
+            reading_data_list.push(r.reb);
+        reading_data_holder.innerText = reading_data_list.join("、");
+        container.appendChild(reading_data_holder);
+        
+        let spelling_data_holder = document.createElement("div");
+        spelling_data_holder.className = "nazeka_mining_spellings";
+        spelling_data_holder.style.display = "none";
+        let spelling_data_list = new Array();
+        if(term.k_ele)
+            for(let k of term.k_ele)
+                spelling_data_list.push(k.keb);
+        spelling_data_holder.innerText = spelling_data_list.join("、");
+        container.appendChild(spelling_data_holder);
+        
+        // end of "for mining"
         
         let temptag = document.createElement("span");
         temptag.className = "nazeka_word";
@@ -995,6 +1020,7 @@ async function settings_init()
         getvar("hotkey_nudge_left", "ArrowLeft");
         getvar("hotkey_nudge_right", "ArrowRight");
         getvar("volume", 0.2);
+        getvar("live_mining", false);
         
         if(!settings.enabled && exists_div())
             delete_div();
@@ -1575,32 +1601,160 @@ async function mine_to_storage(object)
     browser.storage.local.set({cards:cards});
 }
 
-async function try_to_play_audio(object)
+function get_audio_text(element) // [reading, spelling]
 {
-    if(!exists_div())
-        return;
-    let mydiv = get_div().querySelector(".nazeka_audioref");
+    let mydiv = element.querySelector(".nazeka_audioref");
     if(mydiv)
     {
         let text = mydiv.innerText;
-        let url;
         if(text.includes(";"))
         {
             let fields = text.split(";");
-            url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
+            return [fields[0], fields[1]];
         }
         else
-            url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + text + "&kanji=" + text;
+           return [text, text];
+    }
+    return undefined;
+}
+
+async function try_to_play_audio()
+{
+    if(!exists_div())
+        return;
+    let fields = get_audio_text(get_div());
+    if(fields)
+    {
+        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
         let audio = new Audio(url);
         audio.volume = settings.volume;
         audio.play();
     }
 }
 
+async function try_to_play_audio()
+{
+    if(!exists_div())
+        return;
+    let fields = get_audio_text(get_div());
+    if(fields)
+    {
+        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
+        let audio = new Audio(url);
+        audio.volume = settings.volume;
+        audio.play();
+    }
+}
+
+function send_ankiconnect_command(host, command)
+{
+    let json = JSON.stringify(command);
+    
+    browser.runtime.sendMessage({type:"ankiconnect_mine", host:host, command:json});
+}
+
+async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audiodata)
+{
+    let object_keys = Object.keys(object);
+    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host"]);
+    promise.then((storage) => 
+    {
+        if(storage["livemining_host"] === undefined)
+            storage["livemining_host"] = "http://localhost:8765/";
+        if(storage["livemining_deckname"] === undefined)
+            storage["livemining_deckname"] = "Default";
+        if(storage["livemining_modelname"] === undefined)
+            storage["livemining_modelname"] = "Basic";
+        if(storage["livemining_fields"] === undefined)
+            storage["livemining_fields"] = [["Front", "found_spelling"], ["Back", "readings"]];
+        
+        console.log("attempting to mine card");
+        
+        let note = {
+            "action": "addNote",
+            "version": 6,
+            "params": {
+                "note": {
+                    "deckName": storage["livemining_deckname"],
+                    "modelName": storage["livemining_modelname"],
+                    "fields": {},
+                    "tags": [
+                        "nazeka"
+                    ]
+                }
+            }
+        };
+        let audioadded = false;
+        let fields = {};
+        console.log(storage["livemining_fields"]);
+        console.log("starting loop");
+        for(let pair of storage["livemining_fields"])
+        {
+            console.log("start of iteration");
+            console.log(pair);
+            if(pair[1] != "audio_anki" && object_keys.includes(pair[1]))
+                fields[pair[0]] = String(object[pair[1]]);
+            if(pair[1] == "audio_anki")
+            {
+                if(audiofname != "" && audiodata != "")
+                {
+                    if(!audioadded)
+                    {
+                        let mediafilecommand = {
+                            "action": "storeMediaFile",
+                            "version": 6,
+                            "params": {
+                                "filename": audiofname,
+                                "data": audiodata
+                            }
+                        };
+                        console.log("starting command");
+                        send_ankiconnect_command(storage["livemining_host"], mediafilecommand);
+                        audioadded = true;
+                    }
+                    // for some reason not even anki 2.0 supports this
+                    //if(pair[1] == "audio_html")
+                    //    fields[pair[0]] = "<audio controls><source src=\"" + audiofname + "\"></audio>";
+                    //else
+                    fields[pair[0]] = "[sound:" + audiofname + "]";
+                }
+                else
+                    fields[pair[0]] = "";
+            }
+            console.log("end of iteration");
+        }
+        console.log("ending loop");
+        note["params"]["note"]["fields"] = fields;
+        send_ankiconnect_command(storage["livemining_host"], note);
+        console.log("test");
+    }, (e) => {console.log(e);});
+}
+
+async function mine_to_ankiconnect(object)
+{
+    console.log(object);
+    let audio_base64 = "";
+    if(object.audio !== undefined)
+    {
+        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + object.audio[0] + "&kanji=" + object.audio[1];
+        console.log(url);
+        let reader = new FileReader();
+        reader.onload = () =>
+        {
+            let fname = "nazeka_audio_" + object.audio[0] + "_" + object.audio[1] + ".mp3";
+            let result = reader.result.replace(/[^,]*,/, "");
+            mine_to_ankiconnect_with_base64_audio(object, fname, result);
+        };
+        fetch(url)
+        .then((response) => response.blob())
+        .then((myBlob) => reader.readAsDataURL(myBlob));
+    }
+    else
+        mine_to_ankiconnect_with_base64_audio(object, "", "");
+}
+
 function mine(highlight)
 {
-    // TODO mine audio information
-    
     let front = highlight.textContent;
     let word = highlight.parentElement.parentElement;
     let readings = "";
@@ -1614,6 +1768,56 @@ function mine(highlight)
     let seq = word.getAttribute("nazeka_seq");
     
     mine_to_storage({front: front, readings: readings, definitions: definitions, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
+    
+    if(settings.live_mining)
+    {
+        let now = new Date();
+        
+        let readings_raw = word.querySelector(".nazeka_mining_readings").innerText;
+        let spellings_raw = word.querySelector(".nazeka_mining_spellings").innerText;
+        
+        let audiostuff = get_audio_text(word);
+        let audio_kanji = "";
+        let audio_reading = "";
+        
+        if(readings.length >= 2)
+            readings = readings.substring(1, readings.length-1);
+        
+        console.log(audiostuff);
+        
+        if(audiostuff !== undefined)
+        {
+            audio_kanji = audiostuff[1];
+            audio_reading = audiostuff[0];
+        }
+        mine_to_ankiconnect(
+        {
+            nothing:"",
+            
+            found_spelling:front,
+            readings:readings,
+            
+            definitions:definitions.innerHTML,
+            definitions_raw:definitions.innerText,
+            
+            found_text: lookup.textContent,
+            context: sentence.textContent,
+            context_left: sentence.textContent.substring(0, index.textContent),
+            context_right: sentence.textContent.substring(parseInt(index.textContent) + lookup.textContent.length),
+            
+            audio: audiostuff,
+            audio_kanji: audio_kanji,
+            audio_reading: audio_reading,
+            
+            jmdict_id: seq,
+            url: get_doc().URL,
+            time_unix: now.getTime(),
+            time_local: now.toLocaleString(),
+            
+            readings_raw: readings_raw,
+            spellings_raw: spellings_raw,
+        });
+    }
 }
 
 function keytest(event)

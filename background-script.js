@@ -1731,6 +1731,20 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
     {
         refresh_epwing();
     }
+    else if (req.type == "ankiconnect_mine")
+    {
+        console.log(req.command);
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", req.host, true);
+        //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+        xhr.addEventListener('load', () =>
+        {
+            console.log(xhr.responseText);
+            let response = JSON.parse(xhr.responseText);
+            console.log(response);
+        });
+        xhr.send(req.command);
+    }
     else
     {
         return;

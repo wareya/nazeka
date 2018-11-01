@@ -80,6 +80,12 @@ function defaults()
         default: false,
         label: "Ignore hard line breaks"
     });
+    settings.push({
+        id: "live_mining",
+        kind: "checkbox",
+        default: false,
+        label: "Enable live mining (configured via the button below under \"Other\")"
+    });
     
     // display
     settings.push({
@@ -161,7 +167,7 @@ function defaults()
         kind: "combobox",
         options: ["Flip", "Push"],
         default: 0,
-        label: "How to keep the popup on the screen vertically (at least one of these two options should be \"Push\")"
+        label: "How to keep the popup on the screen vertically (at least one of these two options should be \"Flip\")"
     });
     
     // theme
@@ -429,6 +435,11 @@ function buildpage()
         container.style.marginBottom = "8px";
         optionsection.appendChild(container);
     }
+    
+    let livemininglink = document.getElementById("livemininglink");
+    livemininglink.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
+    
+    optionsection.appendChild(document.createElement("hr"));
     
     let file = document.createElement("input");
     file.type = "file";

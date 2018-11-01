@@ -17,7 +17,8 @@
         "contextMenus",
         "storage",
         "tabs",
-        "clipboardRead"
+        "clipboardRead",
+        "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?*"
     ],
     
     "background": {
@@ -44,6 +45,8 @@
         "reader.html",
         "mining.js",
         "mining.html",
+        "livemining.js",
+        "livemining.html",
         "jmdictabbreviations.html"
     ],
 
