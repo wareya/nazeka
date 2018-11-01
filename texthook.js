@@ -1761,13 +1761,13 @@ function mine(highlight)
     let readings_elements = word.getElementsByClassName("nazeka_readings");
     if(readings_elements.length)
         readings = readings_elements[0].textContent;
-    let definitions = word.getElementsByClassName("nazeka_definitions")[0].innerText; // innerText retains newlines, which we actually want
+    let definitions = word.getElementsByClassName("nazeka_definitions")[0];
     let lookup = word.parentElement.querySelector(".nazeka_lookup");
     let sentence = word.parentElement.querySelector(".nazeka_lookup_sentence");
     let index = word.parentElement.querySelector(".nazeka_lookup_index");
     let seq = word.getAttribute("nazeka_seq");
     
-    mine_to_storage({front: front, readings: readings, definitions: definitions, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
+    mine_to_storage({front: front, readings: readings, definitions: definitions.innerText, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
     
     if(settings.live_mining)
     {
