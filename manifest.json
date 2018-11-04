@@ -41,6 +41,7 @@
         "dict/JMdict10.json",
         "dict/JMdict11.json",
         "dict/jdic audio.txt",
+        "dict/deconjugator.json",
         "reader.js",
         "reader.html",
         "mining.js",

@@ -436,10 +436,52 @@ function buildpage()
         optionsection.appendChild(container);
     }
     
-    let livemininglink = document.getElementById("livemininglink");
-    livemininglink.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
+    // mining
+    
+    let liveminingbutton = document.createElement("button");
+    liveminingbutton.type = "button";
+    liveminingbutton.innerText = "Configure live mining";
+    liveminingbutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
+    optionsection.appendChild(liveminingbutton);
     
     optionsection.appendChild(document.createElement("hr"));
+    
+    // deconjugation rules
+    
+    let decon_file = document.createElement("input");
+    decon_file.type = "file";
+    decon_file.id = "decon_file";
+    decon_file.addEventListener("change", () =>
+    {
+        let fname = document.querySelector("#epwing_file").files[0];
+        let reader = new FileReader();
+        reader.onload = async(e) =>
+        {
+            try
+            {
+                browser.storage.local.set({"deconjugator_rules_json":JSON.stringify(JSON.parse(e.target.result))});
+                browser.runtime.sendMessage({type:"refreshepwing"});
+                document.querySelector("#import_label").textContent = "Imported. Might take a few seconds to apply.";
+            }
+            catch(except)
+            {
+                console.log(except.stack);
+            }
+        };
+        reader.readAsText(fname);
+    });
+    let decon_label = document.createElement("label");
+    decon_label.for = decon_file.id;
+    decon_label.id = "import_label";
+    decon_label.textContent = "Import deconjugation ruleset. Overrides default deconjugation ruleset. Importing a blank file and restarting your browser will restore the default ruleset.";
+    decon_label.style.display = "block";
+    
+    optionsection.appendChild(decon_file);
+    optionsection.appendChild(decon_label);
+    
+    optionsection.appendChild(document.createElement("hr"));
+    
+    // json dictionary
     
     let file = document.createElement("input");
     file.type = "file";
@@ -513,6 +555,8 @@ This format can be extended in the future if it becomes desirable to include mor
     
     optionsection.appendChild(document.createElement("hr"));
     
+    // backup
+    
     let backup_save = document.createElement("button");
     backup_save.type = "button";
     backup_save.innerText = "Save Backup";
@@ -560,7 +604,7 @@ This format can be extended in the future if it becomes desirable to include mor
     let backup_load_label = document.createElement("label");
     backup_load_label.for = backup_save.id;
     backup_load_label.id = "backup_load_label";
-    backup_load_label.textContent = "Import Backup.";
+    backup_load_label.textContent = "Import Backup. WARNING: Overwrites ALMOST EVERYTHING, INCLUDING MINED CARDS.";
     backup_load_label.style.display = "block";
     optionsection.appendChild(backup_load);
     optionsection.appendChild(backup_load_label);
