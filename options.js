@@ -84,7 +84,7 @@ function defaults()
         id: "live_mining",
         kind: "checkbox",
         default: false,
-        label: "Enable live mining (configured via the button below under \"Other\")"
+        label: "Enable live mining (experimental!) (configured via the button below under \"Other\")"
     });
     
     // display
