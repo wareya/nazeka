@@ -552,13 +552,21 @@ function deconjugate(mytext)
     let start_form = {text: mytext, original_text: mytext, tags: [], seentext: new Set(), process: [] };
     novel.add(start_form);
     
+    let myrules = rules;
+    
+    try
+    {
+        if(settings.deconjugator_rules_json != "")
+            myrules = JSON.parse(settings.deconjugator_rules_json);
+    } catch(err) {}
+    
     while(novel.size > 0)
     {
         //print_object(novel);
         let new_novel = new Set();
         for(let form of novel)
         {
-            for(let rule of rules)
+            for(let rule of myrules)
             {
                 if(!(rule instanceof Object))
                     continue;

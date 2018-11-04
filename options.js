@@ -453,13 +453,17 @@ function buildpage()
     decon_file.id = "decon_file";
     decon_file.addEventListener("change", () =>
     {
-        let fname = document.querySelector("#epwing_file").files[0];
+        let fname = document.querySelector("#decon_file").files[0];
         let reader = new FileReader();
         reader.onload = async(e) =>
         {
             try
             {
-                browser.storage.local.set({"deconjugator_rules_json":JSON.stringify(JSON.parse(e.target.result))});
+                let text = e.target.result;
+                if(text == "" || text == "\n" || text == "\r\n")
+                    browser.storage.local.set({"deconjugator_rules_json":""});
+                else
+                    browser.storage.local.set({"deconjugator_rules_json":JSON.stringify(JSON.parse())});
                 document.querySelector("decon_label").textContent = "Imported. Might take a few seconds to apply.";
             }
             catch(except)
@@ -472,7 +476,7 @@ function buildpage()
     let decon_label = document.createElement("label");
     decon_label.for = decon_file.id;
     decon_label.id = "import_label";
-    decon_label.textContent = "Import deconjugation ruleset. Overrides default deconjugation ruleset. Importing a blank file and restarting your browser will restore the default ruleset.";
+    decon_label.textContent = "Import deconjugation ruleset. Overrides default deconjugation ruleset. Importing a blank file will restore the default ruleset.";
     decon_label.style.display = "block";
     
     optionsection.appendChild(decon_file);
