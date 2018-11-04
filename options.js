@@ -460,8 +460,7 @@ function buildpage()
             try
             {
                 browser.storage.local.set({"deconjugator_rules_json":JSON.stringify(JSON.parse(e.target.result))});
-                browser.runtime.sendMessage({type:"refreshepwing"});
-                document.querySelector("#import_label").textContent = "Imported. Might take a few seconds to apply.";
+                document.querySelector("decon_label").textContent = "Imported. Might take a few seconds to apply.";
             }
             catch(except)
             {
