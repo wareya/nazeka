@@ -1187,6 +1187,24 @@ let time_of_last = Date.now();
 
 let search_x_offset = -3;
 
+function get_element_text(element)
+{
+    try
+    {
+        let display = getComputedStyle(element).display;
+        if(display == "ruby-text")
+            return "";
+    }
+    catch(err)
+    {
+        return element.textContent;
+    }
+    let ret = "";
+    for(let child of element.childNodes)
+        ret += get_element_text(child);
+    return ret;
+}
+
 function grab_more_text(textNode, direction = 1)
 {
     if(direction > 0)
@@ -1247,9 +1265,9 @@ function grab_more_text(textNode, direction = 1)
                 if(display == "inline" || (next_node.tagName?next_node.tagName.toLowerCase() == "span":false))
                 {
                     if(direction > 0)
-                        ttext += next_node.textContent;
+                        ttext += get_element_text(next_node);
                     else
-                        ttext = next_node.textContent + ttext;
+                        ttext = get_element_text(next_node) + ttext;
                 }
                 // BUG: this should technically be recursive, not a special case, but it won't affect any real webpages
                 if(display == "ruby")
@@ -1264,12 +1282,12 @@ function grab_more_text(textNode, direction = 1)
                             //    continue;
                             if(display == "inline" || (child.tagName?child.tagName.toLowerCase() == "span":false))
                             {
-                                subtext += child.textContent;
+                                subtext += get_element_text(child);
                             }
                         }
                         catch(err)
                         {
-                            subtext += child.textContent;
+                            subtext += get_element_text(child);
                         }
                     }
                     if(direction > 0)
@@ -1285,9 +1303,9 @@ function grab_more_text(textNode, direction = 1)
             catch(err)
             {
                 if(direction > 0)
-                    text += next_node.textContent;
+                    text += get_element_text(next_node);
                 else
-                    text = next_node.textContent + text;
+                    text = get_element_text(next_node) + text;
             }
         }
         if(text.length < settings.contextlength)
@@ -1307,12 +1325,12 @@ function grab_text(textNode, offset, elemental)
     if(elemental)
     {
         moreText = textNode.value;
-        text = moreText.substring(offset, textNode.value.length);
+        text = moreText.substring(offset, moreText.length);
     }
     else
     {
-        moreText = textNode.textContent;
-        text = moreText.substring(offset, textNode.textContent.length);
+        moreText = get_element_text(textNode);
+        text = moreText.substring(offset, moreText.length);
     }
     
     text += grab_more_text(textNode);
