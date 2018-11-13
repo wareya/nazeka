@@ -433,6 +433,10 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             right_arrow.onclick = lookup_right;
             left_arrow.style.marginTop = "-3px";
             right_arrow.style.marginTop = "-3px";
+            left_arrow.style.display = "inline";
+            right_arrow.style.display = "inline";
+            left_arrow.style.padding = "initial";
+            right_arrow.style.padding = "initial";
             buttons.appendChild(left_arrow);
             buttons.appendChild(right_arrow);
             
@@ -442,6 +446,8 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 close_button.src = browser.extension.getURL("img/closebutton24.png");
                 close_button.onclick = manual_close;
                 close_button.style.marginTop = "-3px";
+                close_button.style.display = "inline";
+                close_button.style.padding = "initial";
                 buttons.appendChild(close_button);
             }
             buttons.style.float = "right";
