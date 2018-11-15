@@ -164,7 +164,20 @@ function display_div(middle, x, y)
     let newx = x;
     let newy = y;
     let mydoc = document;
-    while(find_root.parent && find_root.parent != find_root && find_root.parent.document.body.tagName != "FRAMESET")
+    
+    function is_not_frameset(root)
+    {
+        try
+        {
+            return root.parent.document.body.tagName != "FRAMESET";
+        }
+        catch(err)
+        {
+            return false;
+        }
+    }
+    
+    while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
         let rect = find_root.frameElement.getBoundingClientRect();
         //let rx = find_root.offsetLeft;//rect.x;
