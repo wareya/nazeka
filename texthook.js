@@ -123,11 +123,23 @@ function set_sticky_styles(mydiv)
     mydiv.style.marginBottom = "10px";
 }
 
+function is_not_frameset(root)
+{
+    try
+    {
+        return root.parent.document.body.tagName != "FRAMESET";
+    }
+    catch(err)
+    {
+        return false;
+    }
+}
+
 function get_doc()
 {
     let find_root = window;
     let mydoc = document;
-    while(find_root.parent && find_root.parent != find_root && find_root.parent.document.body.tagName != "FRAMESET")
+    while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
         find_root = find_root.parent;
         try
@@ -164,18 +176,6 @@ function display_div(middle, x, y)
     let newx = x;
     let newy = y;
     let mydoc = document;
-    
-    function is_not_frameset(root)
-    {
-        try
-        {
-            return root.parent.document.body.tagName != "FRAMESET";
-        }
-        catch(err)
-        {
-            return false;
-        }
-    }
     
     while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
