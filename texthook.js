@@ -1208,20 +1208,30 @@ let search_x_offset = -3;
 
 function get_element_text(element)
 {
+    if(!(element instanceof Element))
+        return element.textContent;
     try
     {
         let display = getComputedStyle(element).display;
         if(display == "ruby-text")
             return "";
+        let tagname = element.tagName.toLowerCase();
+        if(tagname == "rt" || tagname == "rp")
+            return "";
+        
+        let ret = "";
+        for(let child of element.childNodes)
+        {
+            let asdf = get_element_text(child);
+            ret += asdf;
+        }
+        return ret;
     }
     catch(err)
     {
-        return element.textContent;
+        console.log(err);
     }
-    let ret = "";
-    for(let child of element.childNodes)
-        ret += get_element_text(child);
-    return ret;
+    return "";
 }
 
 function grab_more_text(textNode, direction = 1)
@@ -1239,16 +1249,18 @@ function grab_more_text(textNode, direction = 1)
     {
         iters += 1;
         if(current_node == undefined) break;
-        // don't search up parent element if current element isn't inline-like
+        // search up parent element only if current element is inline-like
         try
         {
             let display = getComputedStyle(current_node).display;
-            // break out of elements neither inline nor ruby
-            if(display != "inline" && display != "ruby" && current_node.tagName.toLowerCase() != "span")
+            let tagname = current_node.tagName.toLowerCase();
+            // FIXME get real inline vs block detection
+            if(!(display.contains("inline") || display == "ruby") || tagname == "rt" || tagname == "rp")
             {
                 break;
             }
-        }catch(err){}
+        }
+        catch(err){}
         
         if(iters > 100)
         {
@@ -1278,41 +1290,14 @@ function grab_more_text(textNode, direction = 1)
                 let ttext = "";
                 
                 let display = getComputedStyle(next_node).display;
-                if(display == "ruby-text")
-                    continue;
                 
-                if(display == "inline" || (next_node.tagName?next_node.tagName.toLowerCase() == "span":false))
+                // FIXME get real inline vs block detection
+                if(display != "block" && display != "grid" && display != "table" && display != "none")
                 {
                     if(direction > 0)
                         ttext += get_element_text(next_node);
                     else
                         ttext = get_element_text(next_node) + ttext;
-                }
-                // BUG: this should technically be recursive, not a special case, but it won't affect any real webpages
-                if(display == "ruby")
-                {
-                    let subtext = "";
-                    for(let child of next_node.childNodes)
-                    {
-                        try
-                        {
-                            let display = getComputedStyle(child).display;
-                            //if(display == "ruby-text")
-                            //    continue;
-                            if(display == "inline" || (child.tagName?child.tagName.toLowerCase() == "span":false))
-                            {
-                                subtext += get_element_text(child);
-                            }
-                        }
-                        catch(err)
-                        {
-                            subtext += get_element_text(child);
-                        }
-                    }
-                    if(direction > 0)
-                        ttext += subtext;
-                    else
-                        ttext = subtext + ttext;
                 }
                 if(direction > 0)
                     text += ttext;
