@@ -2,6 +2,15 @@
 
 'use strict';
 
+if (navigator.userAgent.indexOf('Chrome') > -1)
+{
+    var ischrome = true;
+}
+else
+{
+    var ischrome = false;
+}
+
 // updated by a timer looping function, based on local storage set by the options page
 // we only use a tiny number of settings here
 
@@ -55,16 +64,19 @@ let lookup_epwing_kana = new Map();
 async function refresh_epwing()
 {
     let myjson = (await browser.storage.local.get("epwing"))["epwing"];
-    epwing = JSON.parse(myjson);
-    lookup_epwing_kan = new Map();
-    lookup_epwing_kana = new Map();
-    for (let i = 1; i < epwing.length; i++)
+    if(myjson !== undefined)
     {
-        if(typeof epwing[i] === 'string' || epwing[i] instanceof String)
-            continue;
-        add_epwing_id(epwing[i]["r"], i);
-        for(let spelling of epwing[i]["s"])
-            add_epwing_id(spelling, i);
+        epwing = JSON.parse(myjson);
+        lookup_epwing_kan = new Map();
+        lookup_epwing_kana = new Map();
+        for (let i = 1; i < epwing.length; i++)
+        {
+            if(typeof epwing[i] === 'string' || epwing[i] instanceof String)
+                continue;
+            add_epwing_id(epwing[i]["r"], i);
+            for(let spelling of epwing[i]["s"])
+                add_epwing_id(spelling, i);
+        }
     }
 }
 refresh_epwing();
@@ -359,6 +371,7 @@ function load_deconjugation_rules(filename)
     {
         if (req.readyState === 4)
         {
+            console.log("loaded deconjugation rules");
             if (req.status === 200)
                 rules = JSON.parse(req.responseText);
             else
@@ -532,12 +545,11 @@ tetrap: tetrap_check,
 saspecial: saspecial_check,
 };
 
-Set.prototype.union = function(setB)
+function union(setA, setB)
 {
-    let union = new Set(this);
     for (let elem of setB)
-        union.add(elem);
-    return union;
+        setA.add(elem);
+    return setA;
 }
 
 // Returns a set of objects, each containing the "final form" of a series of deconjugations
@@ -585,7 +597,7 @@ function deconjugate(mytext)
                     new_novel.add(newform);
             }
         }
-        processed = processed.union(novel);
+        processed = union(processed, novel);
         novel = new_novel;
     }
     
@@ -596,6 +608,7 @@ function deconjugate(mytext)
 // building a list of all matches
 function build_lookup_comb(forms)
 {
+    console.log("in build_lookup_comb");
     // FIXME: dumpster fire that shouldn't be anywhere near as complicated as I made it
     
     // This is the only part of this function that doesn't look like a garbage fire.
@@ -644,18 +657,16 @@ function build_lookup_comb(forms)
                 {
                     if(entry.allpos.has(form.tags[form.tags.length-1]))
                     {
-                        if(entry.deconj)
-                            entry.deconj.add(form);
-                        else
-                            entry.deconj = new Set([form]);
+                        if(entry.deconj === undefined)
+                            entry.deconj = new Set();
+                        entry.deconj.add(form);
                     }
                 }
                 else
                 {
-                    if(entry.deconj)
-                        entry.deconj.add(form);
-                    else
-                        entry.deconj = new Set([form]);
+                    if(entry.deconj === undefined)
+                        entry.deconj = new Set();
+                    entry.deconj.add(form);
                 }
             }
         }
@@ -670,6 +681,7 @@ function build_lookup_comb(forms)
         {
             if(entry.deconj)
             {
+                entry.deconj = Array.from(entry.deconj);
                 merger.push(entry);
             }
         }
@@ -683,6 +695,7 @@ function build_lookup_comb(forms)
 
 function add_epwing_info(lookups)
 {
+    console.log("in add_epwing_info");
     for(let lookup of lookups)
     {
         for(let entry of lookup.result)
@@ -835,6 +848,7 @@ function add_epwing_info(lookups)
                 entry.epwing["z"] = epwing[0];
         }
     }
+    console.log("about to exit add_epwing_info");
     return lookups;
 }
 
@@ -1010,15 +1024,17 @@ function filter_kana_ish_results(results)
     return newresults;
 }
 
-// https://stackoverflow.com/questions/4459928/how-to-deep-clone-in-javascript
 function copy(orig)
 {
-    let mine = orig;
-
-    mine = Object.assign({}, orig)
+    let mine;
+    if (Set.prototype.isPrototypeOf(orig))
+        mine = new Set(orig);
+    else
+        mine = Object.assign({}, orig);
     for(let f in mine)
     {
-        f = Object.assign({}, f)
+        if(f !== orig)
+            f = copy(f);
     }
     return mine;
 }
@@ -1217,11 +1233,9 @@ function skip_rereferenced_entries(results)
     let newresults = [];
     let seenseq = new Set();
     
-    //console.log(results);
     for(let lookup of results)
     {
         let newlookup = [];
-        //console.log(lookup);
         for(let entry of lookup.result)
         {
             if(seenseq.has(entry.seq))
@@ -1251,7 +1265,6 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
     // try to look up successively shorter substrings of text
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
-    //console.log("trying to look up " + text);
     // FIXME: later lookups using definitions already caught
     if(alternatives_mode == 0 || alternatives_mode == 1 || alternatives_mode == 2)
     {
@@ -1260,14 +1273,11 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
         while(result === undefined && text.length > 0)
         {
             text = text.substring(0, text.length-1);
-            //console.log("trying to look up " + text);
             forms = deconjugate(text);
             result = build_lookup_comb(forms);
         }
         if(result !== undefined && result.length > 0)
         {
-            //console.log("found lookup");
-            //console.log(text)
             result = sort_results(text, result);
             if(alternatives_mode == 0 || text.length <= 1)
                 return skip_rereferenced_entries([{text:text, result:result}]);
@@ -1473,24 +1483,34 @@ function clipboard_hook(tab)
 let platform = "";
 async function get_real_platform()
 {
-    let platformInfo = await browser.runtime.getPlatformInfo();
-    if(platformInfo)
-        platform = platformInfo.os;
-    console.log(`platform is ${platform}`);
+    if (!ischrome)
+    {
+        let platformInfo = await browser.runtime.getPlatformInfo();
+        if(platformInfo)
+            platform = platformInfo.os;
+        console.log(`platform is ${platform}`);
+    }
+    else
+    {
+        platform = "win";
+        console.log(`on chrome, didn't check platform; assuming desktop`);
+    }
 }
 get_real_platform();
 
 //console.log("setting message listener");
-browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
+browser.runtime.onMessage.addListener((req, sender) =>
 {
-    //console.log("received message to background script");
     if (req.type == "search")
     {
-        sendResponse(lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives));
+        let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives);
+        console.log("got out of lookup_indirect");
+        console.log(asdf);
+        return Promise.resolve({"response" : asdf});
     }
     else if (req.type == "platform")
     {
-        sendResponse(platform);
+        return Promise.resolve({"response" : platform});
     }
     else if (req.type == "fixicon")
     {
@@ -1518,17 +1538,27 @@ browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
         });
         xhr.send(req.command);
     }
-    else
-    {
-        return;
-    }
+    return Promise.resolve(undefined);
 });
 //console.log("set message listener");
 
-browser.contextMenus.create({
-    id: "nazeka-toggle",
-    title: "Toggle Nazeka",
-    contexts: ["page", "selection"],
-    documentUrlPatterns: ["moz-extension://*/reader.html"],
-    onclick: toggle_enabled
-});
+if (!ischrome)
+{
+    browser.contextMenus.create({
+        id: "nazeka-toggle",
+        title: "Toggle Nazeka",
+        contexts: ["page", "selection"],
+        documentUrlPatterns: ["moz-extension://*/reader.html"],
+        onclick: toggle_enabled
+    });
+}
+else
+{
+    browser.contextMenus.create({
+        id: "nazeka-toggle",
+        title: "Toggle Nazeka",
+        contexts: ["page", "selection"],
+        documentUrlPatterns: ["chrome-extension://*/reader.html"],
+        onclick: toggle_enabled
+    });
+}

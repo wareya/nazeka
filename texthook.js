@@ -14,6 +14,15 @@
  * 
  */
 
+if (navigator.userAgent.indexOf('Chrome') > -1)
+{
+    var ischrome = true;
+}
+else
+{
+    var ischrome = false;
+}
+
 'use strict';
 
 // updated by a timer looping function, based on local storage set by the options page
@@ -41,7 +50,8 @@ hlfont: "",
 corner: 0,
 xoffset: 5,
 yoffset: 22,
-ignore_linebreaks: false,
+ignore_linebreaks: true,
+ignore_divs: false,
 sticky: false,
 popup_follows_mouse: true,
 popup_requires_key: 0, // 0: none; 1: ctrl; 2: shift
@@ -66,11 +76,15 @@ async function get_real_platform()
     let my_platform = undefined;
     try {
         my_platform = await browser.runtime.sendMessage({type:"platform"});
+        if(my_platform)
+            my_platform = my_platform["response"];
     }catch(err){}
     while(my_platform == "")
     {
         try {
             my_platform = await browser.runtime.sendMessage({type:"platform"});
+            if(my_platform)
+                my_platform = my_platform["response"];
         }catch(err){}
     }
     platform = my_platform;
@@ -1023,7 +1037,8 @@ async function settings_init()
         getvar("xoffset", 5);
         getvar("yoffset", 22);
         
-        getvar("ignore_linebreaks", false);
+        getvar("ignore_linebreaks", true);
+        getvar("ignore_divs", false);
         getvar("sticky", false);
         getvar("popup_follows_mouse", true);
         getvar("popup_requires_key", 0);
@@ -1072,100 +1087,67 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     }
 });
 
-// look up words on a timer loop that only uses the most recent lookup request and ignores all the others
-
-let lookup_timer = undefined;
-let lookup_queue = [];
-//let lookup_rate = 8;
-
-let last_lookup = [];
-
+let last_lookup = undefined;
 let last_manual_interaction = Date.now();
-
-let lookup_loop_cancel = false;
 let lookup_last_time = Date.now();
 
-async function lookup_loop()
+async function send_lookup(lookup)
 {
-    //console.log("running lookup queue");
     lookup_last_time = Date.now();
-    let t_start = Date.now();
-    if(lookup_queue.length > 0)
-    {
-        //console.log("queue not empty");
-        let lookup = lookup_queue.pop();
-        lookup_queue = [];
-        last_lookup = lookup;
-        //console.log("asking background to search the dictionary");
-        let response = await browser.runtime.sendMessage({type:"search", text:lookup[0], time:Date.now(), divexisted:exists_div(), alternatives_mode:settings.alternatives_mode, strict_alternatives:settings.strict_alternatives});
-        //console.log("got response");
-        if(response && response != "itsthesame")
-        {
-            if(!response.length)
-            {
-                let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
-                if(mydiv)
-                    display_div(mydiv, lookup[3], lookup[4]);
-            }
-            else
-            {
-                let mydiv = build_div_compound(response, lookup[5], lookup[6]);
-                if(mydiv)
-                    display_div(mydiv, lookup[3], lookup[4]);
-            }
-        }
-        //else if(response != "itsthesame" && settings.popup_follows_mouse && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(0, lookup[0].length-2))))
-        else if(response != "itsthesame" && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(1, lookup[0].length-2))))
-            lookup_cancel();
-    }
-    let t_end = Date.now();
-    let t_to_wait = settings.lookuprate - (t_end - t_start);
-    if(t_to_wait < 0) t_to_wait = 0;
-    if(t_to_wait > settings.lookuprate) t_to_wait = settings.lookuprate;
+    last_lookup = lookup;
     
-    if(lookup_loop_cancel)
+    let response = await browser.runtime.sendMessage(
     {
-        //console.log("queue setup");
-        lookup_loop_cancel = false;
-        lookup_timer = undefined;
-        return;
+        type:"search",
+        text:lookup[0],
+        time:Date.now(),
+        divexisted:exists_div(),
+        alternatives_mode:settings.alternatives_mode,
+        strict_alternatives:settings.strict_alternatives
+    });
+    if(response)
+        response = response["response"];
+    
+    if(response && response != "itsthesame")
+    {
+        if(!response.length)
+        {
+            let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
+            if(mydiv)
+                display_div(mydiv, lookup[3], lookup[4]);
+        }
+        else
+        {
+            let mydiv = build_div_compound(response, lookup[5], lookup[6]);
+            if(mydiv)
+                display_div(mydiv, lookup[3], lookup[4]);
+        }
     }
-    else
-        lookup_timer = setTimeout(lookup_loop, t_to_wait);
+    else if(response != "itsthesame" && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(1, lookup[0].length-2))))
+        lookup_cancel();
 }
-
-lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
-
 function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 {
-    //console.log("trying to enqueue lookup");
-    lookup_queue = [[text, x, y, x2, y2, moreText, index]];
-    //console.log("enqueued lookup");
-    if(!lookup_timer || lookup_last_time+settings.lookuprate*100 < Date.now())
+    if(lookup_last_time+settings.lookuprate < Date.now())
     {
-        if(lookup_timer)
-            clearTimeout(lookup_timer);
-        lookup_timer = setTimeout(lookup_loop, settings.lookuprate);
+        send_lookup([text, x, y, x2, y2, moreText, index]);
     }
 }
 
 function lookup_cancel()
 {
-    lookup_queue = [];
     if(!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0 || platform == "android")
         delete_div();
 }
 
 function manual_close()
 {
-    lookup_queue = [];
     delete_div();
     last_manual_interaction = Date.now();
 }
 
 function lookup_cancel_force()
 {
-    lookup_queue = [];
     delete_div();
 }
 
@@ -1183,8 +1165,8 @@ function lookup_left()
         index--;
     text = text.substring(index);
     
-    lookup_queue = [[text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]];
     last_manual_interaction = Date.now();
+    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
 }
 
 function lookup_right()
@@ -1198,8 +1180,8 @@ function lookup_right()
         index++;
     text = text.substring(index);
     
-    lookup_queue = [[text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]];
     last_manual_interaction = Date.now();
+    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
 }
 
 let time_of_last = Date.now();
@@ -1250,18 +1232,25 @@ function grab_more_text(textNode, direction = 1)
         iters += 1;
         if(current_node == undefined) break;
         // search up parent element only if current element is inline-like
-        try
+        if (!settings.ignore_divs)
         {
-            let display = getComputedStyle(current_node).display;
-            let tagname = current_node.tagName.toLowerCase();
-            // FIXME get real inline vs block detection
-            if(!(display.contains("inline") || display == "ruby") || tagname == "rt" || tagname == "rp")
+            try
             {
-                break;
+                let display = getComputedStyle(current_node).display;
+                let tagname = current_node.tagName.toLowerCase();
+                // FIXME get real inline vs block detection
+                
+                let inline_like = display.includes("inline") || display == "ruby";
+                
+                let ruby_interior = tagname == "rt" || tagname == "rp";
+                console.log(display);
+                console.log(inline_like);
+                console.log(ruby_interior);
+                if(ruby_interior || !inline_like)
+                    break;
             }
+            catch(err){}
         }
-        catch(err){}
-        
         if(iters > 100)
         {
             console.log("too many iterations");
@@ -1272,6 +1261,8 @@ function grab_more_text(textNode, direction = 1)
         let parent = current_node.parentNode;
         if(parent == undefined || parent == current_node) break;
         let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
+        console.log(current_node);
+        console.log(i);
         if(i < 0) break;
         i += direction;
         while(i < current_node.parentNode.childNodes.length && i >= 0 && text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))
@@ -1373,6 +1364,16 @@ function grab_text(textNode, offset, elemental)
     return [text, moreText, index];
 }
 
+function true_next_sibling(node)
+{
+    if(node === null)
+        return null;
+    if(node.nextSibling !== null)
+        return node.nextSibling;
+    else
+        return true_next_sibling(node.parentNode);
+}
+
 let last_seen_event = undefined;
 let shift_down = false;
 let ctrl_down = false;
@@ -1448,6 +1449,7 @@ function update(event)
                 yoffset = searchoffset;
             else
                 xoffset = searchoffset;
+            // firefox
             if (document.caretPositionFromPoint)
             {
                 let caretdata = document.caretPositionFromPoint(x+xoffset, y+yoffset);
@@ -1462,14 +1464,28 @@ function update(event)
                     range.detach();
                 }
             }
+            // chrome
             else if (document.caretRangeFromPoint)
             {
                 let range = document.caretRangeFromPoint(x+xoffset, y+yoffset);
                 if(range)
                 {
+                    try
+                    {
+                        range.setEnd(range.endContainer, range.endOffset+1);
+                    }
+                    catch(err)
+                    {
+                        try
+                        {
+                            range.setEnd(true_next_sibling(range.endContainer), 0);
+                        }
+                        catch(err){}
+                    }
                     textNode = range.startContainer;
                     offset = range.startOffset;
                     hitrect = range.getBoundingClientRect();
+                    console.log(hitrect);
                 }
             }
             if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0)) // sticky mode and android need to break out on parent detection
@@ -1498,7 +1514,7 @@ function update(event)
                 return;
         }
         
-        if(!(textNode == undefined))
+        if(textNode !== undefined)
         {
             // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
             try
@@ -1533,9 +1549,6 @@ function update(event)
     let elemental = acceptable_element(textNode);
     if (textNode && (textNode.nodeType == 3 || elemental))
     {
-        //print_object(textNode);
-        //print_object(textNode.parentNode);
-    
         let rect = undefined;
         let fud = 5;
         if(elemental)
@@ -1544,13 +1557,15 @@ function update(event)
             rect = textNode.parentNode.getBoundingClientRect();
         
         // FIXME: Doesn't work to reject in all cases
-        
-        let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
-        //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
-        if(!hit)
+        if(!ischrome)
         {
-            lookup_cancel();
-            return;
+            let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
+            //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
+            if(!hit)
+            {
+                lookup_cancel();
+                return;
+            }
         }
         
         let found = grab_text(textNode, offset, elemental);
@@ -1558,33 +1573,15 @@ function update(event)
         let moreText = found[1];
         let index = found[2];
         
-        //text = text.trim();
-        
-        //print_object(text);
         text = text.substring(0, Math.min(text.length, settings.length));
         
-        //if(text != "")
-            //lookup_indirect(text, event.clientX, event.clientY, time_of_last);
         if(text != "")
-        {
-            //console.log("calling lookup_enqueue");
             lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY, moreText, index);
-        }
         else
-        {
-//             console.log("no text");
             lookup_cancel();
-        }
     }
     else
-    {
-//         console.log("no text node");
-//         console.log("actual type:");
-//         console.log(textNode.nodeType);
-//         console.log("offset:");
-//         console.log(offset);
         lookup_cancel();
-    }
 }
 
 function update_touch(event)

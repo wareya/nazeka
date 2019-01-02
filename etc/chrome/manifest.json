@@ -6,13 +6,6 @@
     "homepage_url": "https://github.com/wareya/nazeka",
     "description": "A rikai replacement.",
 
-    "applications": {
-        "gecko": {
-            "id": "nazeka@wareya.moe",
-            "strict_min_version": "56.0"
-        }
-    },
-
     "permissions": [
         "contextMenus",
         "storage",
@@ -26,6 +19,7 @@
     },
 
     "web_accessible_resources": [
+        "include/browser-polyfill.min.js",
         "img/closebutton24.png",
         "img/leftarrow24.png",
         "img/rightarrow24.png",
@@ -54,13 +48,12 @@
     "content_scripts": [
         {
             "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file:///*"],
-            "js": ["texthook.js"],
+            "js": ["include/browser-polyfill.min.js", "texthook.js"],
             "all_frames": true
         }
     ],
 
     "options_ui": {
-        "browser_style": true,
         "page": "options.html"
     },
 

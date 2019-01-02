@@ -77,8 +77,14 @@ function defaults()
     settings.push({
         id: "ignore_linebreaks",
         kind: "checkbox",
+        default: true,
+        label: "Ignore hard line breaks (disable for text with preformatted linewraps)"
+    });
+    settings.push({
+        id: "ignore_divs",
+        kind: "checkbox",
         default: false,
-        label: "Ignore hard line breaks"
+        label: "Search out from within block-like elements like divs (enable only for very poorly-constructed web pages; usually causes performance problems)"
     });
     settings.push({
         id: "live_mining",
@@ -146,7 +152,7 @@ function defaults()
         id: "fixedwidthpositioning",
         kind: "checkbox",
         default: false,
-        label: "Position as though fixed width"
+        label: "Position as though fixed width (currently nonfunctional; will fix later)"
     });
     settings.push({
         id: "corner",

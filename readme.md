@@ -1,10 +1,12 @@
 Nazeka is a rikai replacement.
 
-*Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.*
+*(Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.**
 
 This is my first nontrivial javascript work and the code is probably terrible.
 
-Options:
+# Options
+
+Nazeka has added many options since it was first created, and they're documented within the options page. The following is an example of what options it has:
 
 - Enabled: whether to search pages for text
 - Compact: definitions on same line or with linebreaks
@@ -24,13 +26,17 @@ Options:
 
 Nazeka has added more options since this was written.
 
-Building:
+# Building
 
 Build process requires python and lxml, or an existing copy of the extension to rip JMdict#.json from.
 
+- Copy the appropriate manifest.json from etc/ (either etc/firefox/manifest.json or etc/chrome/manifest.json) into the root of the repository
 - Download JMdict.gz from http://www.edrdg.org/jmdict/edict_doc.html
-- Convert it to json with https://gist.github.com/wareya/c2175520db5f1927e4f6ba839487dd8c
-- Place under dict/ so that [...]/dict/JMdict1.json and others exist in that location relative to [...]/manifest.json
+- Convert it to json with etc/process.py
+- Move the output to under dict/ so that [...]/dict/JMdict1.json and others exist in that location relative to [...]/manifest.json
+- Make sure every .json file is listed as available to the extension in manifest.json - if jmdict added a lot of words, there might be more than 11 files now
 - Package as an extension for your browser of choice, or load it as a temporary/indev extension using your browser's development tools
+
+# Copyright and License
 
 Copyright 2017~2018; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
