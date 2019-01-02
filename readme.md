@@ -1,8 +1,8 @@
 Nazeka is a rikai replacement.
 
-*(Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.**
+***Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.***
 
-This is my first nontrivial javascript work and the code is probably terrible.
+My code here is terrible, but at least we can all agree that Javascript is a terrible language.
 
 # Options
 
@@ -13,18 +13,15 @@ Nazeka has added many options since it was first created, and they're documented
 - Show original text: shows the string of text that nazeka used to look up a set of definitions
 - Super border: add an additional level to the double border
 - Fixed width: always use maximum width width, don't shrink to small contents
-- Position as though fixed width: when rejecting the popup from the right side of the window, act as though it has the maximum width, even if it doesn't
 - Search length: maximum length to search for words
-- Matching mode: what kinds, of alternative lookups to display
-- Strict matching for alternative matches: if true, alternative lookups of hiragana strings will not produce definitions that are not at least usually kana
+- Matching mode: what kinds of alternative lookups to display
+- Strict matching for alternative matches: if true, ***alternative*** lookups of hiragana strings will not produce definitions that are not at least usually kana (the longest lookup will always show all possibilities)
 - Lookup popup scale: zoom factor for entire popup
 - Lookup popup width: maximum width for the lookup
 - Lookup throttle: minimum milliseconds between the start of lookups
 - Colors: the colors of the popup
 - Font override: font override for the whole popup, max priority but will fall back to default fonts for characters not in the font override
 - Font override (highlighted text only): for the main spelling of a definition
-
-Nazeka has added more options since this was written.
 
 # Building
 
