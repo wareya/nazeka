@@ -5,12 +5,12 @@
 // updated by a timer looping function, based on local storage set by the options page
 // we only use a tiny number of settings here
 
-let settings = {
+let reader_settings = {
 reader_reverse: false,
 reader_leeway: 200
 };
 
-async function settings_init()
+async function reader_settings_init()
 {
     try
     {
@@ -19,14 +19,14 @@ async function settings_init()
             let temp = (await browser.storage.local.get(name))[name];
             if(temp == undefined)
                 temp = defval;
-            settings[name] = temp;
+            reader_settings[name] = temp;
         }
         getvar("reader_reverse", false);
         getvar("reader_leeway", 200);
     } catch(err) {} // options not stored yet
 }
 
-settings_init();
+reader_settings_init();
 
 browser.storage.onChanged.addListener((updates, storageArea) =>
 {
@@ -35,14 +35,14 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     {
         let option = setting[0];
         let value = setting[1];
-        if(Object.keys(settings).includes(option))
-            settings[option] = value.newValue;
+        if(Object.keys(reader_settings).includes(option))
+            reader_settings[option] = value.newValue;
     }
 });
 
 // actual reder code
 
-function might_have_japanese(text)
+function reader_might_have_japanese(text)
 {
     for(let char of text)
         if(char && char.length > 0 && char.codePointAt(0) >= 0x2E80)
@@ -50,26 +50,26 @@ function might_have_japanese(text)
     return false;
 }
 
-function update(text)
+function reader_update(text)
 {
-    if(!might_have_japanese(text))
+    if(!reader_might_have_japanese(text))
         return;
     
     let target = document.body;
     let newnode = document.createElement("p");
     newnode.textContent = text;
     
-    if(!settings.reader_reverse)
+    if(!reader_settings.reader_reverse)
         target.insertBefore(newnode, document.body.firstChild);
     else
     {
         target.appendChild(newnode);
         
-        if(settings.reader_leeway != 0)
+        if(reader_settings.reader_leeway != 0)
         {
             let scroll_end_distance = -document.body.scrollHeight + -document.body.clientHeight + 2*document.body.offsetHeight - document.body.scrollTop;
 
-            if (scroll_end_distance < settings.reader_leeway)
+            if (scroll_end_distance < reader_settings.reader_leeway)
                 window.scrollTo(0, document.body.scrollHeight);
         }
     }
@@ -77,40 +77,36 @@ function update(text)
     document.getElementById("linecount").innerText = parseInt(document.getElementById("linecount").innerText)+1;
 }
 
-let text_previous = "";
-function cycle_text(text)
+let reader_text_previous = "";
+function reader_cycle_text(text)
 {
-    if(text != "" && text != text_previous)
-        update(text);
-    text_previous = text;
+    if(text != "" && text != reader_text_previous)
+        reader_update(text);
+    reader_text_previous = text;
 }
 
-function gimmetext()
+function reader_gimmetext()
 {
     browser.runtime.sendMessage({type:"gimmetext"});
 }
 
 let interval = 250;
-async function checkpaste()
+async function reader_checkpaste()
 {
     try
     {
-        let text = await gimmetext();
-        cycle_text(text);
+        let text = await reader_gimmetext();
+        reader_cycle_text(text);
     }
     catch(error){}
     
-    setTimeout(checkpaste, interval);
+    setTimeout(reader_checkpaste, interval);
 }
-setTimeout(checkpaste, interval);
+setTimeout(reader_checkpaste, interval);
 
-var executing = browser.tabs.executeScript({
-    file: "/texthook.js",
-    allFrames: true
-});
-
-browser.runtime.onMessage.addListener((req, sender, sendResponse) =>
+browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "text")
-        cycle_text(req.text);
+        reader_cycle_text(req.text);
+    return Promise.resolve(undefined);
 });

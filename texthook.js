@@ -1243,9 +1243,6 @@ function grab_more_text(textNode, direction = 1)
                 let inline_like = display.includes("inline") || display == "ruby";
                 
                 let ruby_interior = tagname == "rt" || tagname == "rp";
-                console.log(display);
-                console.log(inline_like);
-                console.log(ruby_interior);
                 if(ruby_interior || !inline_like)
                     break;
             }
@@ -1261,8 +1258,6 @@ function grab_more_text(textNode, direction = 1)
         let parent = current_node.parentNode;
         if(parent == undefined || parent == current_node) break;
         let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
-        console.log(current_node);
-        console.log(i);
         if(i < 0) break;
         i += direction;
         while(i < current_node.parentNode.childNodes.length && i >= 0 && text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))
@@ -1435,7 +1430,7 @@ function update(event)
         return false;
     }
     // find the text under the mouse event
-    let nodeIsBad  = true;
+    let nodeIsBad = true;
     while(nodeIsBad)
     {
         nodeIsBad = false;
@@ -1488,24 +1483,32 @@ function update(event)
                     console.log(hitrect);
                 }
             }
-            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0)) // sticky mode and android need to break out on parent detection
+            // sticky mode and android need to break out on parent detection
+            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
             {
+                console.log("not parent");
                 textNode = undefined;
                 offset = undefined;
                 hitrect = undefined;
             }
-            if(hitrect && (x > hitrect.right+5 || x < hitrect.left-5 || y > hitrect.bottom+5 || y < hitrect.top-5))
+            // break out if the mouse isn't actually over the hit rectangle
+            if(hitrect && (x > hitrect.right+5 || x < hitrect.left-5+xoffset || y > hitrect.bottom+5 || y < hitrect.top-5+yoffset))
             {
+                console.log("missed");
+                console.log([x, y, x+offset, y+offset, hitrect]);
                 textNode = undefined;
                 offset = undefined;
                 hitrect = undefined;
             }
         };
-        
+        console.log("first try");
         hitpage(event.clientX, search_x_offset, event.clientY);
         // try without the offset
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
+        {
+        console.log("retry");
             hitpage(event.clientX, 0, event.clientY);
+        }
         
         if ((platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)) && exists_div())
         {
@@ -1541,9 +1544,13 @@ function update(event)
     }
     for(let toreset of nodeResetList)
     {
-        let element = toreset[0];
-        let z_index = toreset[1];
-        element.style.zIndex = z_index;
+        try
+        {
+            let element = toreset[0];
+            let z_index = toreset[1];
+            element.style.zIndex = z_index;
+        }
+        catch (err){}
     }
     // if there was text, use it
     let elemental = acceptable_element(textNode);
@@ -1557,7 +1564,7 @@ function update(event)
             rect = textNode.parentNode.getBoundingClientRect();
         
         // FIXME: Doesn't work to reject in all cases
-        if(!ischrome)
+        //if(!ischrome)
         {
             let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
             //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
