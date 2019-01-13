@@ -2,7 +2,7 @@
 
 /*
  * TODO:
- * 
+ *
  * ! Finish porting the underlay's deconjugation rules
  * - Add an option for "hide unfitting senses/spellings/readings" vs "show everything but with details about what can be what"
  * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
@@ -11,7 +11,7 @@
  * - Integrate frequency into priority handling
  * - Load deconjugation rules from an advanced setting, with a reset button
  * ? Export/import settings with json
- * 
+ *
  */
 
 if (navigator.userAgent.indexOf('Chrome') > -1)
@@ -47,6 +47,9 @@ hlcolor: "#99DDFF",
 hlcolor2: "#99FF99",
 font: "",
 hlfont: "",
+definition_fontsize: 13,
+dict_item_fontsize: 18,
+reading_fontsize: 15,
 corner: 0,
 xoffset: 5,
 yoffset: 22,
@@ -72,7 +75,7 @@ let platform = "win";
 
 async function get_real_platform()
 {
-    
+
     let my_platform = undefined;
     try {
         my_platform = await browser.runtime.sendMessage({type:"platform"});
@@ -184,13 +187,13 @@ function display_div(middle, x, y)
     if(font != "")
         font += ",";
     middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
-    middle.firstChild.style = `border: 1px solid ${settings.fgcolor}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; font-size: 13px; text-align: left;`;
-    
+    middle.firstChild.style = `border: 1px solid ${settings.fgcolor}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif;  text-align: left; font-size: ${settings.definition_fontsize}px;`;
+
     let find_root = window;
     let newx = x;
     let newy = y;
     let mydoc = document;
-    
+
     while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
         let rect = find_root.frameElement.getBoundingClientRect();
@@ -210,7 +213,7 @@ function display_div(middle, x, y)
             mydoc = find_root.document;
         } catch(err) {}
     }
-    
+
     // compensate for body being relative if it is, because our popup is absolute
     let relative_body = getComputedStyle(mydoc.body).position == "relative";
     if(relative_body)
@@ -222,11 +225,11 @@ function display_div(middle, x, y)
         newx -= mydoc.scrollingElement.scrollLeft;
         newy -= mydoc.scrollingElement.scrollTop;
     }
-    
+
     let basewidth = Math.round(Number(settings.width));
     if(settings.x_dodge != 1 && basewidth > mydoc.documentElement.getBoundingClientRect().width/2 - settings.xoffset - 5)
         basewidth = Math.max(150, Math.round(mydoc.documentElement.getBoundingClientRect().width/2 - settings.xoffset - 5));
-    
+
     let styletext = "";
     if(settings.fixedwidth)
     {
@@ -239,14 +242,14 @@ function display_div(middle, x, y)
         styletext += "min-width: 150px; "
     }
     styletext += "position: absolute; top: 0; left: 0; transition: unset; ";
-    
+
     if(settings.superborder)
         styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 1000000000000000000000;`;
     else
         styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 1000000000000000000000;`;
-    
+
     styletext += "writing-mode: horizontal-tb; line-height: initial; white-space: initial;";
-    
+
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
     if(other.length > 0)
@@ -266,20 +269,20 @@ function display_div(middle, x, y)
             outer.appendChild(middle);
         mydoc.body.appendChild(outer);
     }
-    
+
     outer.lang = "ja";
-    
+
     if(settings.scale != 1 && settings.scale > 0 && settings.scale < 64)
         styletext += " transform-origin: top left; transform: scale(" + Number(settings.scale) + ");";
-    
+
     outer.style = styletext;
-    
+
     let mywidth = basewidth*settings.scale;
     if(!settings.fixedwidthpositioning)
         mywidth = outer.offsetWidth*settings.scale;
-    
+
     let corner = settings.corner;
-    
+
     if(settings.sticky && platform != "android" && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)
         set_sticky_styles(outer);
     else
@@ -291,34 +294,34 @@ function display_div(middle, x, y)
         }
         else
             newx += settings.xoffset;
-        
+
         if(corner == 2 || corner == 3)
             newy = newy - outer.getBoundingClientRect().height - settings.yoffset;
         else
             newy = newy + settings.yoffset;
-        
+
         // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
         outer.style.top = "0px";
         outer.style.left = "0px";
         let width = outer.offsetWidth;
         //
-        
+
         outer.style.top = (newy)+"px";
         outer.style.bottom = "unset";
         outer.style.right = "unset";
         outer.style.left = (newx)+"px";
         outer.style.marginRight = "unset";
         outer.style.marginLeft = "unset";
-        
+
         // fixes an absolute positioning """feature""" that doesn't work properly with very wide pages (e.g. pages of left-to-right vertical text)
         outer.style.width = (width)+"px";
         //
     }
-    
+
     let localrect;
     let dodged_vertically = false;
     let viewport = getViewportSize(mydoc);
-    
+
     // dodge top/bottom
     localrect = outer.getBoundingClientRect();
     if(localrect.bottom+5 > viewport.h)
@@ -339,7 +342,7 @@ function display_div(middle, x, y)
             newy += localrect.height + settings.yoffset*2;
         outer.style.top = (newy)+"px";
     }
-    
+
     // dodge left/right
     localrect = outer.getBoundingClientRect();
     if(localrect.right+5 > viewport.w)
@@ -373,7 +376,7 @@ function exists_div()
             mydoc = find_root.document;
         } catch(err) {}
     }
-    
+
     let other = mydoc.body.getElementsByClassName(div_class);
     return (other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "");
 }
@@ -390,7 +393,7 @@ function get_div()
             mydoc = find_root.document;
         } catch(err) {}
     }
-    
+
     let other = mydoc.body.getElementsByClassName(div_class);
     if(other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "")
         return other[0];
@@ -439,7 +442,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         //console.log(moreText);
         //console.log(index);
         //console.log(text);
-        
+
         let original_inner = document.createElement("span");
         original_inner.className = "nazeka_lookup";
         original_inner.textContent = text;
@@ -448,7 +451,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original.appendChild(document.createTextNode(moreText_start));
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
-        
+
         if(first_of_many && (platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)))
         {
             let buttons = document.createElement("div");
@@ -466,7 +469,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             right_arrow.style.padding = "initial";
             buttons.appendChild(left_arrow);
             buttons.appendChild(right_arrow);
-            
+
             if(platform == "android")
             {
                 let close_button = document.createElement("img");
@@ -481,13 +484,13 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             original.appendChild(buttons);
         }
         temp.appendChild(original);
-        
+
         let original_sentence = document.createElement("span");
         original_sentence.className = "nazeka_lookup_sentence";
         original_sentence.textContent = moreText;
         original_sentence.style.display = "none";
         temp.appendChild(original_sentence);
-        
+
         let original_index = document.createElement("span");
         original_index.className = "nazeka_lookup_index";
         original_index.textContent = `${index}`;
@@ -501,20 +504,20 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original_inner.textContent = text;
         original_inner.style.display = "none";
         temp.appendChild(original_inner);
-        
+
         let original_sentence = document.createElement("span");
         original_sentence.className = "nazeka_lookup_sentence";
         original_sentence.textContent = moreText;
         original_sentence.style.display = "none";
         temp.appendChild(original_sentence);
-        
+
         let original_index = document.createElement("span");
         original_index.className = "nazeka_lookup_index";
         original_index.textContent = `${index}`;
         original_index.style.display = "none";
         temp.appendChild(original_index);
     }
-    
+
     // styling for highlighted stuff and the lookup text
     let style = document.createElement("style");
     style.type = "text/css";
@@ -524,34 +527,34 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
     if(settings.font.trim().replace(";","").replace("}","") != "")
         font += settings.font.trim().replace(";","").replace("}","") + ",";
     style.textContent =
-`.nazeka_main_keb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
-.nazeka_main_reb{font-size:18px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+`.nazeka_main_keb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_main_reb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
 .nazeka_word * {vertical-align: middle}
-.nazeka_sub_keb{font-size:15px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
-.nazeka_sub_reb{font-size:15px;white-space:nowrap;color:${settings.hlcolor2}}
+.nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
+.nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
 .epwing_head{margin: 6px 8px 4px;}
 .epwing_definition{margin: 0 8px;}
 `;
     temp.appendChild(style);
-    
+
     function makespan(text)
     {
         let s = document.createElement("span");
         s.textContent = text;
         return s;
     }
-    
+
     // lookups can have multiple results (e.g. する -> 為る, 刷る, 掏る, 剃る, 擦る)
     for(let i = 0; i < result.length; i++)
     {
         let term = result[i];
-        
+
         let container = document.createElement("div");
         container.className = "nazeka_word_container";
         container.style.marginBottom = "3px";
         container.setAttribute("nazeka_seq", term.seq);
-        
+
         let text = "";
         if(term.found.keb)
             text = term.found.keb;
@@ -559,8 +562,8 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             text = term.found.reb;
         else
             continue; // shouldn't happen, but again, just in case of broken data
-        
-        
+
+
         if(term.has_audio.length > 0)
         {
             for(let audio of term.has_audio)
@@ -572,9 +575,9 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 container.appendChild(audio_data_holder);
             }
         }
-        
+
         // for mining
-        
+
         let reading_data_holder = document.createElement("div");
         reading_data_holder.className = "nazeka_mining_readings";
         reading_data_holder.style.display = "none";
@@ -583,7 +586,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             reading_data_list.push(r.reb);
         reading_data_holder.innerText = reading_data_list.join("、");
         container.appendChild(reading_data_holder);
-        
+
         let spelling_data_holder = document.createElement("div");
         spelling_data_holder.className = "nazeka_mining_spellings";
         spelling_data_holder.style.display = "none";
@@ -593,15 +596,15 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 spelling_data_list.push(k.keb);
         spelling_data_holder.innerText = spelling_data_list.join("、");
         container.appendChild(spelling_data_holder);
-        
+
         // end of "for mining"
-        
+
         let temptag = document.createElement("span");
         temptag.className = "nazeka_word";
         let original_kana = "";
         if(term.found.reb)
             original_kana = term.found.reb;
-        
+
         if(term.found.keb)
         {
             let k_ele = term.found;
@@ -625,10 +628,10 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 }
                 temptag.appendChild(maininfos);
             }
-            
+
             // list readings
             let readings = term.r_ele;
-            
+
             temptag.appendChild(document.createElement("wbr"));
             let e_readings = document.createElement("span");
             e_readings.appendChild(makespan("《"));
@@ -659,13 +662,13 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             }
             e_readings.appendChild(makespan("》"));
             temptag.appendChild(e_readings);
-            
+
             // list alternatives
             let alternatives = [];
             for(let j = 0; j < term.k_ele.length; j++)
                 if(term.k_ele[j].keb != kanji_text)
                     alternatives.push(term.k_ele[j]);
-            
+
             if(alternatives.length > 0)
             {
                 temptag.appendChild(makespan(" (also "));
@@ -694,9 +697,9 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             }
             if(alternatives.length > 0)
                 temptag.appendChild(makespan(")"));
-            
+
             // deconjugations
-            
+
             if(term.deconj)
             {
                 //console.log(term.deconj);
@@ -793,14 +796,14 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 }
                 temptag.appendChild(maininfos);
             }
-            
+
             // list alternatives
             let alternatives = [];
-            
+
             for(let j = 0; j < term.r_ele.length; j++)
                 if(term.r_ele[j].reb != text)
                     alternatives.push(term.r_ele[j]);
-            
+
             if(alternatives.length > 0)
                 temptag.appendChild(makespan(" (also "));
             for(let j = 0; j < alternatives.length; j++)
@@ -827,21 +830,21 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         }
         container.appendChild(temptag);
         container.appendChild(document.createElement("br"));
-        
+
         let goodsenses = term.sense;
-        
+
         let lastpos = [];
         let definition = document.createElement("div");
         definition.className = "nazeka_definitions";
         for(let j = 0; j < goodsenses.length; j++)
         {
             let sense = goodsenses[j];
-            
+
             if(sense.pos == lastpos)
                 sense.pos = undefined;
             else
                 lastpos = sense.pos;
-            
+
             if(sense.pos)
             {
                 let part = document.createElement("span");
@@ -858,7 +861,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                     definition.appendChild(document.createTextNode(" "));
                 else
                     definition.appendChild(document.createElement("br"));
-                
+
             }
             if(settings.compact)
             {
@@ -1022,31 +1025,31 @@ async function settings_init()
         getvar("fixedwidthpositioning", false);
         getvar("superborder", false);
         getvar("showoriginal", true);
-        
+
         getvar("bgcolor", "#111111");
         getvar("fgcolor", "#CCCCCC");
         getvar("hlcolor", "#99DDFF");
         getvar("hlcolor2", "#66DD44");
         getvar("font", "");
         getvar("hlfont", "");
-        
+
         getvar("alternatives_mode", 0);
         getvar("strict_alternatives", true);
-        
+
         getvar("corner", 0);
         getvar("xoffset", 5);
         getvar("yoffset", 22);
-        
+
         getvar("ignore_linebreaks", true);
         getvar("ignore_divs", false);
         getvar("sticky", false);
         getvar("popup_follows_mouse", true);
         getvar("popup_requires_key", 0);
-        
+
         getvar("x_dodge", 1);
         getvar("y_dodge", 0);
         getvar("sticky_maxheight", 0);
-        
+
         getvar("hotkey_mine", "m");
         getvar("hotkey_close", "n");
         getvar("hotkey_sticky", "b");
@@ -1055,7 +1058,7 @@ async function settings_init()
         getvar("hotkey_nudge_right", "ArrowRight");
         getvar("volume", 0.2);
         getvar("live_mining", false);
-        
+
         if(!settings.enabled && exists_div())
             delete_div();
         if(!settings.enabled)
@@ -1095,7 +1098,7 @@ async function send_lookup(lookup)
 {
     lookup_last_time = Date.now();
     last_lookup = lookup;
-    
+
     let response = await browser.runtime.sendMessage(
     {
         type:"search",
@@ -1107,7 +1110,7 @@ async function send_lookup(lookup)
     });
     if(response)
         response = response["response"];
-    
+
     if(response && response != "itsthesame")
     {
         if(!response.length)
@@ -1164,7 +1167,7 @@ function lookup_left()
     while (index > 0 && (text.codePointAt(index) < 0x100 || japanesePunctuation.includes(text.charAt(index))))
         index--;
     text = text.substring(index);
-    
+
     last_manual_interaction = Date.now();
     send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
 }
@@ -1179,7 +1182,7 @@ function lookup_right()
     while (index < text.length-1 && (text.codePointAt(index) < 0x100 || japanesePunctuation.includes(text.charAt(index))))
         index++;
     text = text.substring(index);
-    
+
     last_manual_interaction = Date.now();
     send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
 }
@@ -1200,7 +1203,7 @@ function get_element_text(element)
         let tagname = element.tagName.toLowerCase();
         if(tagname == "rt" || tagname == "rp")
             return "";
-        
+
         let ret = "";
         for(let child of element.childNodes)
         {
@@ -1239,9 +1242,9 @@ function grab_more_text(textNode, direction = 1)
                 let display = getComputedStyle(current_node).display;
                 let tagname = current_node.tagName.toLowerCase();
                 // FIXME get real inline vs block detection
-                
+
                 let inline_like = display.includes("inline") || display == "ruby";
-                
+
                 let ruby_interior = tagname == "rt" || tagname == "rp";
                 console.log(display);
                 console.log(inline_like);
@@ -1257,7 +1260,7 @@ function grab_more_text(textNode, direction = 1)
             console.log(current_node);
             break;
         }
-        
+
         let parent = current_node.parentNode;
         if(parent == undefined || parent == current_node) break;
         let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
@@ -1270,7 +1273,7 @@ function grab_more_text(textNode, direction = 1)
             let next_node = current_node.parentNode.childNodes[i];
             i += direction;
             let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
-            
+
             if(tagname == "br" && !settings.ignore_linebreaks)
                 break;
             if(tagname == "rt" || tagname == "rp")
@@ -1279,9 +1282,9 @@ function grab_more_text(textNode, direction = 1)
             try
             {
                 let ttext = "";
-                
+
                 let display = getComputedStyle(next_node).display;
-                
+
                 // FIXME get real inline vs block detection
                 if(display != "block" && display != "grid" && display != "table" && display != "none")
                 {
@@ -1327,38 +1330,38 @@ function grab_text(textNode, offset, elemental)
         moreText = get_element_text(textNode);
         text = moreText.substring(offset, moreText.length);
     }
-    
+
     text += grab_more_text(textNode);
     moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
-    
+
     if(settings.ignore_linebreaks)
         text = text.replace(/\n/g, "");
     if(settings.ignore_linebreaks)
         moreText = moreText.replace(/\n/g, "");
-    
+
     //console.log("more (orig): " + moreText);
     //console.log("less (orig): " + text);
-    
+
     let index = moreText.lastIndexOf(text);
-    
+
     let leftwards = 0;
     let rightwards = 0;
-    
+
     while(!japaneseSeparators.includes(moreText[index + leftwards]) && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
         leftwards--;
     leftwards++;
-    
+
     while(!japaneseSeparators.includes(moreText[index + rightwards]) && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
         rightwards++;
-    
+
     moreText = moreText.substring(index+leftwards, index+rightwards);
     text = text.substring(0, rightwards);
-    
+
     index = -leftwards;
-    
+
     //console.log("more: " + moreText);
     //console.log("less: " + text);
-    
+
     // grab text from later and surrounding DOM nodes
     text = moreText.substring(index);
     return [text, moreText, index];
@@ -1381,7 +1384,7 @@ function update(event)
 {
     if(!event) return;
     last_seen_event = event;
-    
+
     if((settings.popup_requires_key == 2 && !shift_down)
     || (settings.popup_requires_key == 1 && !ctrl_down))
     {
@@ -1390,9 +1393,9 @@ function update(event)
             lookup_cancel();
         return;
     }
-    
+
     if(!settings.enabled) return;
-    
+
     if(settings.popup_follows_mouse && exists_div() && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
     {
         let other = get_div();
@@ -1402,25 +1405,25 @@ function update(event)
             display_div(middle, event.pageX, event.pageY);
         //move_div(event.pageX, event.pageY);
     }
-    
+
     if(Date.now() - time_of_last < settings.lookuprate)
     {
         return;
     }
-    
+
     if(platform == "android" && Date.now() - last_manual_interaction < 150)
         return;
-    
+
     //console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
     //console.log("searching for text");
     let textNode;
     let offset;
     let hitrect;
-    
+
     let nodeResetList = [];
     let nodeResetSeen = new Set();
-    
+
     function acceptable_element(node)
     {
         if(!textNode) return false;
@@ -1439,7 +1442,7 @@ function update(event)
     while(nodeIsBad)
     {
         nodeIsBad = false;
-        
+
         let hitpage = function(x, searchoffset, y)
         {
             let xoffset = 0;
@@ -1457,7 +1460,7 @@ function update(event)
                 {
                     textNode = caretdata.offsetNode;
                     offset = caretdata.offset;
-                    
+
                     let range = document.createRange();
                     range.selectNode(textNode);
                     hitrect = range.getBoundingClientRect();
@@ -1501,19 +1504,19 @@ function update(event)
                 hitrect = undefined;
             }
         };
-        
+
         hitpage(event.clientX, search_x_offset, event.clientY);
         // try without the offset
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
             hitpage(event.clientX, 0, event.clientY);
-        
+
         if ((platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)) && exists_div())
         {
             let ele = get_div();
             if(ele.contains(textNode))
                 return;
         }
-        
+
         if(textNode !== undefined)
         {
             // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
@@ -1522,7 +1525,7 @@ function update(event)
                 if(textNode.nodeType == 1 && !nodeResetSeen.has(textNode) && !acceptable_element(textNode))
                 {
                     let style = getComputedStyle(textNode)
-                    let bg_color = style.getPropertyValue("background-color"); 
+                    let bg_color = style.getPropertyValue("background-color");
                     if(bg_color == "rgba(0, 0, 0, 0)")
                     {
                         nodeIsBad = true;
@@ -1555,7 +1558,7 @@ function update(event)
             rect = textNode.getBoundingClientRect();
         else
             rect = textNode.parentNode.getBoundingClientRect();
-        
+
         // FIXME: Doesn't work to reject in all cases
         if(!ischrome)
         {
@@ -1567,14 +1570,14 @@ function update(event)
                 return;
             }
         }
-        
+
         let found = grab_text(textNode, offset, elemental);
         let text = found[0];
         let moreText = found[1];
         let index = found[2];
-        
+
         text = text.substring(0, Math.min(text.length, settings.length));
-        
+
         if(text != "")
             lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY, moreText, index);
         else
@@ -1601,12 +1604,12 @@ function message(text)
     mydiv.style = "background-color: rgba(0, 0, 0, 0.5); color: white; width: 200px; position: fixed; right: 25px; bottom: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
     mydiv.textContent = text;
     document.body.appendChild(mydiv);
-    
+
     function delete_later()
     {
         mydiv.remove();
     }
-    
+
     setTimeout(delete_later, 3000);
 }
 
@@ -1668,7 +1671,7 @@ async function try_to_play_audio()
 function send_ankiconnect_command(host, command)
 {
     let json = JSON.stringify(command);
-    
+
     browser.runtime.sendMessage({type:"ankiconnect_mine", host:host, command:json});
 }
 
@@ -1676,7 +1679,7 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
 {
     let object_keys = Object.keys(object);
     let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host"]);
-    promise.then((storage) => 
+    promise.then((storage) =>
     {
         if(storage["livemining_host"] === undefined)
             storage["livemining_host"] = "http://localhost:8765/";
@@ -1686,9 +1689,9 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
             storage["livemining_modelname"] = "Basic";
         if(storage["livemining_fields"] === undefined)
             storage["livemining_fields"] = [["Front", "found_spelling"], ["Back", "readings"]];
-        
+
         console.log("attempting to mine card");
-        
+
         let note = {
             "action": "addNote",
             "version": 6,
@@ -1785,25 +1788,25 @@ function mine(highlight)
     let sentence = word.parentElement.querySelector(".nazeka_lookup_sentence");
     let index = word.parentElement.querySelector(".nazeka_lookup_index");
     let seq = word.getAttribute("nazeka_seq");
-    
+
     mine_to_storage({front: front, readings: readings, definitions: definitions.innerText, lookup: lookup.textContent, sentence: sentence.textContent, index: index.textContent, seq: seq});
-    
+
     if(settings.live_mining)
     {
         let now = new Date();
-        
+
         let readings_raw = word.querySelector(".nazeka_mining_readings").innerText;
         let spellings_raw = word.querySelector(".nazeka_mining_spellings").innerText;
-        
+
         let audiostuff = get_audio_text(word);
         let audio_kanji = "";
         let audio_reading = "";
-        
+
         if(readings.length >= 2)
             readings = readings.substring(1, readings.length-1);
-        
+
         console.log(audiostuff);
-        
+
         if(audiostuff !== undefined)
         {
             audio_kanji = audiostuff[1];
@@ -1812,27 +1815,27 @@ function mine(highlight)
         mine_to_ankiconnect(
         {
             nothing:"",
-            
+
             found_spelling:front,
             readings:readings,
-            
+
             definitions:definitions.innerHTML,
             definitions_raw:definitions.innerText,
-            
+
             found_text: lookup.textContent,
             context: sentence.textContent,
             context_left: sentence.textContent.substring(0, index.textContent),
             context_right: sentence.textContent.substring(parseInt(index.textContent) + lookup.textContent.length),
-            
+
             audio: audiostuff,
             audio_kanji: audio_kanji,
             audio_reading: audio_reading,
-            
+
             jmdict_id: seq,
             url: get_doc().URL,
             time_unix: now.getTime(),
             time_local: now.toLocaleString(),
-            
+
             readings_raw: readings_raw,
             spellings_raw: spellings_raw,
         });
@@ -1890,7 +1893,7 @@ function keytest(event)
             mydiv.style.zIndex = 1000000000000000000000;
             // do not compound! z-index can be range limited by the browser
             mydiv.style.zIndex -= 1;
-            
+
             for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
             {
                 keb.addEventListener("click", (event)=>
@@ -1909,7 +1912,7 @@ function keytest(event)
                         get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
                 });
             }
-            
+
             get_doc().body.appendChild(mydiv);
         }
     }
@@ -1944,11 +1947,10 @@ function keyuntest(event)
         shift_down = false;
     if(event.key == "Control")
         ctrl_down = false;
-    
+
 }
 
 window.addEventListener("mousemove", update);
 window.addEventListener("keydown", keytest);
 window.addEventListener("keyup", keyuntest);
 document.addEventListener("touchstart", update_touch);
-

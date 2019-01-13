@@ -11,7 +11,7 @@ function defaults()
         kind: "dummy",
         label: "Behavior"
     });
-    
+
     settings.push({
         id: "enabled",
         kind: "checkbox",
@@ -92,7 +92,7 @@ function defaults()
         default: false,
         label: "Enable live mining (experimental!) (configured via the button below under \"Other\")"
     });
-    
+
     // display
     settings.push({
         kind: "dummy",
@@ -175,7 +175,7 @@ function defaults()
         default: 0,
         label: "How to keep the popup on the screen vertically (at least one of these two options should be \"Flip\")"
     });
-    
+
     // theme
     settings.push({
         kind: "dummy",
@@ -224,12 +224,36 @@ function defaults()
         label: "Font override (highlighted text only) (without trailing comma)"
     });
     settings.push({
+        id: "definition_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 13,
+        label: "Definition font size"
+    });
+    settings.push({
+        id: "dict_item_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 18,
+        label: "Dictionary item font size"
+    });
+    settings.push({
+        id: "reading_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 15,
+        label: "Reading font size"
+    });
+    settings.push({
         id: "sticky",
         kind: "checkbox",
         default: false,
         label: "Sticky mode"
     });
-    
+
     // reader
     settings.push({
         kind: "dummy",
@@ -268,7 +292,7 @@ function defaults()
         default: 200,
         label: "Reader autoscroll leeway (when \"insert at bottom\" is enabled) (0 disables)"
     });
-    
+
     // hotkeys
     settings.push({
         kind: "dummy",
@@ -319,7 +343,7 @@ function defaults()
         default: 0.2,
         label: "Audio playback volume (press \"p\" while popup is open)"
     });
-    
+
     // other (added imperatively)
     settings.push({
         kind: "dummy",
@@ -416,11 +440,11 @@ function buildpage()
             input.value = option.default;
             configger = input;
         }
-        
+
         let label = document.createElement("label");
         label.for = option.id;
         let labelText = document.createTextNode(option.label);
-        
+
         if(option.kind == "checkbox")
         {
             label.appendChild(configger);
@@ -437,23 +461,23 @@ function buildpage()
             container.appendChild(cont1);
             container.appendChild(cont2);
         }
-        
+
         container.style.marginBottom = "8px";
         optionsection.appendChild(container);
     }
-    
+
     // mining
-    
+
     let liveminingbutton = document.createElement("button");
     liveminingbutton.type = "button";
     liveminingbutton.innerText = "Configure live mining";
     liveminingbutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
     optionsection.appendChild(liveminingbutton);
-    
+
     optionsection.appendChild(document.createElement("hr"));
-    
+
     // deconjugation rules
-    
+
     let decon_file = document.createElement("input");
     decon_file.type = "file";
     decon_file.id = "decon_file";
@@ -484,14 +508,14 @@ function buildpage()
     decon_label.id = "import_label";
     decon_label.textContent = "Import deconjugation ruleset. Overrides default deconjugation ruleset. Importing a blank file will restore the default ruleset.";
     decon_label.style.display = "block";
-    
+
     optionsection.appendChild(decon_file);
     optionsection.appendChild(decon_label);
-    
+
     optionsection.appendChild(document.createElement("hr"));
-    
+
     // json dictionary
-    
+
     let file = document.createElement("input");
     file.type = "file";
     file.id = "epwing_file";
@@ -519,9 +543,9 @@ function buildpage()
     label.id = "import_label";
     label.textContent = "Import JSON dictionary.";
     label.style.display = "block";
-    
+
     let dict_explanation = document.createElement("p");
-    dict_explanation.innerHTML = 
+    dict_explanation.innerHTML =
 `JSON dictionaries have the following format:
 <pre style='font-family:monospace !important' lang='en-US'>[
     "The Worst Dictionary Ever",
@@ -557,15 +581,15 @@ This format is designed to be a sane generic mapping for EPWing dictionaries, af
 You can currently only have one JSON dictionary at a time and cannot manage the one you have imported aside from replacing it.<br>
 Unfortunately, EPWING dictionaries can't be converted to this format in a general way. Someone has to write a script for every single EPWING dictionary out there, one at a time.<br>
 This format can be extended in the future if it becomes desirable to include more information, like pitch accent data, from dictionaries that have it.`;
-    
+
     optionsection.appendChild(file);
     optionsection.appendChild(label);
     optionsection.appendChild(dict_explanation);
-    
+
     optionsection.appendChild(document.createElement("hr"));
-    
+
     // backup
-    
+
     let backup_save = document.createElement("button");
     backup_save.type = "button";
     backup_save.innerText = "Save Backup";
@@ -582,12 +606,12 @@ This format can be extended in the future if it becomes desirable to include mor
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
+
         window.URL.revokeObjectURL(url);
     }));
     optionsection.appendChild(backup_save);
     optionsection.appendChild(document.createElement("br"));
-    
+
     let backup_load = document.createElement("input");
     backup_load.type = "file";
     backup_load.id = "backup_file";
@@ -617,9 +641,9 @@ This format can be extended in the future if it becomes desirable to include mor
     backup_load_label.style.display = "block";
     optionsection.appendChild(backup_load);
     optionsection.appendChild(backup_load_label);
-    
+
     optionsection.appendChild(document.createElement("hr"));
-    
+
     let abbrlink = document.getElementById("abbrlink");
     abbrlink.onclick = function(e){browser.windows.create({url:browser.extension.getURL('jmdictabbreviations.html'),type:'popup'}); e.preventDefault();};
 }
