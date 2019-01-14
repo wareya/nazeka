@@ -218,6 +218,30 @@ function defaults()
         label: "Font override (without trailing comma)"
     });
     settings.push({
+        id: "definition_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 13,
+        label: "Definition font size"
+    });
+    settings.push({
+        id: "dict_item_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 18,
+        label: "Dictionary item font size"
+    });
+    settings.push({
+        id: "reading_fontsize",
+        kind: "number",
+        min: 4,
+        max: 48,
+        default: 15,
+        label: "Reading font size"
+    });
+    settings.push({
         id: "hlfont",
         kind: "text",
         default: "",
