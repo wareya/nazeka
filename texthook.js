@@ -14,15 +14,6 @@
  * 
  */
 
-if (navigator.userAgent.indexOf('Chrome') > -1)
-{
-    var ischrome = true;
-}
-else
-{
-    var ischrome = false;
-}
-
 'use strict';
 
 // updated by a timer looping function, based on local storage set by the options page
@@ -1240,7 +1231,7 @@ function grab_more_text(textNode, direction = 1)
                 let tagname = current_node.tagName.toLowerCase();
                 // FIXME get real inline vs block detection
                 
-                let inline_like = display.includes("inline") || display == "ruby";
+                let inline_like = display.includes("inline") || display == "ruby" || display == "ruby-base";
                 
                 let ruby_interior = tagname == "rt" || tagname == "rp";
                 if(ruby_interior || !inline_like)
@@ -1564,15 +1555,12 @@ function update(event)
             rect = textNode.parentNode.getBoundingClientRect();
         
         // FIXME: Doesn't work to reject in all cases
-        //if(!ischrome)
+        let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
+        //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
+        if(!hit)
         {
-            let hit = (event.clientX+fud >= rect.left && event.clientX-fud <= rect.right && event.clientY+fud >= rect.top && event.clientY-fud <= rect.bottom);
-            //let hit = (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom);
-            if(!hit)
-            {
-                lookup_cancel();
-                return;
-            }
+            lookup_cancel();
+            return;
         }
         
         let found = grab_text(textNode, offset, elemental);
