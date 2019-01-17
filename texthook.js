@@ -409,8 +409,6 @@ function clip(str)
 // note that we can get multiple lookups and this function only handles a single lookup
 function build_div_inner(text, result, moreText, index, first_of_many = false)
 {
-    //console.log("building div for " + text);
-    //console.log(result);
     let temp = document.createElement("div");
     temp.style.position = "relative";
     // the "Looked up XXXX" text
@@ -430,9 +428,6 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         {
             moreText_end = moreText_end.substring(0, 3)+"…";
         }
-        //console.log(moreText);
-        //console.log(index);
-        //console.log(text);
         
         let original_inner = document.createElement("span");
         original_inner.className = "nazeka_lookup";
@@ -693,7 +688,6 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             
             if(term.deconj)
             {
-                //console.log(term.deconj);
                 let deconj = "";
                 let first = true;
                 for(let form of term.deconj)
@@ -980,8 +974,6 @@ function build_div_compound (results, moreText, index)
 {
     lastMoreText = moreText;
     last_displayed = results;
-    //console.log("Displaying:");
-    //print_object(result);
     let middle = build_div_intermediary();
     let first = true;
     for(let lookup of results)
@@ -1303,7 +1295,6 @@ function grab_more_text(textNode, direction = 1)
 
 function grab_text(textNode, offset, elemental)
 {
-    //console.log("found text");
     let text = "";
     let moreText = "";
     if(elemental)
@@ -1325,9 +1316,6 @@ function grab_text(textNode, offset, elemental)
     if(settings.ignore_linebreaks)
         moreText = moreText.replace(/\n/g, "");
     
-    //console.log("more (orig): " + moreText);
-    //console.log("less (orig): " + text);
-    
     let index = moreText.lastIndexOf(text);
     
     let leftwards = 0;
@@ -1344,9 +1332,6 @@ function grab_text(textNode, offset, elemental)
     text = text.substring(0, rightwards);
     
     index = -leftwards;
-    
-    //console.log("more: " + moreText);
-    //console.log("less: " + text);
     
     // grab text from later and surrounding DOM nodes
     text = moreText.substring(index);
@@ -1400,9 +1385,7 @@ function update(event)
     if(platform == "android" && Date.now() - last_manual_interaction < 150)
         return;
     
-    //console.log("---- entry to word lookup at " + Date.now());
     time_of_last = Date.now();
-    //console.log("searching for text");
     let textNode;
     let offset;
     let hitrect;
@@ -1413,7 +1396,6 @@ function update(event)
     function acceptable_element(node)
     {
         if(!textNode) return false;
-        //console.log(node);
         if(textNode.nodeType != 1)
             return false;
         if(textNode.tagName.toLowerCase() == "textarea")
@@ -1474,13 +1456,11 @@ function update(event)
                     textNode = range.startContainer;
                     offset = range.startOffset;
                     hitrect = range.getBoundingClientRect();
-                    console.log(hitrect);
                 }
             }
             // sticky mode and android need to break out on parent detection
             if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
             {
-                console.log("not parent");
                 textNode = undefined;
                 offset = undefined;
                 hitrect = undefined;
@@ -1488,19 +1468,15 @@ function update(event)
             // break out if the mouse isn't actually over the hit rectangle
             if(hitrect && (x > hitrect.right+5 || x < hitrect.left-5+xoffset || y > hitrect.bottom+5 || y < hitrect.top-5+yoffset))
             {
-                console.log("missed");
-                console.log([x, y, x+offset, y+offset, hitrect]);
                 textNode = undefined;
                 offset = undefined;
                 hitrect = undefined;
             }
         };
-        console.log("first try");
         hitpage(event.clientX, search_x_offset, event.clientY);
         // try without the offset
         if (textNode == undefined || (textNode.nodeType != 3 && !acceptable_element(textNode)))
         {
-        console.log("retry");
             hitpage(event.clientX, 0, event.clientY);
         }
         
@@ -1584,10 +1560,8 @@ function update(event)
 
 function update_touch(event)
 {
-    //console.log("touch event triggered");
     if(event.touches)
     {
-        //console.log("receiving touch event");
         update(event.touches[0]);
     }
 }
@@ -1613,7 +1587,6 @@ async function mine_to_storage(object)
     let cards = (await browser.storage.local.get("cards")).cards;
     if(!cards)
         cards = [];
-    //console.log(cards);
     cards.push(object);
     browser.storage.local.set({cards:cards});
 }
@@ -1703,12 +1676,8 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
         };
         let audioadded = false;
         let fields = {};
-        console.log(storage["livemining_fields"]);
-        console.log("starting loop");
         for(let pair of storage["livemining_fields"])
         {
-            console.log("start of iteration");
-            console.log(pair);
             if(pair[1] != "audio_anki" && object_keys.includes(pair[1]))
                 fields[pair[0]] = String(object[pair[1]]);
             if(pair[1] == "audio_anki")
@@ -1725,7 +1694,6 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
                                 "data": audiodata
                             }
                         };
-                        console.log("starting command");
                         send_ankiconnect_command(storage["livemining_host"], mediafilecommand);
                         audioadded = true;
                     }
@@ -1738,23 +1706,18 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
                 else
                     fields[pair[0]] = "";
             }
-            console.log("end of iteration");
         }
-        console.log("ending loop");
         note["params"]["note"]["fields"] = fields;
         send_ankiconnect_command(storage["livemining_host"], note);
-        console.log("test");
     }, (e) => {console.log(e);});
 }
 
 async function mine_to_ankiconnect(object)
 {
-    console.log(object);
     let audio_base64 = "";
     if(object.audio !== undefined)
     {
         let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + object.audio[0] + "&kanji=" + object.audio[1];
-        console.log(url);
         let reader = new FileReader();
         reader.onload = () =>
         {
@@ -1799,8 +1762,6 @@ function mine(highlight)
         
         if(readings.length >= 2)
             readings = readings.substring(1, readings.length-1);
-        
-        console.log(audiostuff);
         
         if(audiostuff !== undefined)
         {
@@ -1861,10 +1822,8 @@ function keytest(event)
         {
             while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
             {
-                console.log("deleting");
                 get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
             }
-            console.log("deleted");
         }
         else
         {
@@ -1872,7 +1831,7 @@ function keytest(event)
                 return;
             while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
                 get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-            //console.log("mining request");
+            
             let mydiv = get_div().cloneNode(true);
             delete_div();
             set_sticky_styles(mydiv);

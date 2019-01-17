@@ -2,15 +2,6 @@
 
 'use strict';
 
-if (navigator.userAgent.indexOf('Chrome') > -1)
-{
-    var ischrome = true;
-}
-else
-{
-    var ischrome = false;
-}
-
 // updated by a timer looping function, based on local storage set by the options page
 // we only use a tiny number of settings here
 
@@ -402,15 +393,7 @@ function stdrule_deconjugate_inner(my_form, my_rule)
         return;
     // tag doesn't match
     if(my_form.tags.length > 0 && my_form.tags[my_form.tags.length-1] != my_rule.con_tag)
-    {
-        if(false)//my_rule.detail=="potential")
-        {
-            //console.log("Returning from deconjugation: tag doesn't match");
-            //console.log(my_form);
-            //console.log(my_rule);
-        }
         return;
-    }
     
     let newtext = my_form.text.substring(0, my_form.text.length-my_rule.con_end.length)+my_rule.dec_end;
     
@@ -608,7 +591,6 @@ function deconjugate(mytext)
 // building a list of all matches
 function build_lookup_comb(forms)
 {
-    console.log("in build_lookup_comb");
     // FIXME: dumpster fire that shouldn't be anywhere near as complicated as I made it
     
     // This is the only part of this function that doesn't look like a garbage fire.
@@ -695,7 +677,6 @@ function build_lookup_comb(forms)
 
 function add_epwing_info(lookups)
 {
-    console.log("in add_epwing_info");
     for(let lookup of lookups)
     {
         for(let entry of lookup.result)
@@ -719,9 +700,6 @@ function add_epwing_info(lookups)
                     {
                         let possibilities = copy_gen(lookup_epwing_kan.get(text));
                         
-                        //console.log(text);
-                        //console.log(possibilities);
-                        
                         // FIXME this is disgusting
                         let priority = [];
                         for(let reading of entry.r_ele)
@@ -741,8 +719,6 @@ function add_epwing_info(lookups)
                         }
                         possibilities = priority.concat(possibilities);
                         priority = [];
-                        
-                        //console.log(possibilities);
                         
                         for(let wing of possibilities)
                         {
@@ -848,7 +824,6 @@ function add_epwing_info(lookups)
                 entry.epwing["z"] = epwing[0];
         }
     }
-    console.log("about to exit add_epwing_info");
     return lookups;
 }
 
@@ -1000,7 +975,6 @@ function sort_results(text, results)
         // FIXME: prefer short deconjugations to long deconjugations, not just no deconjugations to any deconjugations
         if(entry.deconj)
             entry.priority -= 1;
-        //console.log(entry);
     }
     
     results.sort((a,b)=>
@@ -1047,8 +1021,6 @@ function restrict_by_text(entry, text)
 {
     // deep clone lol (we should probably do this WAY earlier)
     let term = copy(entry);
-    //console.log(entry);
-    //console.log(term);
     if(!term.found) // bogus lookup
         return term;
     
@@ -1352,7 +1324,6 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
             if(results.length > 0)
                 first = false;
         }
-        //console.log(results);
         if(results.length > 0)
             return skip_rereferenced_entries(results);
     }
@@ -1483,29 +1454,18 @@ function clipboard_hook(tab)
 let platform = "";
 async function get_real_platform()
 {
-    if (!ischrome)
-    {
-        let platformInfo = await browser.runtime.getPlatformInfo();
-        if(platformInfo)
-            platform = platformInfo.os;
-        console.log(`platform is ${platform}`);
-    }
-    else
-    {
-        platform = "win";
-        console.log(`on chrome, didn't check platform; assuming desktop`);
-    }
+    let platformInfo = await browser.runtime.getPlatformInfo();
+    if(platformInfo)
+        platform = platformInfo.os;
+    console.log(`platform is ${platform}`);
 }
 get_real_platform();
 
-//console.log("setting message listener");
 browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
         let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives);
-        console.log("got out of lookup_indirect");
-        console.log(asdf);
         return Promise.resolve({"response" : asdf});
     }
     else if (req.type == "platform")
@@ -1526,39 +1486,22 @@ browser.runtime.onMessage.addListener((req, sender) =>
     }
     else if (req.type == "ankiconnect_mine")
     {
-        console.log(req.command);
         let xhr = new XMLHttpRequest();
         xhr.open("POST", req.host, true);
         //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
         xhr.addEventListener('load', () =>
         {
-            console.log(xhr.responseText);
             let response = JSON.parse(xhr.responseText);
-            console.log(response);
         });
         xhr.send(req.command);
     }
     return Promise.resolve(undefined);
 });
-//console.log("set message listener");
 
-if (!ischrome)
-{
-    browser.contextMenus.create({
-        id: "nazeka-toggle",
-        title: "Toggle Nazeka",
-        contexts: ["page", "selection"],
-        documentUrlPatterns: ["moz-extension://*/reader.html"],
-        onclick: toggle_enabled
-    });
-}
-else
-{
-    browser.contextMenus.create({
-        id: "nazeka-toggle",
-        title: "Toggle Nazeka",
-        contexts: ["page", "selection"],
-        documentUrlPatterns: ["chrome-extension://*/reader.html"],
-        onclick: toggle_enabled
-    });
-}
+browser.contextMenus.create({
+    id: "nazeka-toggle",
+    title: "Toggle Nazeka",
+    contexts: ["page", "selection"],
+    documentUrlPatterns: ["moz-extension://*/reader.html"],
+    onclick: toggle_enabled
+});
