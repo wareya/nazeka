@@ -379,17 +379,8 @@ load_deconjugation_rules("dict/deconjugator.json");
 // return deconjugated form if stdrule applies to form, return otherwise
 function stdrule_deconjugate_inner(my_form, my_rule)
 {
-    // can't deconjugate nothingness
-    if(my_form.text == "")
-        return;
     // ending doesn't match
     if(!my_form.text.endsWith(my_rule.con_end))
-        return;
-    // deconjugated form too much longer than conjugated form
-    if(my_form.text.length > my_form.original_text.length+10)
-        return;
-    // impossibly information-dense
-    if(my_form.tags.length > my_form.original_text.length+6)
         return;
     // tag doesn't match
     if(my_form.tags.length > 0 && my_form.tags[my_form.tags.length-1] != my_rule.con_tag)
@@ -421,6 +412,19 @@ function stdrule_deconjugate_inner(my_form, my_rule)
 };
 function stdrule_deconjugate(my_form, my_rule)
 {
+    // can't deconjugate nothingness
+    if(my_form.text == "")
+        return;
+    // deconjugated form too much longer than conjugated form
+    if(my_form.text.length > my_form.original_text.length+10)
+        return;
+    // impossibly information-dense
+    if(my_form.tags.length > my_form.original_text.length+6)
+        return;
+    // blank detail mean it can't be the last (first applied, but rightmost) rule
+    if(my_rule.detail == "" && my_form.tags.length == 0)
+        return;
+    
     let array = undefined;
     // pick the first one that is an array
     // FIXME: use minimum length for safety reasons? assert all arrays equal length?
@@ -496,19 +500,11 @@ neverfinalrule: neverfinalrule_deconjugate,
 contextrule: contextrule_deconjugate,
 };
 
-function adjspecial_check(my_form, my_rule)
+function v1inftrap_check(my_form, my_rule)
 {
-    if(my_form.tags.length != 2) return true;
-    let my_tag = my_form.tags[my_form.tags.length-2];
-    if(my_tag == "stem-adj-base")
-        return false;
-    return true;
-};
-function tetrap_check(my_form, my_rule)
-{
-    if(my_form.tags.length < 2) return true;
-    let my_tag = my_form.tags[my_form.tags.length-2];
-    if(my_tag == "stem-te")
+    if(my_form.tags.length != 1) return true;
+    let my_tag = my_form.tags[0];
+    if(my_tag == "stem-ren")
         return false;
     return true;
 };
@@ -523,8 +519,7 @@ function saspecial_check(my_form, my_rule)
 };
 
 let context_functions = {
-adjspecial: adjspecial_check,
-tetrap: tetrap_check,
+v1inftrap: v1inftrap_check,
 saspecial: saspecial_check,
 };
 

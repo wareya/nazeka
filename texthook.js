@@ -3,14 +3,9 @@
 /*
  * TODO:
  * 
- * ! Finish porting the underlay's deconjugation rules
- * - Add an option for "hide unfitting senses/spellings/readings" vs "show everything but with details about what can be what"
  * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
- * - More configurability
  * - VNstats frequency data
  * - Integrate frequency into priority handling
- * - Load deconjugation rules from an advanced setting, with a reset button
- * ? Export/import settings with json
  * 
  */
 
@@ -686,8 +681,11 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             
             // deconjugations
             
+            
             if(term.deconj)
             {
+                console.log(term.deconj);
+                
                 let deconj = "";
                 let first = true;
                 for(let form of term.deconj)
@@ -702,7 +700,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                         if(info.startsWith("(") && info.endsWith(")") && f != 0)
                             continue;
                         if(added > 0)
-                            formtext += "―";
+                            formtext += "→";
                         added++;
                         formtext += info;
                     }
@@ -735,6 +733,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             temptag.appendChild(main_reb);
             if(term.deconj)
             {
+                console.log(term.deconj);
                 let deconj = "";
                 let first = true;
                 for(let form of term.deconj)
@@ -749,7 +748,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                         if(info.startsWith("(") && info.endsWith(")") && f != 0)
                             continue;
                         if(added > 0)
-                            formtext += "―";
+                            formtext += "→";
                         added++;
                         formtext += info;
                     }
@@ -1075,11 +1074,9 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 
 let last_lookup = undefined;
 let last_manual_interaction = Date.now();
-let lookup_last_time = Date.now();
 
 async function send_lookup(lookup)
 {
-    lookup_last_time = Date.now();
     last_lookup = lookup;
     
     let response = await browser.runtime.sendMessage(
@@ -1114,10 +1111,7 @@ async function send_lookup(lookup)
 }
 function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 {
-    if(lookup_last_time+settings.lookuprate < Date.now())
-    {
-        send_lookup([text, x, y, x2, y2, moreText, index]);
-    }
+    send_lookup([text, x, y, x2, y2, moreText, index]);
 }
 
 function lookup_cancel()
@@ -1359,8 +1353,8 @@ function update(event)
     if((settings.popup_requires_key == 2 && !shift_down)
     || (settings.popup_requires_key == 1 && !ctrl_down))
     {
-        function sqr(n) {return n*n;}
-        if(Math.sqrt(sqr(last_display_x-event.pageX) + sqr(last_display_y-event.pageY)) > 20)
+        function sq(n) {return n*n;}
+        if(Math.sqrt(sq(last_display_x-event.pageX) + sq(last_display_y-event.pageY)) > 20)
             lookup_cancel();
         return;
     }
@@ -1420,43 +1414,18 @@ function update(event)
                 yoffset = searchoffset;
             else
                 xoffset = searchoffset;
-            // firefox
-            if (document.caretPositionFromPoint)
+            
+            let caretdata = document.caretPositionFromPoint(x+xoffset, y+yoffset);
+            
+            if(caretdata)
             {
-                let caretdata = document.caretPositionFromPoint(x+xoffset, y+yoffset);
-                if(caretdata)
-                {
-                    textNode = caretdata.offsetNode;
-                    offset = caretdata.offset;
-                    
-                    let range = document.createRange();
-                    range.selectNode(textNode);
-                    hitrect = range.getBoundingClientRect();
-                    range.detach();
-                }
-            }
-            // chrome
-            else if (document.caretRangeFromPoint)
-            {
-                let range = document.caretRangeFromPoint(x+xoffset, y+yoffset);
-                if(range)
-                {
-                    try
-                    {
-                        range.setEnd(range.endContainer, range.endOffset+1);
-                    }
-                    catch(err)
-                    {
-                        try
-                        {
-                            range.setEnd(true_next_sibling(range.endContainer), 0);
-                        }
-                        catch(err){}
-                    }
-                    textNode = range.startContainer;
-                    offset = range.startOffset;
-                    hitrect = range.getBoundingClientRect();
-                }
+                textNode = caretdata.offsetNode;
+                offset = caretdata.offset;
+                
+                let range = document.createRange();
+                range.selectNode(textNode);
+                hitrect = range.getBoundingClientRect();
+                range.detach();
             }
             // sticky mode and android need to break out on parent detection
             if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
@@ -1487,7 +1456,7 @@ function update(event)
                 return;
         }
         
-        if(textNode !== undefined)
+        if(false && textNode !== undefined)
         {
             // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
             try
@@ -1496,7 +1465,8 @@ function update(event)
                 {
                     let style = getComputedStyle(textNode)
                     let bg_color = style.getPropertyValue("background-color"); 
-                    if(bg_color == "rgba(0, 0, 0, 0)")
+                    let position = style.getPropertyValue("position"); 
+                    if(bg_color == "rgba(0, 0, 0, 0)" && (position == "absolute" || (position != "static" && textNode.tagName == "A")))
                     {
                         nodeIsBad = true;
                         nodeResetList.unshift([textNode, style.getPropertyValue("z-index")]);
