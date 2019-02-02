@@ -22,9 +22,10 @@ fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
 showoriginal: true,
+definitions_mode: 0,
+normal_definitions_in_mining: false,
 alternatives_mode: 0, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
 strict_alternatives: true, // if true, alternatives looked up in all kana can not return results with kanji glosses that don't have any usually/exclusively kana info
-definitions_mode: 0,
 strict_epwing: true,
 scale: 1,
 width: 600,
@@ -156,6 +157,17 @@ function get_doc()
     return mydoc;
 }
 
+function mining_ui_exists()
+{
+    return get_doc().body.getElementsByClassName("nazeka_mining_ui").length > 0;
+}
+
+function delete_mining_ui()
+{
+    while(mining_ui_exists())
+        get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+}
+
 function getViewportSize(mydoc)
 {
     if (mydoc.compatMode == "CSS1Compat")
@@ -271,7 +283,7 @@ function display_div(middle, x, y)
     
     let corner = settings.corner;
     
-    if(settings.sticky && platform != "android" && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)
+    if(settings.sticky && platform != "android" && !mining_ui_exists())
         set_sticky_styles(outer);
     else
     {
@@ -568,7 +580,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
         
-        if(first_of_many && (platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)))
+        if(first_of_many && (platform == "android" || (settings.sticky && !mining_ui_exists())))
         {
             let buttons = document.createElement("div");
             let left_arrow = document.createElement("img");
@@ -954,7 +966,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         let jmdict_div = elementize_jmdict_defs(term.sense);
         let epwing_div = elementize_epwing_defs(term.epwing);
         
-        if (settings.definitions_mode == 0) // normal
+        if (settings.definitions_mode == 0 || (settings.normal_definitions_in_mining && mining_ui_exists())) // normal
         {
             if(jmdict_div) definition.appendChild(jmdict_div);
             if(epwing_div) definition.appendChild(epwing_div);
@@ -1071,6 +1083,7 @@ async function settings_init()
         getvar("alternatives_mode", 0);
         getvar("strict_alternatives", true);
         getvar("definitions_mode", 0);
+        getvar("normal_definitions_in_mining", false);
         getvar("strict_epwing", true);
         
         getvar("corner", 0);
@@ -1100,7 +1113,7 @@ async function settings_init()
             delete_div();
         if(!settings.enabled)
         {
-            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+            while(mining_ui_exists())
                 get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
         }
     } catch(err) {} // options not stored yet
@@ -1122,7 +1135,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
         delete_div();
     if(!settings.enabled)
     {
-        while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+        while(mining_ui_exists())
             get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
     }
 });
@@ -1140,9 +1153,11 @@ async function send_lookup(lookup)
         text:lookup[0],
         time:Date.now(),
         divexisted:exists_div(),
-        alternatives_mode:settings.alternatives_mode,
-        strict_alternatives:settings.strict_alternatives,
-        strict_epwing:settings.strict_epwing
+        settings:{
+            alternatives_mode:settings.alternatives_mode,
+            strict_alternatives:settings.strict_alternatives,
+            strict_epwing:settings.strict_epwing
+        }
     });
     if(response)
         response = response["response"];
@@ -1172,7 +1187,7 @@ function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 
 function lookup_cancel()
 {
-    if(!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0 || platform == "android")
+    if(!settings.sticky || mining_ui_exists() || platform == "android")
         delete_div();
 }
 
@@ -1417,7 +1432,7 @@ function update(event)
     
     if(!settings.enabled) return;
     
-    if(settings.popup_follows_mouse && exists_div() && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
+    if(settings.popup_follows_mouse && exists_div() && platform != "android" && (!settings.sticky || mining_ui_exists()))
     {
         let other = get_div();
         //let middle = other.firstChild.cloneNode(true);
@@ -1484,7 +1499,7 @@ function update(event)
                 range.detach();
             }
             // sticky mode and android need to break out on parent detection
-            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || get_doc().body.getElementsByClassName("nazeka_mining_ui").length != 0))
+            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || mining_ui_exists()))
             {
                 textNode = undefined;
                 offset = undefined;
@@ -1505,7 +1520,7 @@ function update(event)
             hitpage(event.clientX, 0, event.clientY);
         }
         
-        if ((platform == "android" || (settings.sticky && get_doc().body.getElementsByClassName("nazeka_mining_ui").length == 0)) && exists_div())
+        if ((platform == "android" || (settings.sticky && !mining_ui_exists())) && exists_div())
         {
             let ele = get_div();
             if(ele.contains(textNode))
@@ -1844,19 +1859,15 @@ function keytest(event)
         return;
     if(event.key == settings.hotkey_mine)
     {
-        if(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
+        if(mining_ui_exists())
         {
-            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
-            {
-                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-            }
+            delete_mining_ui();
         }
         else
         {
             if(!exists_div())
                 return;
-            while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
-                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+            delete_mining_ui();
             
             let mydiv = get_div().cloneNode(true);
             delete_div();
@@ -1866,8 +1877,7 @@ function keytest(event)
             newheader.textContent = "Mining UI. Press the given entry's main spelling to mine it, or click this message to cancel.";
             newheader.addEventListener("click", ()=>
             {
-                while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
-                    get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                delete_mining_ui();
             });
             mydiv.firstChild.firstChild.prepend(newheader);
             mydiv.style.zIndex = 1000000000000000000000;
@@ -1879,8 +1889,7 @@ function keytest(event)
                 keb.addEventListener("click", (event)=>
                 {
                     mine(event.target);
-                    while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
-                        get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                    delete_mining_ui();
                 });
             }
             for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
@@ -1888,8 +1897,7 @@ function keytest(event)
                 reb.addEventListener("click", (event)=>
                 {
                     mine(event.target);
-                    while(get_doc().body.getElementsByClassName("nazeka_mining_ui").length)
-                        get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
+                    delete_mining_ui();
                 });
             }
             

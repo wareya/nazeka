@@ -704,7 +704,7 @@ function epwing_lookup_kana_inexact(kana)
     return possibilities;
 }
 
-function add_epwing_info(lookups, strict_epwing)
+function add_epwing_info(lookups, other_settings)
 {
     for(let lookup of lookups)
     {
@@ -720,7 +720,7 @@ function add_epwing_info(lookups, strict_epwing)
             
             if(entry.k_ele)
             {
-                let spellings = [];
+                let spellings = [lookup.text, foundtext];
                 for(let spelling of entry.k_ele)
                     spellings.push(spelling.keb);
                 let readings = [];
@@ -728,31 +728,18 @@ function add_epwing_info(lookups, strict_epwing)
                     readings.push(reading.reb);
                 
                 // try exact matches
-                // lookup
-                let possibilities = epwing_lookup_kanji([lookup.text], readings, false);
-                // main spelling
-                if(possibilities.length == 0)
-                    possibilities = epwing_lookup_kanji([foundtext], readings, false);
-                // all possible spellings
-                if(possibilities.length == 0)
-                    possibilities = epwing_lookup_kanji(spellings, readings, false);
+                let possibilities = epwing_lookup_kanji(spellings, readings, false);
                 // try inexact matches
-                if(!strict_epwing)
-                {
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji([lookup.text], readings, true);
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji([foundtext], readings, true);
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji(spellings, readings, true);
-                }
+                if(possibilities.length == 0 && !other_settings.strict_epwing)
+                    possibilities = epwing_lookup_kanji(spellings, readings, true);
+                
                 if(possibilities.length > 0)
                     epwing_data = copy(epwing[possibilities[0]]);
             }
             else
             {
                 let possibilities = epwing_lookup_kana_exact(foundtext);
-                if(!strict_epwing)
+                if(!other_settings.strict_epwing)
                 {
                     for(let reading of entry.r_ele)
                     {
@@ -1120,7 +1107,7 @@ function restrict_by_text(entry, text)
     return term;
 }
 
-function add_extra_info(results, strict_epwing)
+function add_extra_info(results, other_settings)
 {
     for(let lookup of results)
     {
@@ -1153,11 +1140,11 @@ function add_extra_info(results, strict_epwing)
             }
         }
     }
-    return add_epwing_info(results, strict_epwing);
+    return add_epwing_info(results, other_settings);
 }
 
 // Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
-function skip_rereferenced_entries(results, strict_epwing)
+function skip_rereferenced_entries(results, other_settings)
 {
     let newresults = [];
     let seenseq = new Set();
@@ -1175,12 +1162,12 @@ function skip_rereferenced_entries(results, strict_epwing)
         if(newlookup.length > 0)
             newresults.push({text:lookup.text, result:newlookup});
     }
-    return add_extra_info(newresults, strict_epwing); // add extra information like epwing results and audio data now
+    return add_extra_info(newresults, other_settings); // add extra information like epwing results and audio data now
 }
 
 let last_lookup = "";
 let last_time_lookup = Date.now();
-function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alternatives, strict_epwing)
+function lookup_indirect(text, time, divexisted, other_settings)
 {
     if(text == "")
         return;
@@ -1195,7 +1182,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
     // build_lookup_comb looks for dictionary definitions matching any deconjugation, returning a list of them
     // FIXME: later lookups using definitions already caught
-    if(alternatives_mode == 0 || alternatives_mode == 1 || alternatives_mode == 2)
+    if(other_settings.alternatives_mode == 0 || other_settings.alternatives_mode == 1 || other_settings.alternatives_mode == 2)
     {
         let forms = deconjugate(text);
         let result = build_lookup_comb(forms);
@@ -1208,9 +1195,9 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
         if(result !== undefined && result.length > 0)
         {
             result = sort_results(text, result);
-            if(alternatives_mode == 0 || text.length <= 1)
-                return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
-            else if(alternatives_mode == 1) // second longest too 
+            if(other_settings.alternatives_mode == 0 || text.length <= 1)
+                return skip_rereferenced_entries([{text:text, result:result}], other_settings);
+            else if(other_settings.alternatives_mode == 1) // second longest too 
             {
                 let len = text.length-1;
                 let short_text = text.substring(0, len);
@@ -1224,17 +1211,17 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                     short_forms = deconjugate(short_text);
                     short_result = build_lookup_comb(short_forms);
                 }
-                if(strict_alternatives && is_kana(short_text))
+                if(other_settings.strict_alternatives && is_kana(short_text))
                     short_result = filter_kana_ish_results(short_result);
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], strict_epwing);
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], other_settings);
                 }
                 else
-                    return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
+                    return skip_rereferenced_entries([{text:text, result:result}], other_settings);
             }
-            else if(alternatives_mode == 2) // shortest too
+            else if(other_settings.alternatives_mode == 2) // shortest too
             {
                 let len = 1;
                 let short_text = text.substring(0, len);
@@ -1248,19 +1235,19 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                     short_forms = deconjugate(short_text);
                     short_result = build_lookup_comb(short_forms);
                 }
-                if(strict_alternatives && is_kana(short_text))
+                if(other_settings.strict_alternatives && is_kana(short_text))
                     short_result = filter_kana_ish_results(short_result);
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], strict_epwing);
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], other_settings);
                 }
                 else
-                    return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
+                    return skip_rereferenced_entries([{text:text, result:result}], other_settings);
             }
         }
     }
-    else if(alternatives_mode == 3)
+    else if(other_settings.alternatives_mode == 3)
     {
         let results = [];
         let first = true;
@@ -1269,7 +1256,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
             let forms = deconjugate(text);
             let result = build_lookup_comb(forms);
             
-            if(!first && strict_alternatives && is_kana(text))
+            if(!first && other_settings.strict_alternatives && is_kana(text))
                 result = filter_kana_ish_results(result);
             
             if(result !== undefined && result.length > 0)
@@ -1282,7 +1269,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 first = false;
         }
         if(results.length > 0)
-            return skip_rereferenced_entries(results, strict_epwing);
+            return skip_rereferenced_entries(results, other_settings);
     }
 }
 
@@ -1422,7 +1409,7 @@ browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
-        let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives, req.strict_epwing);
+        let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.settings);
         return Promise.resolve({"response" : asdf});
     }
     else if (req.type == "platform")

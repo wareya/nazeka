@@ -75,6 +75,12 @@ function defaults()
         label: "Where to look for definitions (does not affect jmdict readings)"
     });
     settings.push({
+        id: "normal_definitions_in_mining",
+        kind: "checkbox",
+        default: false,
+        label: "Force \"From jmdict then json\" definitions mode when mining UI is open"
+    });
+    settings.push({
         id: "strict_epwing",
         kind: "checkbox",
         default: true,
