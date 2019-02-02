@@ -68,6 +68,19 @@ function defaults()
         label: "Strict matching for alternative matches"
     });
     settings.push({
+        id: "definitions_mode",
+        kind: "combobox",
+        options: ["From jmdict then json", "From json then jmdict", "From json; otherwise jmdict", "From json dictionary only", "None"],
+        default: 0,
+        label: "Where to look for definitions (does not affect jmdict readings)"
+    });
+    settings.push({
+        id: "strict_epwing",
+        kind: "checkbox",
+        default: true,
+        label: "Strict matching for json dictionary matches"
+    });
+    settings.push({
         id: "popup_requires_key",
         kind: "combobox",
         options: ["None", "Ctrl", "Shift"],
@@ -494,7 +507,7 @@ function buildpage()
                     browser.storage.local.set({"deconjugator_rules_json":""});
                 else
                     browser.storage.local.set({"deconjugator_rules_json":JSON.stringify(JSON.parse())});
-                document.querySelector("decon_label").textContent = "Imported. Might take a few seconds to apply.";
+                document.querySelector("#decon_label").textContent = "Imported. Might take a few seconds to apply.";
             }
             catch(except)
             {
@@ -505,7 +518,7 @@ function buildpage()
     });
     let decon_label = document.createElement("label");
     decon_label.for = decon_file.id;
-    decon_label.id = "import_label";
+    decon_label.id = "decon_label";
     decon_label.textContent = "Import deconjugation ruleset. Overrides default deconjugation ruleset. Importing a blank file will restore the default ruleset.";
     decon_label.style.display = "block";
     

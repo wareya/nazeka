@@ -64,43 +64,31 @@ async function refresh_epwing()
         {
             if(typeof epwing[i] === 'string' || epwing[i] instanceof String)
                 continue;
-            add_epwing_id(epwing[i]["r"], i);
+            add_epwing_reading(epwing[i]["r"], i);
             for(let spelling of epwing[i]["s"])
-                add_epwing_id(spelling, i);
+                add_epwing_spelling(spelling, i);
         }
     }
 }
 refresh_epwing();
 
-function string_is_kana(str)
+function add_epwing_reading(text, id)
 {
-    for(let i = 0; i < str.length; i++)
-    {
-        let codepoint = str.codePointAt(i);
-        if(!(codepoint >= 0x3040 && codepoint <= 0x30FF))
-            return false;
-    }
-    return true;
-}
-
-function add_epwing_id(id, i)
-{
-    if(id === "")
+    if(text === "")
         return;
-    if(string_is_kana(id))
-    {
-        if (!lookup_epwing_kana.has(id))
-            lookup_epwing_kana.set(id, [i]);
-        else
-            lookup_epwing_kana.get(id).push(i);
-    }
+    if (!lookup_epwing_kana.has(text))
+        lookup_epwing_kana.set(text, [id]);
     else
-    {
-        if (!lookup_epwing_kan.has(id))
-            lookup_epwing_kan.set(id, [i]);
-        else
-            lookup_epwing_kan.get(id).push(i);
-    }
+        lookup_epwing_kana.get(text).push(id);
+}
+function add_epwing_spelling(text, id)
+{
+    if(text === "")
+        return;
+    if (!lookup_epwing_kan.has(text))
+        lookup_epwing_kan.set(text, [id]);
+    else
+        lookup_epwing_kan.get(text).push(id);
 }
 
 
@@ -670,7 +658,53 @@ function build_lookup_comb(forms)
         return;
 }
 
-function add_epwing_info(lookups)
+function epwing_lookup_kanji(spelling_list, readings, inexact)
+{
+    let indexes_set = new Set();
+    let indexes = [];
+    for(let spelling of spelling_list)
+    {
+        let possibilities = lookup_epwing_kan.get(spelling);
+        if(!possibilities)
+            continue;
+        for(let id of lookup_epwing_kan.get(spelling))
+        {
+            if(inexact || readings.includes(epwing[id]["r"]))
+            {
+                if(!indexes_set.has(id))
+                {
+                    indexes_set.add(id);
+                    indexes.push(id);
+                }
+            }
+        }
+    }
+    return indexes;
+}
+
+function epwing_lookup_kana_exact(kana)
+{
+    let possibilities = lookup_epwing_kana.get(kana);
+    if(!possibilities)
+        return [];
+    let actual_possibilities = [];
+    for(let wing of possibilities)
+    {
+        let spellings = epwing[wing]["s"]
+        if(spellings.length == 1 && spellings[0] === "")
+            actual_possibilities.push(wing);
+    }
+    return actual_possibilities;
+}
+function epwing_lookup_kana_inexact(kana)
+{
+    let possibilities = copy_gen(lookup_epwing_kana.get(kana));
+    if(!possibilities)
+        return [];
+    return possibilities;
+}
+
+function add_epwing_info(lookups, strict_epwing)
 {
     for(let lookup of lookups)
     {
@@ -684,139 +718,67 @@ function add_epwing_info(lookups)
             else
                 foundtext = entry.orig_found.reb;
             
-            let exact = 0;
-            // TODO: figure out which of these .includes() calls should be equality tests instead. definitely some of them, definitely not all of them.
             if(entry.k_ele)
             {
+                let spellings = [];
                 for(let spelling of entry.k_ele)
-                {
-                    let text = spelling.keb;
-                    if (lookup_epwing_kan.has(text))
-                    {
-                        let possibilities = copy_gen(lookup_epwing_kan.get(text));
-                        
-                        // FIXME this is disgusting
-                        let priority = [];
-                        for(let reading of entry.r_ele)
-                        {
-                            let rtext = reading.reb;
-                            for(let wing of possibilities)
-                            {
-                                if(epwing[wing]["r"] === rtext)
-                                    priority.push(wing);
-                            }
-                        }
-                        for(let wing of priority)
-                        {
-                            var index = possibilities.indexOf(wing);
-                            if (index > -1)
-                                possibilities.splice(index, 1);
-                        }
-                        possibilities = priority.concat(possibilities);
-                        priority = [];
-                        
-                        for(let wing of possibilities)
-                        {
-                            let epw = copy(epwing[wing]);
-                            if(epw && epw["l"])
-                            {
-                                if(epwing_data == undefined)
-                                {
-                                    epwing_data = epw;
-                                    exact = epw["r"].includes(foundtext);
-                                    for(let spelling of epw["s"])
-                                        exact |= spelling.includes(foundtext);
-                                    // FIXME duplicated below
-                                    if(exact)
-                                    {
-                                        for(let reading of entry.r_ele)
-                                        {
-                                            let rtext = reading.reb;
-                                            if(epw["r"].includes(rtext))
-                                                exact = 2;
-                                        }
-                                    }
-                                }
-                                else if(exact == 0)
-                                {
-                                    exact |= epw["r"].includes(foundtext);
-                                    for(let spelling of epw["s"])
-                                        exact |= spelling.includes(foundtext);
-                                    if(exact)
-                                    {
-                                        for(let reading of entry.r_ele)
-                                        {
-                                            let rtext = reading.reb;
-                                            if(epw["r"].includes(rtext))
-                                                exact = 2;
-                                        }
-                                        epwing_data = epw;
-                                    }
-                                }
-                                else if(exact == 1)
-                                {
-                                    let maybe_more_exact = epw["r"].includes(foundtext);
-                                    for(let spelling of epw["s"])
-                                        maybe_more_exact |= spelling.includes(foundtext);
-                                    if(maybe_more_exact)
-                                    {
-                                        for(let reading of entry.r_ele)
-                                        {
-                                            let text = reading.reb;
-                                            if(epw["r"].includes(text))
-                                            {
-                                                exact = 2;
-                                                epwing_data = epw;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if(epwing_data == undefined && entry.r_ele)
-            {
+                    spellings.push(spelling.keb);
+                let readings = [];
                 for(let reading of entry.r_ele)
+                    readings.push(reading.reb);
+                
+                // try exact matches
+                // lookup
+                let possibilities = epwing_lookup_kanji([lookup.text], readings, false);
+                // main spelling
+                if(possibilities.length == 0)
+                    possibilities = epwing_lookup_kanji([foundtext], readings, false);
+                // all possible spellings
+                if(possibilities.length == 0)
+                    possibilities = epwing_lookup_kanji(spellings, readings, false);
+                // try inexact matches
+                if(!strict_epwing)
                 {
-                    let text = reading.reb;
-                    
-                    if (lookup_epwing_kana.has(text))
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji([lookup.text], readings, true);
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji([foundtext], readings, true);
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji(spellings, readings, true);
+                }
+                if(possibilities.length > 0)
+                    epwing_data = copy(epwing[possibilities[0]]);
+            }
+            else
+            {
+                let possibilities = epwing_lookup_kana_exact(foundtext);
+                if(!strict_epwing)
+                {
+                    for(let reading of entry.r_ele)
                     {
-                        let possibilities = copy_gen(lookup_epwing_kana.get(text));
-                        for(let wing of possibilities)
-                        {
-                            let epw = copy(epwing[wing]);
-                            if(epw && epw["l"])
-                            {
-                                if(epwing_data == undefined)
-                                {
-                                    epwing_data = epw;
-                                    exact = epw["r"].includes(foundtext);
-                                }
-                                else if(exact == 0)
-                                {
-                                    exact |= epw["r"].includes(foundtext);
-                                    if(exact)
-                                        epwing_data = epw;
-                                }
-                                else if(exact == 1)
-                                {
-                                    if(epw["s"].length == 1 && epw["s"][0] === "" && epw["r"].includes(foundtext))
-                                    {
-                                        exact = 2;
-                                        epwing_data = epw;
-                                    }
-                                }
-                            }
-                        }
+                        if(possibilities.length == 0)
+                            possibilities = epwing_lookup_kana_exact(reading);
+                    }
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kana_inexact(foundtext);
+                    for(let reading of entry.r_ele)
+                    {
+                        if(possibilities.length == 0)
+                            possibilities = epwing_lookup_kana_inexact(reading);
                     }
                 }
+                if(possibilities.length > 0)
+                    epwing_data = copy(epwing[possibilities[0]]);
             }
-            entry.epwing = epwing_data;
-            if(entry.epwing && (typeof epwing[0] === 'string' || epwing[0] instanceof String))
-                entry.epwing["z"] = epwing[0];
+            
+            if(epwing_data)
+            {
+                // add dictionary title
+                if(epwing_data && (typeof epwing[0] === 'string' || epwing[0] instanceof String))
+                    epwing_data["z"] = epwing[0];
+                // add to lookup
+                entry.epwing = epwing_data;
+            }
         }
     }
     return lookups;
@@ -1158,7 +1120,7 @@ function restrict_by_text(entry, text)
     return term;
 }
 
-function add_extra_info(results)
+function add_extra_info(results, strict_epwing)
 {
     for(let lookup of results)
     {
@@ -1191,11 +1153,11 @@ function add_extra_info(results)
             }
         }
     }
-    return add_epwing_info(results);
+    return add_epwing_info(results, strict_epwing);
 }
 
 // Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
-function skip_rereferenced_entries(results)
+function skip_rereferenced_entries(results, strict_epwing)
 {
     let newresults = [];
     let seenseq = new Set();
@@ -1213,12 +1175,12 @@ function skip_rereferenced_entries(results)
         if(newlookup.length > 0)
             newresults.push({text:lookup.text, result:newlookup});
     }
-    return add_extra_info(newresults); // add extra information like epwing results and audio data now
+    return add_extra_info(newresults, strict_epwing); // add extra information like epwing results and audio data now
 }
 
 let last_lookup = "";
 let last_time_lookup = Date.now();
-function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alternatives)
+function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alternatives, strict_epwing)
 {
     if(text == "")
         return;
@@ -1247,7 +1209,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
         {
             result = sort_results(text, result);
             if(alternatives_mode == 0 || text.length <= 1)
-                return skip_rereferenced_entries([{text:text, result:result}]);
+                return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
             else if(alternatives_mode == 1) // second longest too 
             {
                 let len = text.length-1;
@@ -1267,10 +1229,10 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}]);
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], strict_epwing);
                 }
                 else
-                    return skip_rereferenced_entries([{text:text, result:result}]);
+                    return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
             }
             else if(alternatives_mode == 2) // shortest too
             {
@@ -1291,10 +1253,10 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 if(short_result !== undefined && short_result.length > 0)
                 {
                     short_result = sort_results(short_text, short_result);
-                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}]);
+                    return skip_rereferenced_entries([{text:text, result:result}, {text:short_text, result:short_result}], strict_epwing);
                 }
                 else
-                    return skip_rereferenced_entries([{text:text, result:result}]);
+                    return skip_rereferenced_entries([{text:text, result:result}], strict_epwing);
             }
         }
     }
@@ -1320,7 +1282,7 @@ function lookup_indirect(text, time, divexisted, alternatives_mode, strict_alter
                 first = false;
         }
         if(results.length > 0)
-            return skip_rereferenced_entries(results);
+            return skip_rereferenced_entries(results, strict_epwing);
     }
 }
 
@@ -1460,7 +1422,7 @@ browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
-        let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives);
+        let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.alternatives_mode, req.strict_alternatives, req.strict_epwing);
         return Promise.resolve({"response" : asdf});
     }
     else if (req.type == "platform")

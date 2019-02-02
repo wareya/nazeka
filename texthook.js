@@ -24,6 +24,8 @@ superborder: false,
 showoriginal: true,
 alternatives_mode: 0, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
 strict_alternatives: true, // if true, alternatives looked up in all kana can not return results with kanji glosses that don't have any usually/exclusively kana info
+definitions_mode: 0,
+strict_epwing: true,
 scale: 1,
 width: 600,
 lookuprate: 8,
@@ -400,6 +402,139 @@ function clip(str)
     return str.substring(1, str.length-1);
 }
 
+function elementize_jmdict_defs(goodsenses)
+{
+    let lastpos = [];
+    let jmdict_defs = document.createElement("div");
+    jmdict_defs.className = "jmdict_definitions";
+    for(let j = 0; j < goodsenses.length; j++)
+    {
+        let sense = goodsenses[j];
+        
+        if(sense.pos == lastpos)
+            sense.pos = undefined;
+        else
+            lastpos = sense.pos;
+        
+        if(sense.pos)
+        {
+            let part = document.createElement("span");
+            part.className = "nazeka_pos";
+            let temptext = "(";
+            let parts = [];
+            for(let l = 0; l < sense.pos.length; l++)
+                parts.push(sense.pos[l]);
+            temptext += parts.join(", ");
+            temptext += ")";
+            part.textContent = temptext;
+            jmdict_defs.appendChild(part);
+            if(settings.compact)
+                jmdict_defs.appendChild(document.createTextNode(" "));
+            else
+                jmdict_defs.appendChild(document.createElement("br"));
+            
+        }
+        if(settings.compact)
+        {
+            if(goodsenses.length > 1)
+            {
+                let number = document.createElement("span");
+                number.className = "nazeka_num";
+                number.textContent = "("+(j+1)+")";
+                jmdict_defs.appendChild(number);
+                jmdict_defs.appendChild(document.createTextNode(" "));
+            }
+        }
+        else
+        {
+            let temptag = document.createElement("span");
+            temptag.className = "nazeka_num";
+            temptag.textContent = ""+(j+1)+".";
+            jmdict_defs.appendChild(temptag);
+            jmdict_defs.appendChild(document.createTextNode(" "));
+        }
+        if(sense.inf)
+        {
+            let info = document.createElement("i");
+            info.textContent = "("+sense.inf+") ";
+            jmdict_defs.appendChild(info);
+        }
+        if(sense.misc)
+        {
+            let temptag = document.createElement("span");
+            temptag.className = "nazeka_misc";
+            let temptext = "(";
+            let parts = [];
+            for(let l = 0; l < sense.misc.length; l++)
+                parts.push(sense.misc[l].substring(1, sense.misc[l].length-1));
+            temptext += parts.join(", ");
+            temptext += ")";
+            temptag.textContent = temptext;
+            jmdict_defs.appendChild(temptag);
+            jmdict_defs.appendChild(document.createTextNode(" "));
+        }
+        jmdict_defs.appendChild(document.createTextNode(sense.gloss.join("; ")));
+        if(settings.compact)
+        {
+            if(sense.gloss.length > 1 || j+1 != goodsenses.length)
+                jmdict_defs.appendChild(document.createTextNode("; "));
+        }
+        else
+        {
+            jmdict_defs.appendChild(document.createElement("br"));
+        }
+    }
+    return jmdict_defs;
+}
+function elementize_epwing_defs(epwing)
+{
+    if(epwing)
+    {
+        let epwing_defs = document.createElement("div");
+        epwing_defs.className = "epwing_definitions";
+        
+        let epwing_head = document.createElement("div");
+        epwing_head.appendChild(document.createTextNode("―"+epwing["z"]+"―"));
+        epwing_head.appendChild(document.createElement("br"));
+        let epwing_head_text = epwing["r"];
+        if(epwing["s"] && epwing["s"][0] != "")
+        {
+            let isfirst = true;
+            epwing_head_text += "【";
+            for(let spelling of epwing["s"])
+            {
+                if(!isfirst)
+                    epwing_head_text += "・";
+                epwing_head_text += spelling;
+                isfirst = false;
+            }
+            epwing_head_text += "】";
+        }
+        epwing_head.appendChild(document.createTextNode(epwing_head_text));
+        let epwing_definition = document.createElement("div");
+        let isfirst = true;
+        for(let line of epwing["l"])
+        {
+            if(!isfirst)
+                epwing_definition.appendChild(document.createElement("br"));
+            let def_line = document.createElement("span");
+            def_line.textContent = line;
+            epwing_definition.appendChild(def_line);
+            isfirst = false;
+        }
+        epwing_head.className = "epwing_head";
+        epwing_definition.className = "epwing_definition";
+        epwing_defs.appendChild(epwing_head);
+        epwing_defs.appendChild(epwing_definition);
+        
+        return epwing_defs;
+    }
+    else
+    {
+        return undefined;
+    }
+}
+
 // Here we actually build the content of the lookup popup, based on the text we looked up and the list of lookups from the background script
 // note that we can get multiple lookups and this function only handles a single lookup
 function build_div_inner(text, result, moreText, index, first_of_many = false)
@@ -514,8 +649,9 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
 .nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
 .nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
-.epwing_head{margin: 6px 8px 4px;}
-.epwing_definition{margin: 0 8px;}
+.epwing_head{margin: 0 4px 6px;}
+.jmdict_definitions{margin: 0 4px 6px;}
+.epwing_definition{margin: 0 4px 6px;}
 `;
     temp.appendChild(style);
     
@@ -684,8 +820,6 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             
             if(term.deconj)
             {
-                console.log(term.deconj);
-                
                 let deconj = "";
                 let first = true;
                 for(let form of term.deconj)
@@ -733,7 +867,6 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             temptag.appendChild(main_reb);
             if(term.deconj)
             {
-                console.log(term.deconj);
                 let deconj = "";
                 let first = true;
                 for(let form of term.deconj)
@@ -815,125 +948,45 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         container.appendChild(temptag);
         container.appendChild(document.createElement("br"));
         
-        let goodsenses = term.sense;
-        
-        let lastpos = [];
         let definition = document.createElement("div");
         definition.className = "nazeka_definitions";
-        for(let j = 0; j < goodsenses.length; j++)
+        
+        let jmdict_div = elementize_jmdict_defs(term.sense);
+        let epwing_div = elementize_epwing_defs(term.epwing);
+        
+        if (settings.definitions_mode == 0) // normal
         {
-            let sense = goodsenses[j];
-            
-            if(sense.pos == lastpos)
-                sense.pos = undefined;
-            else
-                lastpos = sense.pos;
-            
-            if(sense.pos)
+            if(jmdict_div) definition.appendChild(jmdict_div);
+            if(epwing_div) definition.appendChild(epwing_div);
+        }
+        else if (settings.definitions_mode == 1) // epwing first
+        {
+            if(epwing_div) definition.appendChild(epwing_div);
+            if(jmdict_div)
             {
-                let part = document.createElement("span");
-                part.className = "nazeka_pos";
-                let temptext = "(";
-                let parts = [];
-                for(let l = 0; l < sense.pos.length; l++)
-                    parts.push(sense.pos[l]);
-                temptext += parts.join(", ");
-                temptext += ")";
-                part.textContent = temptext;
-                definition.appendChild(part);
-                if(settings.compact)
-                    definition.appendChild(document.createTextNode(" "));
-                else
-                    definition.appendChild(document.createElement("br"));
-                
-            }
-            if(settings.compact)
-            {
-                if(goodsenses.length > 1)
-                {
-                    let number = document.createElement("span");
-                    number.className = "nazeka_num";
-                    number.textContent = "("+(j+1)+")";
-                    definition.appendChild(number);
-                    definition.appendChild(document.createTextNode(" "));
-                }
-            }
-            else
-            {
-                let temptag = document.createElement("span");
-                temptag.className = "nazeka_num";
-                temptag.textContent = ""+(j+1)+".";
-                definition.appendChild(temptag);
-                definition.appendChild(document.createTextNode(" "));
-            }
-            if(sense.inf)
-            {
-                let info = document.createElement("i");
-                info.textContent = "("+sense.inf+") ";
-                definition.appendChild(info);
-            }
-            if(sense.misc)
-            {
-                let temptag = document.createElement("span");
-                temptag.className = "nazeka_misc";
-                let temptext = "(";
-                let parts = [];
-                for(let l = 0; l < sense.misc.length; l++)
-                    parts.push(sense.misc[l].substring(1, sense.misc[l].length-1));
-                temptext += parts.join(", ");
-                temptext += ")";
-                temptag.textContent = temptext;
-                definition.appendChild(temptag);
-                definition.appendChild(document.createTextNode(" "));
-            }
-            definition.appendChild(document.createTextNode(sense.gloss.join("; ")));
-            if(settings.compact)
-            {
-                if(sense.gloss.length > 1 || j+1 != goodsenses.length)
-                    definition.appendChild(document.createTextNode("; "));
-            }
-            else
-            {
-                definition.appendChild(document.createElement("br"));
+                jmdict_div.insertBefore(document.createTextNode("jmdict: "), jmdict_div.firstChild);
+                definition.appendChild(jmdict_div);
             }
         }
-        if(term.epwing)
+        else if (settings.definitions_mode == 2) // epwing or else jmdict
         {
-            definition.appendChild(document.createElement("br"));
-            let epwing_head = document.createElement("div");
-            epwing_head.appendChild(document.createTextNode("―"+term.epwing["z"]+"―"));
-            epwing_head.appendChild(document.createElement("br"));
-            let epwing_head_text = term.epwing["r"];
-            if(term.epwing["s"] && term.epwing["s"][0] != "")
-            {
-                let isfirst = true;
-                epwing_head_text += "【";
-                for(let spelling of term.epwing["s"])
-                {
-                    if(!isfirst)
-                        epwing_head_text += "・";
-                    epwing_head_text += spelling;
-                    isfirst = false;
-                }
-                epwing_head_text += "】";
-            }
-            epwing_head.appendChild(document.createTextNode(epwing_head_text));
-            let epwing_definition = document.createElement("div");
-            let isfirst = true;
-            for(let line of term.epwing["l"])
-            {
-                if(!isfirst)
-                    epwing_definition.appendChild(document.createElement("br"));
-                let def_line = document.createElement("span");
-                def_line.textContent = line;
-                epwing_definition.appendChild(def_line);
-                isfirst = false;
-            }
-            epwing_head.className = "epwing_head";
-            epwing_definition.className = "epwing_definition";
-            definition.appendChild(epwing_head);
-            definition.appendChild(epwing_definition);
+            if(epwing_div) definition.appendChild(epwing_div);
+            else           definition.appendChild(jmdict_div);
         }
+        else if (settings.definitions_mode == 3) // epwing only
+        {
+            if(epwing_div) definition.appendChild(epwing_div);
+        }
+        else if (settings.definitions_mode == 4) // none
+        {
+            
+        }
+        else // normal (fallback)
+        {
+            if(jmdict_div) definition.appendChild(jmdict_div);
+            if(epwing_div) definition.appendChild(epwing_div);
+        }
+        
         container.appendChild(definition);
         if(settings.corner == 2 || settings.corner == 3)
         {
@@ -1017,6 +1070,8 @@ async function settings_init()
         
         getvar("alternatives_mode", 0);
         getvar("strict_alternatives", true);
+        getvar("definitions_mode", 0);
+        getvar("strict_epwing", true);
         
         getvar("corner", 0);
         getvar("xoffset", 5);
@@ -1086,7 +1141,8 @@ async function send_lookup(lookup)
         time:Date.now(),
         divexisted:exists_div(),
         alternatives_mode:settings.alternatives_mode,
-        strict_alternatives:settings.strict_alternatives
+        strict_alternatives:settings.strict_alternatives,
+        strict_epwing:settings.strict_epwing
     });
     if(response)
         response = response["response"];
