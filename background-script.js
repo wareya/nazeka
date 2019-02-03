@@ -723,13 +723,19 @@ function add_epwing_info(lookups, other_settings)
                 let spellings = [lookup.text, foundtext];
                 for(let spelling of entry.k_ele)
                     spellings.push(spelling.keb);
+                let core_readings = [foundtext, entry.r_ele[0].reb];
+                console.log(core_readings);
                 let readings = [];
                 for(let reading of entry.r_ele)
                     readings.push(reading.reb);
                 
                 // try exact matches
-                let possibilities = epwing_lookup_kanji(spellings, readings, false);
+                let possibilities = epwing_lookup_kanji(spellings, core_readings, false);
+                if(possibilities.length == 0)
+                    possibilities = epwing_lookup_kanji(spellings, readings, false);
                 // try inexact matches
+                if(possibilities.length == 0 && !other_settings.strict_epwing)
+                    possibilities = epwing_lookup_kanji(spellings, core_readings, true);
                 if(possibilities.length == 0 && !other_settings.strict_epwing)
                     possibilities = epwing_lookup_kanji(spellings, readings, true);
                 
@@ -744,14 +750,14 @@ function add_epwing_info(lookups, other_settings)
                     for(let reading of entry.r_ele)
                     {
                         if(possibilities.length == 0)
-                            possibilities = epwing_lookup_kana_exact(reading);
+                            possibilities = epwing_lookup_kana_exact(reading.reb);
                     }
                     if(possibilities.length == 0)
                         possibilities = epwing_lookup_kana_inexact(foundtext);
                     for(let reading of entry.r_ele)
                     {
                         if(possibilities.length == 0)
-                            possibilities = epwing_lookup_kana_inexact(reading);
+                            possibilities = epwing_lookup_kana_inexact(reading.reb);
                     }
                 }
                 if(possibilities.length > 0)
