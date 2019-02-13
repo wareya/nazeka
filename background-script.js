@@ -723,21 +723,28 @@ function add_epwing_info(lookups, other_settings)
                 let spellings = [lookup.text, foundtext];
                 for(let spelling of entry.k_ele)
                     spellings.push(spelling.keb);
-                let core_readings = [foundtext, entry.r_ele[0].reb];
-                console.log(core_readings);
+                let core_readings_a = [lookup.text, foundtext];
+                let core_readings_b = [entry.r_ele[0].reb];
                 let readings = [];
                 for(let reading of entry.r_ele)
                     readings.push(reading.reb);
                 
                 // try exact matches
-                let possibilities = epwing_lookup_kanji(spellings, core_readings, false);
+                let possibilities = epwing_lookup_kanji(spellings, core_readings_a, false);
+                if(possibilities.length == 0)
+                    possibilities = epwing_lookup_kanji(spellings, core_readings_b, false);
                 if(possibilities.length == 0)
                     possibilities = epwing_lookup_kanji(spellings, readings, false);
                 // try inexact matches
-                if(possibilities.length == 0 && !other_settings.strict_epwing)
-                    possibilities = epwing_lookup_kanji(spellings, core_readings, true);
-                if(possibilities.length == 0 && !other_settings.strict_epwing)
-                    possibilities = epwing_lookup_kanji(spellings, readings, true);
+                if(!other_settings.strict_epwing)
+                {
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji(spellings, core_readings_a, true);
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji(spellings, core_readings_b, true);
+                    if(possibilities.length == 0)
+                        possibilities = epwing_lookup_kanji(spellings, readings, true);
+                }
                 
                 if(possibilities.length > 0)
                     epwing_data = copy(epwing[possibilities[0]]);
