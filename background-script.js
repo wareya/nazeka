@@ -1452,6 +1452,14 @@ browser.runtime.onMessage.addListener((req, sender) =>
         });
         xhr.send(req.command);
     }
+    else if (req.type == "play_audio")
+    {
+        let audio = new Audio(req.host);
+        audio.volume = req.volume;
+        audio.play();
+        console.log("tried to play audio");
+        console.log(req.host);
+    }
     return Promise.resolve(undefined);
 });
 

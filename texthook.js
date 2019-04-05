@@ -1657,23 +1657,7 @@ async function try_to_play_audio()
     if(fields)
     {
         let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
-        let audio = new Audio(url);
-        audio.volume = settings.volume;
-        audio.play();
-    }
-}
-
-async function try_to_play_audio()
-{
-    if(!exists_div())
-        return;
-    let fields = get_audio_text(get_div());
-    if(fields)
-    {
-        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
-        let audio = new Audio(url);
-        audio.volume = settings.volume;
-        audio.play();
+        browser.runtime.sendMessage({type:"play_audio", host:url, volume:settings.volume});
     }
 }
 
