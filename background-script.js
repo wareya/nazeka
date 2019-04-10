@@ -1418,6 +1418,14 @@ async function get_real_platform()
 }
 get_real_platform();
 
+function send_error(tab, error)
+{
+    try
+    {
+        browser.tabs.sendMessage(tab, {type:"error",error:error});
+    } catch (err) {}
+}
+
 browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
@@ -1449,6 +1457,16 @@ browser.runtime.onMessage.addListener((req, sender) =>
         xhr.addEventListener('load', () =>
         {
             let response = JSON.parse(xhr.responseText);
+            if(response.error)
+                send_error(sender.tab.id, "AnkiConnect mining failed: " + response.error);
+        });
+        xhr.addEventListener('error', () =>
+        {
+            send_error(sender.tab.id, "AnkiConnect mining failed: unspecified error (Anki is probably not open)");
+        });
+        xhr.addEventListener('timeout', () =>
+        {
+            send_error(sender.tab.id, "AnkiConnect mining failed: timed out");
         });
         xhr.send(req.command);
     }

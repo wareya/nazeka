@@ -590,6 +590,7 @@ function buildpage()
         let reader = new FileReader();
         reader.onload = async(e) =>
         {
+            // FIXME: add asking for the unlimited storage permission
             try
             {
                 browser.storage.local.set({"epwing":JSON.stringify(JSON.parse(e.target.result))});
@@ -666,8 +667,6 @@ This format can be extended in the future if it becomes desirable to include mor
         let a = document.createElement("a");
         a.href = url;
         a.download = "nazeka_data_backup.json";
-        console.log("trying to virtually click this a element:");
-        console.log(a);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -699,6 +698,7 @@ This format can be extended in the future if it becomes desirable to include mor
         };
         reader.readAsText(fname);
     });
+    // FIXME: add asking for the unlimited storage permission
     let backup_load_label = document.createElement("label");
     backup_load_label.for = backup_save.id;
     backup_load_label.id = "backup_load_label";

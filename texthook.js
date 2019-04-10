@@ -1607,11 +1607,11 @@ function update_touch(event)
     }
 }
 
-function message(text)
+function errormessage(text)
 {
     if(!text) return;
     let mydiv = document.createElement("div");
-    mydiv.style = "background-color: rgba(0, 0, 0, 0.5); color: white; width: 200px; position: fixed; right: 25px; bottom: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
+    mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double red; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
     mydiv.textContent = text;
     document.body.appendChild(mydiv);
     
@@ -1622,6 +1622,12 @@ function message(text)
     
     setTimeout(delete_later, 3000);
 }
+
+browser.runtime.onMessage.addListener((req, sender) =>
+{
+    if (req.type == "error")
+        errormessage(req.error);
+});
 
 async function mine_to_storage(object)
 {
