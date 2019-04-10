@@ -6,11 +6,11 @@ Install from [Mozilla's official Firefox addons website](https://addons.mozilla.
 
 Nazeka has many settings, and many of them only need to be changed if you run into personal problems with part of Nazeka's behavior. These are the ones that you're most likely to change.
 
-##Display
+## Display
 
 Fixed width: Off by default. Enable if you're annoyed by the occasional narrow mouseover window, or by the mouseover window flipping when it changes width near the edge of the screen
 
-##Theme
+## Theme
 
 Background/foreground color: Light-on-dark by deafult, mild contrast. Change to a higher contrast color pair if your monitor has poor contrast. Or change to a dark-on-light color pair if you use a dim screen in a bright environment (light-on-dark is better otherwise).
 
