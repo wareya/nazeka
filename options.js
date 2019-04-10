@@ -167,12 +167,15 @@ function defaults()
         default: false,
         label: "Fixed width"
     });
+    /*
+    // currently broken
     settings.push({
         id: "fixedwidthpositioning",
         kind: "checkbox",
         default: false,
         label: "Position as though fixed width (currently nonfunctional; will fix later)"
     });
+    */
     settings.push({
         id: "corner",
         kind: "combobox",
@@ -310,6 +313,49 @@ function defaults()
         step: 1,
         default: 200,
         label: "Reader autoscroll leeway (when \"insert at bottom\" is enabled) (0 disables)"
+    });
+    
+    settings.push({
+        id: "reader_bg",
+        kind: "color",
+        default: "#111111",
+        label: "Reader background color"
+    });
+    settings.push({
+        id: "reader_fg",
+        kind: "color",
+        default: "#CCCCCC",
+        label: "Reader text color"
+    });
+    settings.push({
+        id: "reader_font_size",
+        kind: "text",
+        default: "1.4em",
+        label: "Reader text size"
+    });
+    settings.push({
+        id: "reader_right_padding",
+        kind: "text",
+        default: "0px",
+        label: "Reader right padding (useful if you use 'sticky' mode)"
+    });
+    settings.push({
+        id: "reader_max_width",
+        kind: "text",
+        default: "1000px",
+        label: "Reader max width"
+    });
+    settings.push({
+        id: "reader_margin",
+        kind: "text",
+        default: "8px",
+        label: "Reader left/right margins"
+    });
+    settings.push({
+        id: "reader_font",
+        kind: "text",
+        default: "",
+        label: "Reader font override (without trailing comma)"
     });
     
     // hotkeys

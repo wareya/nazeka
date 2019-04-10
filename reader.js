@@ -2,13 +2,32 @@
 
 'use strict';
 
-// updated by a timer looping function, based on local storage set by the options page
 // we only use a tiny number of settings here
 
 let reader_settings = {
 reader_reverse: false,
-reader_leeway: 200
+reader_leeway: 200,
+reader_bg: "#111111",
+reader_fg: "#CCCCCC",
+reader_font_size: "1.4em",
+reader_right_padding: "0px",
+reader_max_width: "1000px",
+reader_margin: "8px",
+reader_font: "",
 };
+
+function update_styles()
+{
+    let target = document.body.style;
+    target.backgroundColor = reader_settings.reader_bg;
+    target.color = reader_settings.reader_fg;
+    target.fontSize = reader_settings.reader_font_size;
+    target.paddingRight = reader_settings.reader_right_padding;
+    target.maxWidth = reader_settings.reader_max_width;
+    target.marginLeft = reader_settings.reader_margin;
+    target.marginRight = reader_settings.reader_margin;
+    target.fontFamily = reader_settings.reader_font;
+}
 
 async function reader_settings_init()
 {
@@ -23,6 +42,13 @@ async function reader_settings_init()
         }
         getvar("reader_reverse", false);
         getvar("reader_leeway", 200);
+        getvar("reader_bg", "#111111");
+        getvar("reader_fg", "#CCCCCC");
+        getvar("reader_font_size","1.4em");
+        getvar("reader_right_padding", "0px");
+        getvar("reader_max_width", "1000px");
+        getvar("reader_margin", "8px");
+        getvar("reader_font", "");
     } catch(err) {} // options not stored yet
 }
 
@@ -38,6 +64,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
         if(Object.keys(reader_settings).includes(option))
             reader_settings[option] = value.newValue;
     }
+    update_styles();
 });
 
 // actual reder code
@@ -81,7 +108,10 @@ let reader_text_previous = "";
 function reader_cycle_text(text)
 {
     if(text != "" && text != reader_text_previous)
+    {
         reader_update(text);
+        update_styles();
+    }
     reader_text_previous = text;
 }
 
@@ -110,3 +140,5 @@ browser.runtime.onMessage.addListener((req, sender) =>
         reader_cycle_text(req.text);
     return Promise.resolve(undefined);
 });
+
+window.onload = update_styles;
