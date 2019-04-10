@@ -58,7 +58,7 @@ function defaults()
         id: "alternatives_mode",
         kind: "combobox",
         options: ["Longest match only", "Longest and shortest match", "Longest and second longest match", "All matches"],
-        default: 0,
+        default: 3,
         label: "Matching mode"
     });
     settings.push({
@@ -109,7 +109,7 @@ function defaults()
         id: "live_mining",
         kind: "checkbox",
         default: false,
-        label: "Enable live mining (experimental!) (configured via the button below under \"Other\")"
+        label: "Enable live mining (configured via the button below under \"Other\")"
     });
     
     // display

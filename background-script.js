@@ -1362,6 +1362,16 @@ function open_mining(info, tab)
         });
     } catch(err) {}
 }
+function open_livemining(info, tab)
+{
+    try
+    {
+        browser.windows.create({
+            url:browser.extension.getURL("livemining.html"),
+            type:"popup"
+        });
+    } catch(err) {}
+}
 
 if(browser.contextMenus)
 {
@@ -1376,6 +1386,12 @@ if(browser.contextMenus)
         title: "View Mined Cards",
         contexts: ["browser_action"],
         onclick: open_mining
+    });
+    browser.contextMenus.create({
+        id: "nazeka-livemining",
+        title: "Configure Live Mining",
+        contexts: ["browser_action"],
+        onclick: open_livemining
     });
 }
 
