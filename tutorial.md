@@ -20,8 +20,7 @@ Font overrides: Add your desired font or fonts. No trailing comma. They're prepe
 
 ## Behavior
 
-Enable live mining
-
+Enable live mining: Enable if you want to mine cards straight to Anki. Must be configured to be used. Configured elsewhere.
 
 # Using the reader/clipboard grabber
 
