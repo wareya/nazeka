@@ -19,6 +19,12 @@ function defaults()
         label: "Enabled"
     });
     settings.push({
+        id: "kanji_mode",
+        kind: "checkbox",
+        default: false,
+        label: "Individual kanji information mode"
+    });
+    settings.push({
         id: "compact",
         kind: "checkbox",
         default: true,
@@ -392,6 +398,12 @@ function defaults()
         kind: "text",
         default: "p",
         label: "Play audio from jpod101 if available"
+    });
+    settings.push({
+        id: "hotkey_kanji_mode",
+        kind: "text",
+        default: "k",
+        label: "Toggle individual kanji information mode on/off"
     });
     settings.push({
         id: "hotkey_nudge_left",

@@ -14,6 +14,7 @@
 // updated by a timer looping function, based on local storage set by the options page
 let settings = {
 enabled: false,
+kanji_mode: false,
 compact: true,
 usetextfields: true,
 length: 25,
@@ -55,6 +56,7 @@ hotkey_mine: "m",
 hotkey_close: "n",
 hotkey_sticky: "b",
 hotkey_audio: "p",
+hotkey_kanji_mode: "k",
 hotkey_nudge_left: "ArrowLeft",
 hotkey_nudge_right: "ArrowRight",
 volume: 0.2,
@@ -548,6 +550,32 @@ function elementize_epwing_defs(epwing)
     }
 }
 
+function get_style()
+{
+    // styling for highlighted stuff and the lookup text
+    let style = document.createElement("style");
+    style.type = "text/css";
+    let font = settings.hlfont.trim().replace(";","").replace("}","");
+    let morefont = settings.font.trim().replace(";","").replace("}","");
+    if(font != "")
+        font += ",";
+    if(morefont != "")
+        font += morefont + ",";
+    style.textContent =
+`.nazeka_main_keb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_main_reb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_word * {vertical-align: middle}
+.nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
+.nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
+.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
+.epwing_head{margin: 0 4px 6px;}
+.jmdict_definitions{margin: 0 4px 6px;}
+.epwing_definition{margin: 0 4px 6px;}
+.kanji_info{margin: 2px 4px 2px;}
+`;
+    return style;
+}
+
 // Here we actually build the content of the lookup popup, based on the text we looked up and the list of lookups from the background script
 // note that we can get multiple lookups and this function only handles a single lookup
 function build_div_inner(text, result, moreText, index, first_of_many = false)
@@ -646,26 +674,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original_index.style.display = "none";
         temp.appendChild(original_index);
     }
-    
-    // styling for highlighted stuff and the lookup text
-    let style = document.createElement("style");
-    style.type = "text/css";
-    let font = settings.hlfont.trim().replace(";","").replace("}","");
-    if(font != "")
-        font += ",";
-    if(settings.font.trim().replace(";","").replace("}","") != "")
-        font += settings.font.trim().replace(";","").replace("}","") + ",";
-    style.textContent =
-`.nazeka_main_keb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
-.nazeka_main_reb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
-.nazeka_word * {vertical-align: middle}
-.nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
-.nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
-.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
-.epwing_head{margin: 0 4px 6px;}
-.jmdict_definitions{margin: 0 4px 6px;}
-.epwing_definition{margin: 0 4px 6px;}
-`;
+    let style = get_style();
     temp.appendChild(style);
     
     function makespan(text)
@@ -1052,6 +1061,127 @@ function build_div_compound (results, moreText, index)
     return middle;
 }
 
+/*
+`.nazeka_main_keb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_main_reb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
+.nazeka_word * {vertical-align: middle}
+.nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
+.nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
+.nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
+*/
+function build_div_kanji(text, kanjidata, moreText, index)
+{
+    if(!kanjidata)
+        return undefined;
+    
+    let middle = build_div_intermediary();
+    let target = middle.firstChild;
+    
+    let style = get_style();
+    target.appendChild(style);
+    
+    let head = document.createElement("div");
+    let info = document.createElement("div");
+    let tail = document.createElement("div");
+    if(platform != "android")
+        head.innerText = "Currently in individual kanji mode. Press [" + settings.hotkey_kanji_mode + "] to cancel.";
+    else
+        head.innerText = "Currently in individual kanji mode. Disable in options to go back to dictionary.";
+    
+    let char = document.createElement("div");
+    char.className = "nazeka_main_keb";
+    char.textContent = text;
+    head.appendChild(char);
+    
+    info.className = "kanji_info";
+    
+    let grade = document.createElement("div");
+    grade.textContent = "Grade: ";
+    if(kanjidata["g"] == "X")
+        grade.textContent += "Hyougai";
+    else if(kanjidata["g"] == "9" || kanjidata["g"] == "10")
+        grade.textContent += "Jinmeiyou";
+    else if(kanjidata["g"] == "8")
+        grade.textContent += "Jouyou";
+    else if("123456".includes(kanjidata["g"]))
+        grade.textContent += "Kyouiku";
+    else
+        grade.textContent += "Unknown (Hyougai)";
+    
+    let strokes = document.createElement("div");
+    strokes.textContent = "Strokes: " + kanjidata["s"];
+    
+    let readings = document.createElement("div");
+    let readings_header = document.createElement("div");
+    readings_header.textContent = "Jouyou readings:";
+    readings.appendChild(readings_header);
+    
+    let added_readings = 0;
+    function add_readings(target, readings)
+    {
+        let first = true;
+        for(let reading of readings)
+        {
+            added_readings += 1;
+            if(!first)
+                target.appendChild(document.createTextNode("、"));
+            let reading_div = document.createElement("span");
+            reading_div.className = "nazeka_sub_reb";
+            reading_div.innerText = reading;
+            target.appendChild(reading_div);
+            first = false;
+        }
+    }
+    
+    if("o" in kanjidata)
+    {
+        let onyomi = document.createElement("div");
+        onyomi.innerText = "On'yomi: ";
+        add_readings(onyomi, kanjidata["o"]);
+        readings.appendChild(onyomi);
+    }
+    if("k" in kanjidata)
+    {
+        let onyomi = document.createElement("div");
+        onyomi.innerText = "Kun'yomi: ";
+        add_readings(onyomi, kanjidata["k"]);
+        readings.appendChild(onyomi);
+    }
+    if("os" in kanjidata)
+    {
+        let onyomi = document.createElement("div");
+        onyomi.innerText = "On'yomi (special): ";
+        add_readings(onyomi, kanjidata["os"]);
+        readings.appendChild(onyomi);
+    }
+    if("ks" in kanjidata)
+    {
+        let onyomi = document.createElement("div");
+        onyomi.innerText = "Kun'yomi (special): ";
+        add_readings(onyomi, kanjidata["ks"]);
+        readings.appendChild(onyomi);
+    }
+    
+    let composition = document.createElement("div");
+    composition.textContent = "Composition: " + kanjidata["z"];
+    
+    info.appendChild(grade);
+    info.appendChild(strokes);
+    if(added_readings > 0)
+        info.appendChild(readings);
+    info.appendChild(composition);
+    
+    tail.appendChild(document.createTextNode("Data for non-jouyou kanji may contain errors."));
+    tail.appendChild(document.createElement("br"));
+    tail.appendChild(document.createTextNode("Composition might not render correctly if it contains obscure characters."));
+    tail.style.marginBottom = "4px";
+    
+    target.appendChild(head);
+    target.appendChild(info);
+    target.appendChild(tail);
+    return middle;
+}
+
 async function settings_init()
 {
     try
@@ -1148,39 +1278,59 @@ let last_manual_interaction = Date.now();
 async function send_lookup(lookup)
 {
     last_lookup = lookup;
-    
-    let response = await browser.runtime.sendMessage(
+    if(!settings.kanji_mode)
     {
-        type:"search",
-        text:lookup[0],
-        time:Date.now(),
-        divexisted:exists_div(),
-        settings:{
-            alternatives_mode:settings.alternatives_mode,
-            strict_alternatives:settings.strict_alternatives,
-            strict_epwing:settings.strict_epwing
-        }
-    });
-    if(response)
-        response = response["response"];
-    
-    if(response && response != "itsthesame")
-    {
-        if(!response.length)
+        let response = await browser.runtime.sendMessage(
         {
-            let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
-            if(mydiv)
-                display_div(mydiv, lookup[3], lookup[4]);
-        }
-        else
+            type:"search",
+            text:lookup[0],
+            time:Date.now(),
+            divexisted:exists_div(),
+            settings:{
+                alternatives_mode:settings.alternatives_mode,
+                strict_alternatives:settings.strict_alternatives,
+                strict_epwing:settings.strict_epwing
+            }
+        });
+        if(response)
+            response = response["response"];
+        
+        if(response && response != "itsthesame")
         {
-            let mydiv = build_div_compound(response, lookup[5], lookup[6]);
-            if(mydiv)
-                display_div(mydiv, lookup[3], lookup[4]);
+            if(!response.length)
+            {
+                let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
+                if(mydiv)
+                    display_div(mydiv, lookup[3], lookup[4]);
+            }
+            else
+            {
+                let mydiv = build_div_compound(response, lookup[5], lookup[6]);
+                if(mydiv)
+                    display_div(mydiv, lookup[3], lookup[4]);
+            }
         }
+        else if(response != "itsthesame" && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(1, lookup[0].length-2))))
+            lookup_cancel();
     }
-    else if(response != "itsthesame" && exists_div() && !lastMoreText.includes(lookup[0].substring(0, Math.max(1, lookup[0].length-2))))
-        lookup_cancel();
+    else
+    {
+        let response = await browser.runtime.sendMessage(
+        {
+            type:"search_kanji",
+            divexisted:exists_div(),
+            text:lookup[0].charAt(0)
+        });
+        if(response)
+            response = response["response"];
+        if(response && response != "itsthesame")
+        {
+            let mydiv = build_div_kanji(lookup[0].charAt(0), response, lookup[5], lookup[6]);
+            if(mydiv)
+                display_div(mydiv, lookup[3], lookup[4]);
+        }
+        
+    }
 }
 function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 {
@@ -1858,49 +2008,73 @@ function keytest(event)
         return;
     if(event.key == settings.hotkey_mine)
     {
-        if(mining_ui_exists())
-        {
-            delete_mining_ui();
-        }
+        if(settings.kanji_mode)
+            errormessage("Cannot mine isolated kanji (make kanji flashcards manually)");
         else
         {
-            if(!exists_div())
-                return;
-            delete_mining_ui();
-            
-            let mydiv = get_div().cloneNode(true);
-            delete_div();
-            set_sticky_styles(mydiv);
-            mydiv.className = "nazeka_mining_ui";
-            let newheader = document.createElement("div");
-            newheader.textContent = "Mining UI. Press the given entry's main spelling to mine it, or click this message to cancel.";
-            newheader.addEventListener("click", ()=>
+            if(mining_ui_exists())
             {
                 delete_mining_ui();
-            });
-            mydiv.firstChild.firstChild.prepend(newheader);
-            mydiv.style.zIndex = 1000000000000000000000;
-            // do not compound! z-index can be range limited by the browser
-            mydiv.style.zIndex -= 1;
-            
-            for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
+            }
+            else
             {
-                keb.addEventListener("click", (event)=>
+                if(!exists_div())
+                    return;
+                delete_mining_ui();
+                
+                let mydiv = get_div().cloneNode(true);
+                delete_div();
+                set_sticky_styles(mydiv);
+                mydiv.className = "nazeka_mining_ui";
+                let newheader = document.createElement("div");
+                newheader.textContent = "Mining UI. Press the given entry's main spelling to mine it, or click this message to cancel.";
+                newheader.addEventListener("click", ()=>
                 {
-                    mine(event.target);
                     delete_mining_ui();
                 });
-            }
-            for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
-            {
-                reb.addEventListener("click", (event)=>
+                mydiv.firstChild.firstChild.prepend(newheader);
+                mydiv.style.zIndex = 1000000000000000000000;
+                // do not compound! z-index can be range limited by the browser
+                mydiv.style.zIndex -= 1;
+                
+                for(let keb of mydiv.getElementsByClassName("nazeka_main_keb"))
                 {
-                    mine(event.target);
-                    delete_mining_ui();
-                });
+                    keb.addEventListener("click", (event)=>
+                    {
+                        mine(event.target);
+                        delete_mining_ui();
+                    });
+                }
+                for(let reb of mydiv.getElementsByClassName("nazeka_main_reb"))
+                {
+                    reb.addEventListener("click", (event)=>
+                    {
+                        mine(event.target);
+                        delete_mining_ui();
+                    });
+                }
+                
+                get_doc().body.appendChild(mydiv);
             }
-            
-            get_doc().body.appendChild(mydiv);
+        }
+    }
+    if(event.key == settings.hotkey_kanji_mode)
+    {
+        settings.kanji_mode = !settings.kanji_mode;
+        browser.storage.local.set({"kanji_mode":settings.kanji_mode});
+        if(exists_div())
+            send_lookup(last_lookup);
+    }
+    if(event.key == settings.hotkey_sticky)
+    {
+        settings.sticky = !settings.sticky;
+        browser.storage.local.set({"sticky":settings.sticky});
+        if(exists_div())
+        {
+            let last_text = last_lookup[0];
+            let last_index = last_lookup[6];
+            send_lookup([" ", last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], 0]);
+            send_lookup([last_text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], last_index]);
         }
     }
     if(!exists_div())
@@ -1908,11 +2082,6 @@ function keytest(event)
     if(event.key == settings.hotkey_close)
     {
         lookup_cancel_force();
-    }
-    if(event.key == settings.hotkey_sticky)
-    {
-        settings.sticky = !settings.sticky;
-        browser.storage.local.set({"sticky":settings.sticky});
     }
     if(event.key == settings.hotkey_audio)
     {

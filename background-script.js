@@ -143,6 +143,23 @@ function build_audio_table()
     }
 }
 
+let kanji_data = new Map();
+
+function load_kanji()
+{
+    if (this.readyState === 4)
+    {
+        if (this.status === 200)
+        {
+            let data = JSON.parse(this.responseText);
+            for(let entry of data)
+                kanji_data.set(entry["c"], entry);
+        }
+        else
+            console.error(xhr.statusText);
+    }
+}
+
 // Having a >4MB flat text file with stupid adhoc formatting is okay
 // but having a >4MB json file with nothing weird in it isn't
 // Thanks, linter team!
@@ -164,6 +181,16 @@ function load_jdic_audio_table(filename)
     return req;
 }
 
+
+function load_kanji_data(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", load_kanji);
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+
 load_part_of_dictionary("dict/JMdict1.json");
 load_part_of_dictionary("dict/JMdict2.json");
 load_part_of_dictionary("dict/JMdict3.json");
@@ -177,6 +204,8 @@ load_part_of_dictionary("dict/JMdict10.json");
 load_part_of_dictionary("dict/JMdict11.json");
 
 load_jdic_audio_table("dict/jdic audio.txt");
+
+load_kanji_data("dict/kanjidata.json");
 
 function buildlookups()
 {
@@ -957,6 +986,8 @@ function filter_kana_ish_results(results)
 
 function copy(orig)
 {
+    if(orig === undefined)
+        return undefined;
     let mine;
     if (Set.prototype.isPrototypeOf(orig))
         mine = new Set(orig);
@@ -973,6 +1004,7 @@ function copy_gen(orig)
 {
     return orig.slice(0);
 }
+
 // Restrict the listed spellings/readings of a JMdict entry to the ones allowed by the looked-up text.
 function restrict_by_text(entry, text)
 {
@@ -1179,17 +1211,14 @@ function skip_rereferenced_entries(results, other_settings)
 }
 
 let last_lookup = "";
-let last_time_lookup = Date.now();
 function lookup_indirect(text, time, divexisted, other_settings)
 {
     if(text == "")
         return;
-    //if(time < last_time_lookup+20) // reduces lag buildup
-    //    return;
-    if(text == last_lookup && divexisted)// || time < last_time_lookup+100)) // helps reduce double-lookups
+    if(text == last_lookup && divexisted)
         return "itsthesame";
+    last_kanji_lookup = "";
     last_lookup = text;
-    last_time_lookup = time;
     
     // try to look up successively shorter substrings of text
     // deconjugate() returns possible deconjugations, one of which has zero deconjugations, i.e. the plain text
@@ -1283,6 +1312,28 @@ function lookup_indirect(text, time, divexisted, other_settings)
         }
         if(results.length > 0)
             return skip_rereferenced_entries(results, other_settings);
+    }
+}
+
+
+
+let last_kanji_lookup = "";
+function lookup_kanji_character(c, divexisted)
+{
+    if(c == "")
+        return;
+    if(c == last_kanji_lookup && divexisted)
+        return "itsthesame";
+    last_kanji_lookup = c;
+    last_lookup = "";
+    
+    try
+    {
+        return copy(kanji_data.get(c));
+    }
+    catch (err)
+    {
+        return undefined;
     }
 }
 
@@ -1447,6 +1498,11 @@ browser.runtime.onMessage.addListener((req, sender) =>
     if (req.type == "search")
     {
         let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.settings);
+        return Promise.resolve({"response" : asdf});
+    }
+    if (req.type == "search_kanji")
+    {
+        let asdf = lookup_kanji_character(req.text, req.divexisted);
         return Promise.resolve({"response" : asdf});
     }
     else if (req.type == "platform")
