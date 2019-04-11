@@ -94,10 +94,16 @@ function defaults()
         label: "Popup requires key"
     });
     settings.push({
+        id: "strip_spaces",
+        kind: "checkbox",
+        default: true,
+        label: "Strip spaces (for when spaces find their way into Japanese text and it breaks word searching)"
+    });
+    settings.push({
         id: "ignore_linebreaks",
         kind: "checkbox",
         default: true,
-        label: "Ignore hard line breaks (disable for text with preformatted linewraps)"
+        label: "Ignore hard line breaks (disable for text with preformatted linebreaks)"
     });
     settings.push({
         id: "ignore_divs",

@@ -42,6 +42,7 @@ reading_fontsize: 15,
 corner: 0,
 xoffset: 5,
 yoffset: 22,
+strip_spaces: true,
 ignore_linebreaks: true,
 ignore_divs: false,
 sticky: false,
@@ -1090,6 +1091,7 @@ async function settings_init()
         getvar("xoffset", 5);
         getvar("yoffset", 22);
         
+        getvar("strip_spaces", true);
         getvar("ignore_linebreaks", true);
         getvar("ignore_divs", false);
         getvar("sticky", false);
@@ -1377,9 +1379,18 @@ function grab_text(textNode, offset, elemental)
     moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
     
     if(settings.ignore_linebreaks)
+    {
         text = text.replace(/\n/g, "");
-    if(settings.ignore_linebreaks)
         moreText = moreText.replace(/\n/g, "");
+    }
+    
+    if(settings.strip_spaces)
+    {
+        text = text.replace(/ /g, "");
+        moreText = moreText.replace(/ /g, "");
+        text = text.replace(/　/g, "");
+        moreText = moreText.replace(/　/g, "");
+    }
     
     let index = moreText.lastIndexOf(text);
     
