@@ -1388,8 +1388,6 @@ function grab_text(textNode, offset, elemental)
     {
         text = text.replace(/ /g, "");
         moreText = moreText.replace(/ /g, "");
-        text = text.replace(/　/g, "");
-        moreText = moreText.replace(/　/g, "");
     }
     
     let index = moreText.lastIndexOf(text);
