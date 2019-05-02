@@ -1504,9 +1504,11 @@ function grab_more_text(textNode, selection, direction = 1)
     let text = "";
     let current_node = textNode;
     let iters = 0;
-    while(text.length < settings.contextlength
-          && (ignore_normal_boundaries
-              || (!text.includes("。") && !text.includes("！") && !text.includes("‼") && !text.includes("？")　&& !text.includes("??") && !text.includes("…") && (!text.includes("\n") || settings.ignore_linebreaks))))
+    while(ignore_normal_boundaries
+          || (text.length < settings.contextlength
+              && (!text.includes("。") && !text.includes("！") && !text.includes("‼") && !text.includes("？")　&& !text.includes("??") && !text.includes("…") && (!text.includes("\n") || settings.ignore_linebreaks))
+             )
+         )
     {
         iters += 1;
         if(current_node == undefined) break;
