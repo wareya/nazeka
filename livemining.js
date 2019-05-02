@@ -134,11 +134,11 @@ function buildpage()
         xhr.addEventListener('load', () =>
         {
             let response = JSON.parse(xhr.responseText);
-            if (response["result"])
+            if (response.result)
             {
                 let old_fields = get_fields();
                 reset_fields();
-                for(let fieldname of response["result"])
+                for(let fieldname of response.result)
                 {
                     let old = old_fields.get(fieldname);
                     if(old !== undefined)
@@ -147,6 +147,18 @@ function buildpage()
                         add_field(fieldname);
                 }
             }
+            else
+            {
+                errormessage(response.error);
+            }
+        });
+        xhr.addEventListener('error', () =>
+        {
+            errormessage("AnkiConnect messaging failed: unspecified error (Anki is probably not open)");
+        });
+        xhr.addEventListener('timeout', () =>
+        {
+            errormessage("AnkiConnect messaging failed: timed out");
         });
         xhr.send(json);
  
@@ -170,6 +182,22 @@ function buildpage()
         let xhr = new XMLHttpRequest();
         xhr.open("POST", host, true);
         xhr.send(json);
+        xhr.addEventListener('load', () =>
+        {
+            let response = JSON.parse(xhr.responseText);
+            if (!response.result)
+            {
+                errormessage(response.error);
+            }
+        });
+        xhr.addEventListener('error', () =>
+        {
+            errormessage("AnkiConnect messaging failed: unspecified error (Anki is probably not open)");
+        });
+        xhr.addEventListener('timeout', () =>
+        {
+            errormessage("AnkiConnect messaging failed: timed out");
+        });
         e.preventDefault();
     };
 }
@@ -180,4 +208,21 @@ if (document.readyState == "complete")
 else
 {
     document.addEventListener("DOMContentLoaded", buildpage);
+}
+
+
+function errormessage(text)
+{
+    if(!text) return;
+    let mydiv = document.createElement("div");
+    mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double red; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
+    mydiv.textContent = text;
+    document.body.appendChild(mydiv);
+    
+    function delete_later()
+    {
+        mydiv.remove();
+    }
+    
+    setTimeout(delete_later, 3000);
 }

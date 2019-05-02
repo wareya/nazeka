@@ -1646,6 +1646,8 @@ function grab_text(textNode, offset, elemental)
         
         while(!japaneseSeparators.includes(moreText[index + rightwards]) && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
             rightwards++;
+        while(japanesePunctuation.includes(moreText[index + rightwards]) && index + rightwards < moreText.length)
+            rightwards++;
         
         moreText = moreText.substring(index+leftwards, index+rightwards);
         text = text.substring(0, rightwards);
