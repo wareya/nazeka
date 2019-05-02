@@ -133,7 +133,7 @@ function defaults()
         id: "only_selection",
         kind: "checkbox",
         default: false,
-        label: "Only look up text when mousing over selection"
+        label: "Only look up text when mousing over selection (only when something is selected, setting ignored otherwise)"
     });
     
     // display

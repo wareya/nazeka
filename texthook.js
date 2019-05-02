@@ -1407,6 +1407,22 @@ function selection_filter_enabled(selection)
     return true;
 }
 
+function selection_rejects_node(selection, textNode, offset)
+{
+    if(!selection)
+        return false;
+    if(selection + "" == "")
+        return false;
+    let range = selection.getRangeAt(0);
+    try
+    {
+        if(!range.isPointInRange(textNode, offset) || !range.isPointInRange(textNode, offset+1))
+            return true;
+    }
+    catch(e){}
+    return false;
+}
+
 function selection_clip_node_with_offsets(node, selection)
 {
     if (!selection_filter_enabled(selection))
@@ -1579,6 +1595,9 @@ function grab_more_text(textNode, selection, direction = 1)
 function grab_text(textNode, offset, elemental)
 {
     let selection = window.getSelection();
+    
+    if(selection_filter_enabled(selection) && selection_rejects_node(selection, textNode, offset))
+        selection = undefined;
     
     let text = "";
     let moreText = "";
@@ -1797,26 +1816,9 @@ function update(event)
         catch (err){}
     }
     
-    function selection_rejects_node(textNode, offset)
-    {
-        let selection = window.getSelection();
-        if(!selection)
-            return false;
-        if(selection + "" == "")
-            return false;
-        let range = selection.getRangeAt(0);
-        try
-        {
-            if(!range.isPointInRange(textNode, offset) || !range.isPointInRange(textNode, offset+1))
-                return true;
-        }
-        catch(e){}
-        return false;
-    }
-    
     if (settings.only_selection)
     {
-        if(selection_rejects_node(textNode, offset))
+        if(selection_rejects_node(window.getSelection(), textNode, offset))
         {
             lookup_cancel();
             return;
