@@ -60,7 +60,9 @@ hotkey_kanji_mode: "k",
 hotkey_nudge_left: "ArrowLeft",
 hotkey_nudge_right: "ArrowRight",
 volume: 0.2,
-live_mining: false
+live_mining: false,
+use_selection: false,
+only_selection: false
 };
 
 let platform = "win";
@@ -1241,6 +1243,9 @@ async function settings_init()
         getvar("volume", 0.2);
         getvar("live_mining", false);
         
+        getvar("use_selection", false);
+        getvar("only_selection", false);
+        
         if(!settings.enabled && exists_div())
             delete_div();
         if(!settings.enabled)
@@ -1391,36 +1396,91 @@ let time_of_last = Date.now();
 
 let search_x_offset = -3;
 
-function get_element_text(element)
+function selection_filter_enabled(selection)
+{
+    if(!settings.use_selection)
+        return false;
+    if(!selection)
+        return false;
+    if(selection.toString() == "")
+        return false;
+    return true;
+}
+
+function selection_clip_node_with_offsets(node, selection)
+{
+    if (!selection_filter_enabled(selection))
+    {
+        return [node.textContent, 0];
+    }
+    let range = selection.getRangeAt(0);
+    
+    if(!range.intersectsNode(node))
+        return ["", 0];
+    
+    let start = 0;
+    let end = node.length;
+    
+    while(start < end)
+    {
+        if(!range.isPointInRange(node, start))
+            start += 1;
+        else
+            break;
+    }
+    while(end > start)
+    {
+        if(!range.isPointInRange(node, end))
+            end -= 1;
+        else
+            break;
+    }
+    return [node.data.slice(start, end), start];
+}
+
+function get_element_text_with_offsets(element, selection)
 {
     if(!(element instanceof Element))
-        return element.textContent;
+    {
+        return selection_clip_node_with_offsets(element, selection);
+    }
     try
     {
         let display = getComputedStyle(element).display;
         if(display == "ruby-text")
-            return "";
+            return ["", 0];
         let tagname = element.tagName.toLowerCase();
         if(tagname == "rt" || tagname == "rp")
-            return "";
+            return ["", 0];
         
         let ret = "";
+        let ret_offset = -1;
         for(let child of element.childNodes)
         {
-            let asdf = get_element_text(child);
-            ret += asdf;
+            let asdf = get_element_text_with_offsets(child, selection);
+            ret += asdf[0];
+            if(ret_offset == -1)
+                ret_offset = asdf[1];
         }
-        return ret;
+        return [ret, ret_offset];
     }
     catch(err)
     {
         console.log(err);
     }
-    return "";
+    return ["", 0];
 }
 
-function grab_more_text(textNode, direction = 1)
+function get_element_text(element, selection)
 {
+    let ret = get_element_text_with_offsets(element, selection)[0];
+    return ret;
+}
+
+function grab_more_text(textNode, selection, direction = 1)
+{
+    let ignore_normal_boundaries = selection_filter_enabled(selection);
+    
     if(direction > 0)
         direction = 1;
     else
@@ -1429,13 +1489,13 @@ function grab_more_text(textNode, direction = 1)
     let current_node = textNode;
     let iters = 0;
     while(text.length < settings.contextlength
-        && !text.includes("。") && !text.includes("！") && !text.includes("‼") && !text.includes("？")　&& !text.includes("??") && !text.includes("…")
-        && (!text.includes("\n") || settings.ignore_linebreaks))
+          && (ignore_normal_boundaries
+              || (!text.includes("。") && !text.includes("！") && !text.includes("‼") && !text.includes("？")　&& !text.includes("??") && !text.includes("…") && (!text.includes("\n") || settings.ignore_linebreaks))))
     {
         iters += 1;
         if(current_node == undefined) break;
         // search up parent element only if current element is inline-like
-        if (!settings.ignore_divs)
+        if (!ignore_normal_boundaries && !settings.ignore_divs)
         {
             try
             {
@@ -1463,13 +1523,17 @@ function grab_more_text(textNode, direction = 1)
         let i = Array.prototype.indexOf.call(current_node.parentNode.childNodes, current_node);
         if(i < 0) break;
         i += direction;
-        while(i < current_node.parentNode.childNodes.length && i >= 0 && text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))
+        while(i < current_node.parentNode.childNodes.length && i >= 0 && (ignore_normal_boundaries || (text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))))
         {
             let next_node = current_node.parentNode.childNodes[i];
             i += direction;
+            
+            if(selection_filter_enabled(selection) && !selection.getRangeAt(0).intersectsNode(next_node))
+                break;
+            
             let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
             
-            if(tagname == "br" && !settings.ignore_linebreaks)
+            if(tagname == "br" && !settings.ignore_linebreaks && !ignore_normal_boundaries)
                 break;
             if(tagname == "rt" || tagname == "rp")
                 continue;
@@ -1481,12 +1545,14 @@ function grab_more_text(textNode, direction = 1)
                 let display = getComputedStyle(next_node).display;
                 
                 // FIXME get real inline vs block detection
-                if(display != "block" && display != "grid" && display != "table" && display != "none")
+                if(ignore_normal_boundaries || (display != "block" && display != "grid" && display != "table" && display != "none"))
                 {
+                    let current = get_element_text(next_node, selection);
+                    
                     if(direction > 0)
-                        ttext += get_element_text(next_node);
+                        ttext += current;
                     else
-                        ttext = get_element_text(next_node) + ttext;
+                        ttext = current + ttext;
                 }
                 if(direction > 0)
                     text += ttext;
@@ -1496,9 +1562,9 @@ function grab_more_text(textNode, direction = 1)
             catch(err)
             {
                 if(direction > 0)
-                    text += get_element_text(next_node);
+                    text += get_element_text(next_node, selection);
                 else
-                    text = get_element_text(next_node) + text;
+                    text = get_element_text(next_node, selection) + text;
             }
         }
         if(text.length < settings.contextlength)
@@ -1512,6 +1578,8 @@ function grab_more_text(textNode, direction = 1)
 
 function grab_text(textNode, offset, elemental)
 {
+    let selection = window.getSelection();
+    
     let text = "";
     let moreText = "";
     if(elemental)
@@ -1521,12 +1589,16 @@ function grab_text(textNode, offset, elemental)
     }
     else
     {
-        moreText = get_element_text(textNode);
+        let etc = get_element_text_with_offsets(textNode, selection);
+        moreText = etc[0];
+        offset -= etc[1];
         text = moreText.substring(offset, moreText.length);
     }
     
-    text += grab_more_text(textNode);
-    moreText = grab_more_text(textNode, -1) + moreText + grab_more_text(textNode);
+    let lhs = grab_more_text(textNode, selection, -1);
+    let rhs = grab_more_text(textNode, selection);
+    text += rhs;
+    moreText = lhs + moreText + rhs;
     
     if(settings.ignore_linebreaks)
     {
@@ -1545,17 +1617,20 @@ function grab_text(textNode, offset, elemental)
     let leftwards = 0;
     let rightwards = 0;
     
-    while(!japaneseSeparators.includes(moreText[index + leftwards]) && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
-        leftwards--;
-    leftwards++;
+    if (!selection_filter_enabled(selection))
+    {
+        while(!japaneseSeparators.includes(moreText[index + leftwards]) && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
+            leftwards--;
+        leftwards++;
+        
+        while(!japaneseSeparators.includes(moreText[index + rightwards]) && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
+            rightwards++;
+        
+        moreText = moreText.substring(index+leftwards, index+rightwards);
+        text = text.substring(0, rightwards);
     
-    while(!japaneseSeparators.includes(moreText[index + rightwards]) && moreText[index + rightwards] != "\n" && index + rightwards < moreText.length)
-        rightwards++;
-    
-    moreText = moreText.substring(index+leftwards, index+rightwards);
-    text = text.substring(0, rightwards);
-    
-    index = -leftwards;
+        index = -leftwards;
+    }
     
     // grab text from later and surrounding DOM nodes
     text = moreText.substring(index);
@@ -1655,7 +1730,6 @@ function update(event)
                 let range = document.createRange();
                 range.selectNode(textNode);
                 hitrect = range.getBoundingClientRect();
-                range.detach();
             }
             // sticky mode and android need to break out on parent detection
             if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || mining_ui_exists()))
@@ -1722,6 +1796,33 @@ function update(event)
         }
         catch (err){}
     }
+    
+    function selection_rejects_node(textNode, offset)
+    {
+        let selection = window.getSelection();
+        if(!selection)
+            return false;
+        if(selection + "" == "")
+            return false;
+        let range = selection.getRangeAt(0);
+        try
+        {
+            if(!range.isPointInRange(textNode, offset) || !range.isPointInRange(textNode, offset+1))
+                return true;
+        }
+        catch(e){}
+        return false;
+    }
+    
+    if (settings.only_selection)
+    {
+        if(selection_rejects_node(textNode, offset))
+        {
+            lookup_cancel();
+            return;
+        }
+    }
+    
     // if there was text, use it
     let elemental = acceptable_element(textNode);
     if (textNode && (textNode.nodeType == 3 || elemental))

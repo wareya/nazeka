@@ -123,6 +123,18 @@ function defaults()
         default: false,
         label: "Enable live mining (configured via the button below under \"Other\")"
     });
+    settings.push({
+        id: "use_selection",
+        kind: "checkbox",
+        default: false,
+        label: "Use text selection to limit lookup length and force context"
+    });
+    settings.push({
+        id: "only_selection",
+        kind: "checkbox",
+        default: false,
+        label: "Only look up text when mousing over selection"
+    });
     
     // display
     settings.push({
