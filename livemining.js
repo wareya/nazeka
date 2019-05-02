@@ -49,6 +49,17 @@ function add_options(input, preselect="")
     }
 }
 
+function get_fields()
+{
+    let mappings = new Map();
+    for(let element of document.querySelectorAll("#containfields > div"))
+    {
+        console.log(element);
+        mappings.set(element.querySelector("label").innerText, element.querySelector("select").value);
+    }
+    return mappings;
+}
+
 function add_field(fieldname, preselect="")
 {
     let div = document.createElement("div");
@@ -103,7 +114,7 @@ function loadConfig()
 
 function buildpage()
 {
-    document.getElementById("autofields").onclick = function(e)
+    document.getElementById("autofields").onclick = (e) =>
     {
         let host = document.getElementById("host").value;
 
@@ -125,9 +136,16 @@ function buildpage()
             let response = JSON.parse(xhr.responseText);
             if (response["result"])
             {
+                let old_fields = get_fields();
                 reset_fields();
                 for(let fieldname of response["result"])
-                    add_field(fieldname);
+                {
+                    let old = old_fields.get(fieldname);
+                    if(old !== undefined)
+                        add_field(fieldname, old);
+                    else
+                        add_field(fieldname);
+                }
             }
         });
         xhr.send(json);
@@ -140,6 +158,20 @@ function buildpage()
     loadConfig();
     
     document.getElementById("loadfields").onclick = loadConfig;
+    
+    document.getElementById("upgrade").onclick = (e) =>
+    {
+        let host = document.getElementById("host").value;
+        
+        let json = `
+        {"action":"upgrade",
+         "version":6
+        }`;
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", host, true);
+        xhr.send(json);
+        e.preventDefault();
+    };
 }
 if (document.readyState == "complete")
 {

@@ -25,7 +25,7 @@ superborder: false,
 showoriginal: true,
 definitions_mode: 0,
 normal_definitions_in_mining: false,
-alternatives_mode: 0, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
+alternatives_mode: 3, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
 strict_alternatives: true, // if true, alternatives looked up in all kana can not return results with kanji glosses that don't have any usually/exclusively kana info
 strict_epwing: true,
 scale: 1,
@@ -1207,11 +1207,11 @@ async function settings_init()
         getvar("bgcolor", "#111111");
         getvar("fgcolor", "#CCCCCC");
         getvar("hlcolor", "#99DDFF");
-        getvar("hlcolor2", "#66DD44");
+        getvar("hlcolor2", "#99FF99");
         getvar("font", "");
         getvar("hlfont", "");
         
-        getvar("alternatives_mode", 0);
+        getvar("alternatives_mode", 3);
         getvar("strict_alternatives", true);
         getvar("definitions_mode", 0);
         getvar("normal_definitions_in_mining", false);

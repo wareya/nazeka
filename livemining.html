@@ -6,6 +6,9 @@
 <title>Nazeka: Configuration for Live Mining</title>
 <script src="include/browser-polyfill.min.js" charset="UTF-8"></script>
 <script type="text/javascript" src="livemining.js"></script>
+<style>
+body { max-width: 800px; margin-left: auto; margin-right: auto; padding-left: 8px; padding-right: 8px; }
+</style>
 </head>
 <body>
 <h2>Configuration for Live Mining</h2>
@@ -13,9 +16,11 @@
 
 <p>Live Mining requires <a href="https://apps.ankiweb.net/">Anki</a> and the <a href="https://ankiweb.net/shared/info/2055492159">Ankiconnect</a> plugin.</p>
 
-<p>If Live Mining is enabled, then when you mine notes to the mining storage, Nazeka will also attempt to connect to Ankiconnect and tell it to insert a new note.</p>
+<p>If Live Mining is enabled, then when you mine words to the mining storage (the list you see when you select "View Mined Cards"), Nazeka will also attempt to connect to Ankiconnect and tell it to insert a new note.</p>
 
-<p>This is still experimental. Nazeka might not show any error messages if Ankiconnect fails to insert the new note. I only tested errors shown when Anki isn't running.</p>
+<p>If this is your first time using live mining, please press the button below. This will make Ankiconnect ask you if it's okay to update to the latest version, then update if you say yes. Doing so fixes several bugs present in old versions of Ankiconnect, and this is important, because the version on Ankiweb sometimes falls behind the latest version. This requires Anki to be running with Ankiconnect already enabled.</p>
+
+<input type="button" id="upgrade" value="Update Ankiconnect">
 
 <h2>Deck and Model</h2>
 <input type="text" value="Default" id="deckname"><br>
@@ -25,7 +30,7 @@
 
 <h2>Fields</h2>
 <input type="button" id="autofields" value="Populate"><br>
-<label for="autofields">Button will connect to Ankiconnect and automatically populate a list of field inputs based on card model/template name, overwriting EVERYTHING that is currently here.</label><br>
+<label for="autofields">Populate button will connect to Ankiconnect and automatically populate a list of field inputs based on card model/template name, overwriting EVERYTHING that is currently here.</label><br>
 
 <div id="containfields">
 (Unpopulated)

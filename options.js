@@ -63,7 +63,7 @@ function defaults()
     settings.push({
         id: "alternatives_mode",
         kind: "combobox",
-        options: ["Longest match only", "Longest and shortest match", "Longest and second longest match", "All matches"],
+        options: ["Longest match only", "Longest and second longest match", "Longest and shortest match", "All matches"],
         default: 3,
         label: "Matching mode"
     });

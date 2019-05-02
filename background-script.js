@@ -1523,14 +1523,20 @@ browser.runtime.onMessage.addListener((req, sender) =>
     }
     else if (req.type == "ankiconnect_mine")
     {
+        console.log("got request");
         let xhr = new XMLHttpRequest();
         xhr.open("POST", req.host, true);
         //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+        console.log(req.command);
         xhr.addEventListener('load', () =>
         {
+            console.log(xhr.responseText);
             let response = JSON.parse(xhr.responseText);
-            if(response.error)
-                send_error(sender.tab.id, "AnkiConnect mining failed: " + response.error);
+            try
+            {
+                if(response.error)
+                    send_error(sender.tab.id, "AnkiConnect mining failed: " + response.error);
+            } catch (e) { }
         });
         xhr.addEventListener('error', () =>
         {
