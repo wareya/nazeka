@@ -27,7 +27,6 @@ Nazeka has added many options since it was first created, and they're documented
 
 Build process requires python and lxml, or an existing copy of the extension to rip JMdict#.json from.
 
-- Copy the appropriate manifest.json from etc/ (either etc/firefox/manifest.json or etc/chrome/manifest.json) into the root of the repository
 - Download JMdict.gz from http://www.edrdg.org/jmdict/edict_doc.html
 - Convert it to json with etc/process.py
 - Move the output to under dict/ so that [...]/dict/JMdict1.json and others exist in that location relative to [...]/manifest.json
