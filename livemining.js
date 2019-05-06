@@ -36,6 +36,7 @@ function add_options(input, preselect="")
     
     "jmdict_id",
     "url",
+    "page_title",
     "time_unix",
     "time_local",
     

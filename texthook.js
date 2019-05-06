@@ -2086,6 +2086,7 @@ function mine(highlight)
             
             jmdict_id: seq,
             url: get_doc().URL,
+            page_title: get_doc().title,
             time_unix: now.getTime(),
             time_local: now.toLocaleString(),
             
