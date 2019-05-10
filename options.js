@@ -640,6 +640,26 @@ function buildpage()
     label.textContent = "Import JSON dictionary.";
     label.style.display = "block";
     
+    function json_dict_reset()
+    {
+        browser.storage.local.set({"epwing":JSON.stringify(JSON.parse("[]"))});
+        browser.runtime.sendMessage({type:"refreshepwing"});
+        document.body.querySelector("#epwing_reset").innerText = "Delete JSON dictionary";
+        document.body.querySelector("#epwing_reset").addEventListener("click", json_dict_ask_reset, {once : true});
+    }
+
+    function json_dict_ask_reset()
+    {
+        document.body.querySelector("#epwing_reset").innerText = "Click again to make Nazeka to delete the JSON dictionary.";
+        document.body.querySelector("#epwing_reset").addEventListener("click", json_dict_reset, {once : true});
+    }
+    
+    let jsonresetbutton = document.createElement("button");
+    jsonresetbutton.type = "button";
+    jsonresetbutton.id = "epwing_reset";
+    jsonresetbutton.innerText = "Delete JSON dictionary";
+    jsonresetbutton.addEventListener("click", json_dict_ask_reset, {once : true});
+    
     let dict_explanation = document.createElement("p");
     dict_explanation.innerHTML = 
 `JSON dictionaries have the following format:
@@ -680,6 +700,7 @@ This format can be extended in the future if it becomes desirable to include mor
     
     optionsection.appendChild(file);
     optionsection.appendChild(label);
+    optionsection.appendChild(jsonresetbutton);
     optionsection.appendChild(dict_explanation);
     
     optionsection.appendChild(document.createElement("hr"));
