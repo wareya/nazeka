@@ -24,6 +24,7 @@ fixedwidthpositioning: false,
 superborder: false,
 disableborder: false,
 space_saver: false,
+hide_deconj: false,
 showoriginal: true,
 definitions_mode: 0,
 normal_definitions_in_mining: false,
@@ -778,7 +779,10 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             
             temptag.appendChild(document.createElement("wbr"));
             let e_readings = document.createElement("span");
-            e_readings.appendChild(makespan("《"));
+            if(!settings.space_saver)
+                e_readings.appendChild(makespan("《"));
+            else
+                e_readings.appendChild(makespan(" "));
             e_readings.className = "nazeka_readings";
             for(let j = 0; j < readings.length; j++)
             {
@@ -804,7 +808,10 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                     e_readings.appendChild(makespan("、"));
                 }
             }
-            e_readings.appendChild(makespan("》"));
+            if(!settings.space_saver)
+                e_readings.appendChild(makespan("》"));
+            else
+                e_readings.appendChild(makespan(" "));
             temptag.appendChild(e_readings);
             
             // list alternatives
@@ -814,7 +821,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                     alternatives.push(term.k_ele[j]);
             
             if(alternatives.length > 0)
-                temptag.appendChild(makespan((settings.space_saver)?("("):(" (also ")));
+                temptag.appendChild(makespan((settings.space_saver)?(" ("):(" (also ")));
             for(let j = 0; j < alternatives.length; j++)
             {
                 let subkeb = document.createElement("span");
@@ -843,7 +850,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             // deconjugations
             
             
-            if(term.deconj)
+            if(term.deconj && !settings.hide_deconj)
             {
                 let deconj = "";
                 let first = true;
@@ -890,7 +897,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             main_reb.className = "nazeka_main_reb";
             main_reb.textContent = term.found.reb;
             temptag.appendChild(main_reb);
-            if(term.deconj)
+            if(term.deconj && !settings.hide_deconj)
             {
                 let deconj = "";
                 let first = true;
@@ -946,8 +953,8 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 if(term.r_ele[j].reb != text)
                     alternatives.push(term.r_ele[j]);
             
-            if(alternatives.length > 0 && !settings.space_saver)
-                temptag.appendChild(makespan((settings.space_saver)?("("):(" (also ")));
+            if(alternatives.length > 0)
+                temptag.appendChild(makespan((settings.space_saver)?(" ("):(" (also ")));
             for(let j = 0; j < alternatives.length; j++)
             {
                 temptag.appendChild(makespan(alternatives[j].reb));
@@ -1207,6 +1214,7 @@ async function settings_init()
         getvar("superborder", false);
         getvar("disableborder", false);
         getvar("space_saver", false);
+        getvar("hide_deconj", false);
         getvar("showoriginal", true);
         
         getvar("bgcolor", "#111111");

@@ -40,7 +40,13 @@ function defaults()
         id: "space_saver",
         kind: "checkbox",
         default: false,
-        label: "Space saver (removes brackets from readings, 'Also:' from alternative spellings)"
+        label: "Space saver (removes extra formatting from readings and other spellings)"
+    });
+    settings.push({
+        id: "hide_deconj",
+        kind: "checkbox",
+        default: false,
+        label: "Hide deconjugations"
     });
     settings.push({
         id: "popup_follows_mouse",
