@@ -2068,7 +2068,7 @@ function mine(highlight)
         let audio_kanji = "";
         let audio_reading = "";
         
-        if(readings.length >= 2)
+        if(readings.length >= 2 && readings.startsWith("《"))
             readings = readings.substring(1, readings.length-1);
         
         if(audiostuff !== undefined)
