@@ -22,6 +22,8 @@ contextlength: 100, // nonconfigurable
 fixedwidth: false,
 fixedwidthpositioning: false,
 superborder: false,
+disableborder: false,
+space_saver: false,
 showoriginal: true,
 definitions_mode: 0,
 normal_definitions_in_mining: false,
@@ -192,7 +194,8 @@ function display_div(middle, x, y)
     if(font != "")
         font += ",";
     middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
-    middle.firstChild.style = `border: 1px solid ${settings.fgcolor}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; text-align: left; font-size: ${settings.definition_fontsize}px;`;
+    let border_text = (settings.disableborder)?("border: 0px solid transparent;"):(`border: 1px solid ${settings.fgcolor}`);
+    middle.firstChild.style = `${border_text}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; text-align: left; font-size: ${settings.definition_fontsize}px;`;
     
     let find_root = window;
     let newx = x;
@@ -248,7 +251,7 @@ function display_div(middle, x, y)
     }
     styletext += "position: absolute; top: 0; left: 0; transition: unset; ";
     
-    if(settings.superborder)
+    if(settings.superborder && !settings.disableborder)
         styletext += `background-color: ${settings.fgcolor}; border-radius: 3px; border: 1px solid ${settings.fgcolor}; z-index: 1000000000000000000000;`;
     else
         styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 1000000000000000000000;`;
@@ -811,9 +814,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                     alternatives.push(term.k_ele[j]);
             
             if(alternatives.length > 0)
-            {
-                temptag.appendChild(makespan(" (also "));
-            }
+                temptag.appendChild(makespan((settings.space_saver)?("("):(" (also ")));
             for(let j = 0; j < alternatives.length; j++)
             {
                 let subkeb = document.createElement("span");
@@ -945,8 +946,8 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 if(term.r_ele[j].reb != text)
                     alternatives.push(term.r_ele[j]);
             
-            if(alternatives.length > 0)
-                temptag.appendChild(makespan(" (also "));
+            if(alternatives.length > 0 && !settings.space_saver)
+                temptag.appendChild(makespan((settings.space_saver)?("("):(" (also ")));
             for(let j = 0; j < alternatives.length; j++)
             {
                 temptag.appendChild(makespan(alternatives[j].reb));
@@ -1204,6 +1205,8 @@ async function settings_init()
         getvar("fixedwidth", false);
         getvar("fixedwidthpositioning", false);
         getvar("superborder", false);
+        getvar("disableborder", false);
+        getvar("space_saver", false);
         getvar("showoriginal", true);
         
         getvar("bgcolor", "#111111");

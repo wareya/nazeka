@@ -37,6 +37,12 @@ function defaults()
         label: "Show original text"
     });
     settings.push({
+        id: "space_saver",
+        kind: "checkbox",
+        default: false,
+        label: "Space saver (removes brackets from readings, 'Also:' from alternative spellings)"
+    });
+    settings.push({
         id: "popup_follows_mouse",
         kind: "checkbox",
         default: true,
@@ -232,6 +238,12 @@ function defaults()
         kind: "checkbox",
         default: false,
         label: "Super border"
+    });
+    settings.push({
+        id: "disableborder",
+        kind: "checkbox",
+        default: false,
+        label: "Disable border"
     });
     settings.push({
         id: "bgcolor",
