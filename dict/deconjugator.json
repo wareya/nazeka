@@ -1058,5 +1058,33 @@
   "con_tag": "uninflectable",
   "detail": "slurred"
  },
- "// TODO: support for other verb types like vk (くる) (started, incomplete), vs_i (true する verbs), v5aru (なさる, くださる, etc), v4r (ござる, etc), ..."
+ "// TODO: support for other verb types like vk (くる) (started, incomplete), vs_i (true する verbs), v5aru (なさる, くださる, etc), v4r (ござる, etc), ...",
+ {
+  "type": "substitution",
+  "dec_end": [
+   "０",
+   "１",
+   "２",
+   "３",
+   "４",
+   "５",
+   "６",
+   "７",
+   "８",
+   "９"
+  ],
+  "con_end": [
+   "0",
+   "1",
+   "2",
+   "3",
+   "4",
+   "5",
+   "6",
+   "7",
+   "8",
+   "9"
+  ],
+  "detail": ""
+ }
 ]

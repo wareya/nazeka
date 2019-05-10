@@ -509,12 +509,83 @@ function contextrule_deconjugate(my_form, my_rule)
     return stdrule_deconjugate(my_form, my_rule);
 };
 
+function substitution_inner(my_form, my_rule)
+{
+    if(!my_form.text.includes(my_rule.con_end))
+        return;
+    let newtext = my_form.text.replace(new RegExp(my_rule.con_end, 'g'), my_rule.dec_end);
+    
+    // I hate javascript reeeeeeeeeeeeeee
+    let newform = {};//new Object();
+    newform.text = newtext;
+    newform.original_text = my_form.original_text;
+    newform.tags = my_form.tags.slice();
+    newform.seentext = new Set([...my_form.seentext]);
+    newform.process = my_form.process.slice();
+    
+    newform.text = newtext;
+    
+    newform.process.push(my_rule.detail);
+    
+    if(newform.seentext.size == 0)
+        newform.seentext.add(my_form.text);
+    newform.seentext.add(newtext);
+    
+    return newform;
+};
+function substitution_deconjugate(my_form, my_rule)
+{
+    if(my_form.process.length != 0)
+        return;
+    
+    // can't deconjugate nothingness
+    if(my_form.text == "")
+        return;
+    
+    let array = undefined;
+    // pick the first one that is an array
+    // FIXME: use minimum length for safety reasons? assert all arrays equal length?
+    if(Array.isArray(my_rule.dec_end))
+        array = my_rule.dec_end;
+    else if(Array.isArray(my_rule.con_end))
+        array = my_rule.con_end;
+    
+    if(array == undefined)
+        return substitution_inner(my_form, my_rule);
+    else
+    {
+        let collection = new Set();
+        for(let i = 0; i < array.length; i++)
+        {
+            let virtual_rule = {};
+            virtual_rule.type = my_rule.type;
+            
+            let index_or_value = function (variable, index)
+            {
+                if(Array.isArray(variable))
+                    return variable[index];
+                else
+                    return variable;
+            }
+            
+            virtual_rule.dec_end = index_or_value(my_rule.dec_end, i);
+            virtual_rule.con_end = index_or_value(my_rule.con_end, i);
+            virtual_rule.detail = my_rule.detail;
+            
+            let ret = substitution_inner(my_form, virtual_rule);
+            if(ret) collection.add(ret);
+        }
+        return collection;
+    }
+}
+
 let rule_functions = {
 stdrule: stdrule_deconjugate,
 rewriterule: rewriterule_deconjugate,
 onlyfinalrule: onlyfinalrule_deconjugate,
 neverfinalrule: neverfinalrule_deconjugate,
 contextrule: contextrule_deconjugate,
+substitution: substitution_deconjugate
 };
 
 function v1inftrap_check(my_form, my_rule)
@@ -565,7 +636,7 @@ function deconjugate(mytext)
     {
         if(settings.deconjugator_rules_json != "")
             myrules = JSON.parse(settings.deconjugator_rules_json);
-    } catch(err) {}
+    } catch(err) { console.log(err); }
     
     while(novel.size > 0)
     {
