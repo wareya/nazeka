@@ -12,7 +12,7 @@ Nazeka has added many options since it was first created, and they're documented
 - Compact: definitions on same line or with linebreaks
 - Show original text: shows the string of text that nazeka used to look up a set of definitions
 - Super border: add an additional level to the double border
-- Fixed width: always use maximum width width, don't shrink to small contents
+- Fixed width: always use maximum width for popup width, don't shrink to small contents
 - Search length: maximum length to search for words
 - Matching mode: what kinds of alternative lookups to display
 - Strict matching for alternative matches: if true, ***alternative*** lookups of hiragana strings will not produce definitions that are not at least usually kana (the longest lookup will always show all possibilities)
