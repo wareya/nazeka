@@ -437,7 +437,7 @@ function elementize_jmdict_defs(goodsenses)
         else
             lastpos = sense.pos;
         
-        if(sense.pos)
+        if(sense.pos && sense.pos.length > 0)
         {
             let part = document.createElement("span");
             part.className = "nazeka_pos";
@@ -985,7 +985,11 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         let definition = document.createElement("div");
         definition.className = "nazeka_definitions";
         
-        let jmdict_div = elementize_jmdict_defs(term.sense);
+        let jmdict_div = undefined;
+        if(typeof term.seq == "string" && term.seq.startsWith("NONE_"))
+            jmdict_div = document.createElement("div");
+        else
+            jmdict_div = elementize_jmdict_defs(term.sense);
         let json_div = elementize_json_defs(term.json);
         
         if (settings.definitions_mode == 0 || (settings.normal_definitions_in_mining && mining_ui_exists())) // normal

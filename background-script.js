@@ -128,6 +128,25 @@ async function migrate_legacy_then_refresh()
 
 migrate_legacy_then_refresh();
 
+function json_lookup_arbitrary_as_is(dict, text)
+{
+    let index = dict.lookup_json_kan.get(text);
+    if(index === undefined)
+        index = dict.lookup_json_kana.get(text);
+    if(index === undefined)
+        return undefined;
+    return copy(dict.entries[index]);
+}
+function json_dict_any_as_is(text)
+{
+    for(let dict of json_dicts)
+    {
+        let ret = json_lookup_arbitrary_as_is(dict, text);
+        if(ret !== undefined)
+            return ret;
+    }
+    return undefined;
+}
 
 let dict = [];
 let lookup_kan = new Map();
@@ -404,6 +423,26 @@ function search(text)
     if(ret) return ret;
     ret = search_inner(replace_kata_with_hira(text));
     if(ret) return ret;
+    ret = json_dict_any_as_is(text);
+    if(ret)
+    {
+        let r_ele = [{reb: ret.r}];
+        let k_ele = [];
+        let seq = "NONE_"+text;
+        let sense = [{gloss: [], pos: []}];
+        for(let spelling of ret.s)
+        {
+            if(spelling == "" || is_kana(spelling))
+                continue;
+            k_ele.push({keb: spelling});
+        }
+        let re_ret = undefined;
+        if(k_ele != [])
+            re_ret = [{k_ele: k_ele, r_ele: r_ele, seq: seq, sense: sense, from: text, found: k_ele[0]}];
+        else
+            re_ret = [{r_ele: r_ele, seq: seq, sense: sense, from: text, found: r_ele[0]}];
+        return re_ret;
+    }
 }
 
 // deconjugation rules
@@ -841,16 +880,6 @@ function json_lookup_kana_inexact(dict, kana)
     return possibilities;
 }
 
-function json_lookup_arbitrary_as_is(dict, text)
-{
-    let index = dict.lookup_json_kan.get(text);
-    if(index === undefined)
-        index = dict.lookup_json_kana.get(text);
-    if(index === undefined)
-        return undefined;
-    return copy(dict.entries[index]);
-}
-
 function add_json_info(lookups, other_settings)
 {
     for(let lookup of lookups)
@@ -933,7 +962,6 @@ function add_json_info(lookups, other_settings)
     }
     return lookups;
 }
-
 
 
 function is_kana(object)
