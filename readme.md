@@ -35,4 +35,4 @@ Build process requires python and lxml, or an existing copy of the extension to 
 
 # Copyright and License
 
-Copyright 2017~2018; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+Copyright 2017~2019; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
