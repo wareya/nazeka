@@ -22,18 +22,26 @@ option.disabled
 div.buttons
 {
     display:flex;
-    width: 200px;
+    width: 300px;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
 }
 div.buttons *
 {
-    width: 33%;
+    width: 33.3%;
+}
+div.buttons button.double
+{
+    width: 50%;
 }
 #delete
 {
     margin-top: 20px;
+}
+div.closed
+{
+    display: none;
 }
 </style>
 <script src="include/browser-polyfill.min.js" charset="UTF-8"></script>
@@ -41,15 +49,77 @@ div.buttons *
 </head>
 
 <body lang="ja" visible="5">
-<select id=dicts size="10" style="width: 200px; box-sizing: border-box; border: none;">
-    <option value="wadai">Kenkyuusha/Wadai</option>
-    <option value="shinmeikai">Shinmeikai</option>
-    <option value="muramasa">Muramasa</option>
-</select>
-<div class=buttons>
-<button id=move_up>Move Up</button><button id=move_down>Move Down</button><button id=add disabled>Add Blank</button>
-<button id=import disabled>Import</button><button id=toggle>Toggle</button><button id=edit disabled>Edit</button>
-<button id=delete disabled>Delete</button></div>
+<div id=dict_manager>
+    <select id=dicts size="10" style="width: 300px; box-sizing: border-box; border: none;">
+        <option class=disabled>ローディング中</option>
+    </select>
+    <div class=buttons>
+        <button id=move_up>Move Up</button><button id=move_down>Move Down</button><button id=toggle>Toggle</button>
+        <button id=import class=double>Import</button><button id=export class=double>Export</button>
+        <button id=add class=double>Add Blank</button><button id=edit class=double>Edit</button>
+        <button id=delete>Delete</button>
+    </div>
+    <input type=file id=file_input style="display: none">
+</div>
+
+<div id=dict_editor class=closed>
+<input type=text id=edit_name value="" style="width: 300px"><button id=edit_apply>Apply</button><button id=edit_okay>Apply &amp; Close</button><button id=edit_cancel>Close</button>
+<textarea type=text id=edit_entries value="" style="width: 100%; height:calc(100vh - 200px)"></textarea>
+<div class=edit_explanation>
+<pre>
+Format (copy-paste-able):
+[
+  {
+    "r": "つるぎ",
+    "s": [
+      ""
+    ],
+    "l": [
+      "line one of a definition",
+      "line two of a definition",
+      "etc",
+      "last line of a definition"
+    ]
+  },
+  {
+    "r": "こだいしゅ",
+    "s": [
+      "古代種",
+      "古代しゅ"
+    ],
+    "l": [
+      "the ancients"
+    ]
+  }
+]
+Format (with comments, which break JSON parsing):
+[
+  { // entry one
+    "r": "つるぎ",
+    "s": [
+      "" // entries with no "spellings" still have a single, blank spelling
+    ], // comma
+    "l": [
+      "line one of a definition",
+      "line two of a definition",
+      "etc",
+      "last line of a definition" // no comma
+    ]
+  }, // comma
+  { // entry two
+    "r": "こだいしゅ",
+    "s": [
+      "古代種",
+      "古代しゅ" // no comma
+    ], // comma
+    "l": [
+      "the ancients" // no comma
+    ]
+  } // last entry, so no comma
+]
+</pre>
+</div>
+</div>
 </body>
 
 </html>

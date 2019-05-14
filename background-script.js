@@ -84,7 +84,7 @@ async function get_storage_or_default(name, fallback)
 async function refresh_json()
 {
     let custom_dicts = (await get_storage_or_default("custom_dicts", []));
-    json_dicts = [];
+    let new_json_dicts = [];
     for(let stored_dict of custom_dicts)
     {
         if(!stored_dict.enabled)
@@ -103,8 +103,9 @@ async function refresh_json()
                     add_json_spelling(dict, spelling, i);
             }
         } catch(e){}
-        json_dicts.push(dict);
+        new_json_dicts.push(dict);
     }
+    json_dicts = new_json_dicts;
 }
 
 async function migrate_legacy_then_refresh()
