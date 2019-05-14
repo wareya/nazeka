@@ -140,11 +140,21 @@ function json_lookup_arbitrary_as_is(dict, text)
 }
 function json_dict_any_as_is(text)
 {
-    for(let dict of json_dicts)
+    let maybe_found_non_latin = false;
+    for(let i = 0; i < text.length; i++)
     {
-        let ret = json_lookup_arbitrary_as_is(dict, text);
-        if(ret !== undefined)
-            return ret;
+        let codepoint = text.codePointAt(i);
+        if(codepoint > 0x100)
+            maybe_found_non_latin = true;
+    }
+    if(maybe_found_non_latin)
+    {
+        for(let dict of json_dicts)
+        {
+            let ret = json_lookup_arbitrary_as_is(dict, text);
+            if(ret !== undefined)
+                return ret;
+        }
     }
     return undefined;
 }
