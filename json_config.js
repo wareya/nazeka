@@ -109,7 +109,7 @@ function edit_cancel()
     document.getElementById("dict_editor").className = "closed";
     document.getElementById("edit_entries").value = "";
 }
-function edit_apply()
+function edit_apply(and_then = undefined)
 {
     try
     {
@@ -126,6 +126,8 @@ function edit_apply()
             
             save_dicts();
         }
+        if(and_then)
+            and_then();
     }
     catch(e)
     {
@@ -134,8 +136,7 @@ function edit_apply()
 }
 function edit_okay()
 {
-    edit_apply();
-    edit_cancel();
+    edit_apply(edit_cancel);
 }
 
 function or_default(val, fallback)

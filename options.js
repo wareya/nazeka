@@ -589,6 +589,16 @@ function buildpage()
     
     optionsection.appendChild(document.createElement("hr"));
     
+    // import
+    
+    let jsonmanagebutton = document.createElement("button");
+    jsonmanagebutton.type = "button";
+    jsonmanagebutton.innerText = "Manage JSON Dictionaries";
+    jsonmanagebutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('json_config.html'),type:'popup'}); e.preventDefault();};
+    optionsection.appendChild(jsonmanagebutton);
+    
+    optionsection.appendChild(document.createElement("hr"));
+    
     // deconjugation rules
     
     let decon_file = document.createElement("input");
