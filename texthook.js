@@ -507,48 +507,50 @@ function elementize_jmdict_defs(goodsenses)
     }
     return jmdict_defs;
 }
-function elementize_epwing_defs(epwing)
+function elementize_json_defs(json)
 {
-    if(epwing)
+    if(json.length > 0)
     {
-        let epwing_defs = document.createElement("div");
-        epwing_defs.className = "epwing_definitions";
+        let json_defs = document.createElement("div");
+        json_defs.className = "json_definitions";
         
-        let epwing_head = document.createElement("div");
-        epwing_head.appendChild(document.createTextNode("―"+epwing["z"]+"―"));
-        epwing_head.appendChild(document.createElement("br"));
-        let epwing_head_text = epwing["r"];
-        if(epwing["s"] && epwing["s"][0] != "")
+        for(let entry of json)
         {
+            let json_head = document.createElement("div");
+            json_head.appendChild(document.createTextNode("―"+entry["z"]+"―"));
+            json_head.appendChild(document.createElement("br"));
+            let json_head_text = entry["r"];
+            if(entry["s"] && entry["s"][0] != "")
+            {
+                let isfirst = true;
+                json_head_text += "【";
+                for(let spelling of entry["s"])
+                {
+                    if(!isfirst)
+                        json_head_text += "・";
+                    json_head_text += spelling;
+                    isfirst = false;
+                }
+                json_head_text += "】";
+            }
+            json_head.appendChild(document.createTextNode(json_head_text));
+            let json_definition = document.createElement("div");
             let isfirst = true;
-            epwing_head_text += "【";
-            for(let spelling of epwing["s"])
+            for(let line of entry["l"])
             {
                 if(!isfirst)
-                    epwing_head_text += "・";
-                epwing_head_text += spelling;
+                    json_definition.appendChild(document.createElement("br"));
+                let def_line = document.createElement("span");
+                def_line.textContent = line;
+                json_definition.appendChild(def_line);
                 isfirst = false;
             }
-            epwing_head_text += "】";
+            json_head.className = "json_head";
+            json_definition.className = "json_definition";
+            json_defs.appendChild(json_head);
+            json_defs.appendChild(json_definition);
         }
-        epwing_head.appendChild(document.createTextNode(epwing_head_text));
-        let epwing_definition = document.createElement("div");
-        let isfirst = true;
-        for(let line of epwing["l"])
-        {
-            if(!isfirst)
-                epwing_definition.appendChild(document.createElement("br"));
-            let def_line = document.createElement("span");
-            def_line.textContent = line;
-            epwing_definition.appendChild(def_line);
-            isfirst = false;
-        }
-        epwing_head.className = "epwing_head";
-        epwing_definition.className = "epwing_definition";
-        epwing_defs.appendChild(epwing_head);
-        epwing_defs.appendChild(epwing_definition);
-        
-        return epwing_defs;
+        return json_defs;
     }
     else
     {
@@ -574,9 +576,9 @@ function get_style()
 .nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
 .nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
-.epwing_head{margin: 0 4px 6px;}
+.json_head{margin: 0 4px 6px;}
 .jmdict_definitions{margin: 0 4px 6px;}
-.epwing_definition{margin: 0 4px 6px;}
+.json_definition{margin: 0 4px 6px;}
 .kanji_info{margin: 2px 4px 2px;}
 `;
     return style;
@@ -984,30 +986,30 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         definition.className = "nazeka_definitions";
         
         let jmdict_div = elementize_jmdict_defs(term.sense);
-        let epwing_div = elementize_epwing_defs(term.epwing);
+        let json_div = elementize_json_defs(term.json);
         
         if (settings.definitions_mode == 0 || (settings.normal_definitions_in_mining && mining_ui_exists())) // normal
         {
             if(jmdict_div) definition.appendChild(jmdict_div);
-            if(epwing_div) definition.appendChild(epwing_div);
+            if(json_div) definition.appendChild(json_div);
         }
-        else if (settings.definitions_mode == 1) // epwing first
+        else if (settings.definitions_mode == 1) // json first
         {
-            if(epwing_div) definition.appendChild(epwing_div);
+            if(json_div) definition.appendChild(json_div);
             if(jmdict_div)
             {
                 jmdict_div.insertBefore(document.createTextNode("jmdict: "), jmdict_div.firstChild);
                 definition.appendChild(jmdict_div);
             }
         }
-        else if (settings.definitions_mode == 2) // epwing or else jmdict
+        else if (settings.definitions_mode == 2) // json or else jmdict
         {
-            if(epwing_div) definition.appendChild(epwing_div);
+            if(json_div) definition.appendChild(json_div);
             else           definition.appendChild(jmdict_div);
         }
-        else if (settings.definitions_mode == 3) // epwing only
+        else if (settings.definitions_mode == 3) // json only
         {
-            if(epwing_div) definition.appendChild(epwing_div);
+            if(json_div) definition.appendChild(json_div);
         }
         else if (settings.definitions_mode == 4) // none
         {
@@ -1016,7 +1018,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         else // normal (fallback)
         {
             if(jmdict_div) definition.appendChild(jmdict_div);
-            if(epwing_div) definition.appendChild(epwing_div);
+            if(json_div) definition.appendChild(json_div);
         }
         
         container.appendChild(definition);

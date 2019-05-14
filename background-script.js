@@ -48,48 +48,85 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
 // Seriously.
 
-let epwing = [];
-let lookup_epwing_kan = new Map();
-let lookup_epwing_kana = new Map();
+let json_dicts = [];
 
-async function refresh_epwing()
+function add_json_reading(dict, text, id)
 {
-    let myjson = (await browser.storage.local.get("epwing"))["epwing"];
-    if(myjson !== undefined)
+    if(text === "")
+        return;
+    if (!dict.lookup_json_kana.has(text))
+        dict.lookup_json_kana.set(text, [id]);
+    else
+        dict.lookup_json_kana.get(text).push(id);
+}
+function add_json_spelling(dict, text, id)
+{
+    if(text === "")
+        return;
+    if (!dict.lookup_json_kan.has(text))
+        dict.lookup_json_kan.set(text, [id]);
+    else
+        dict.lookup_json_kan.get(text).push(id);
+}
+
+function or_default(val, fallback)
+{
+    if(val !== undefined)
+        return val;
+    else
+        return fallback;
+}
+async function get_storage_or_default(name, fallback)
+{
+    return or_default((await browser.storage.local.get(name))[name], fallback);
+}
+
+async function refresh_json()
+{
+    let custom_dicts = (await get_storage_or_default("custom_dicts", []));
+    json_dicts = [];
+    for(let stored_dict of custom_dicts)
     {
-        epwing = JSON.parse(myjson);
-        lookup_epwing_kan = new Map();
-        lookup_epwing_kana = new Map();
-        for (let i = 1; i < epwing.length; i++)
+        if(!stored_dict.enabled)
+            continue;
+        let name = stored_dict.name;
+        let entries = JSON.parse(stored_dict.entries);
+        let lookup_json_kan = new Map();
+        let lookup_json_kana = new Map();
+        let dict = {"name": name, "entries": entries, "lookup_json_kan": lookup_json_kan, "lookup_json_kana": lookup_json_kana};
+        try
         {
-            if(typeof epwing[i] === 'string' || epwing[i] instanceof String)
-                continue;
-            add_epwing_reading(epwing[i]["r"], i);
-            for(let spelling of epwing[i]["s"])
-                add_epwing_spelling(spelling, i);
-        }
+            for (let i = 0; i < entries.length; i++)
+            {
+                add_json_reading(dict, entries[i]["r"], i);
+                for(let spelling of entries[i]["s"])
+                    add_json_spelling(dict, spelling, i);
+            }
+        } catch(e){}
+        json_dicts.push(dict);
     }
 }
-refresh_epwing();
 
-function add_epwing_reading(text, id)
+async function migrate_legacy_then_refresh()
 {
-    if(text === "")
-        return;
-    if (!lookup_epwing_kana.has(text))
-        lookup_epwing_kana.set(text, [id]);
-    else
-        lookup_epwing_kana.get(text).push(id);
+    let myjson = (await browser.storage.local.get(["epwing"]))["epwing"];
+    if(myjson !== undefined)
+    {
+        let epwing = JSON.parse(myjson);
+        let name = epwing.shift();
+        
+        let custom_dicts = (await get_storage_or_default("custom_dicts", []));
+        custom_dicts.push({"name": name, "entries": JSON.stringify(epwing), "enabled": true});
+        
+        browser.storage.local.set({"custom_dicts":custom_dicts});
+        
+        browser.storage.local.remove(["epwing"]);
+    }
+    
+    refresh_json();
 }
-function add_epwing_spelling(text, id)
-{
-    if(text === "")
-        return;
-    if (!lookup_epwing_kan.has(text))
-        lookup_epwing_kan.set(text, [id]);
-    else
-        lookup_epwing_kan.get(text).push(id);
-}
+
+migrate_legacy_then_refresh();
 
 
 let dict = [];
@@ -758,18 +795,18 @@ function build_lookup_comb(forms)
         return;
 }
 
-function epwing_lookup_kanji(spelling_list, readings, inexact)
+function json_lookup_kanji(dict, spelling_list, readings, inexact)
 {
     let indexes_set = new Set();
     let indexes = [];
     for(let spelling of spelling_list)
     {
-        let possibilities = lookup_epwing_kan.get(spelling);
+        let possibilities = dict.lookup_json_kan.get(spelling);
         if(!possibilities)
             continue;
-        for(let id of lookup_epwing_kan.get(spelling))
+        for(let id of dict.lookup_json_kan.get(spelling))
         {
-            if(inexact || readings.includes(epwing[id]["r"]))
+            if(inexact || readings.includes(dict.entries[id]["r"]))
             {
                 if(!indexes_set.has(id))
                 {
@@ -782,102 +819,115 @@ function epwing_lookup_kanji(spelling_list, readings, inexact)
     return indexes;
 }
 
-function epwing_lookup_kana_exact(kana)
+function json_lookup_kana_exact(dict, kana)
 {
-    let possibilities = lookup_epwing_kana.get(kana);
+    let possibilities = dict.lookup_json_kana.get(dict, kana);
     if(!possibilities)
         return [];
     let actual_possibilities = [];
-    for(let wing of possibilities)
+    for(let index of possibilities)
     {
-        let spellings = epwing[wing]["s"]
+        let spellings = dict.entries[index]["s"]
         if(spellings.length == 1 && spellings[0] === "")
-            actual_possibilities.push(wing);
+            actual_possibilities.push(index);
     }
     return actual_possibilities;
 }
-function epwing_lookup_kana_inexact(kana)
+function json_lookup_kana_inexact(dict, kana)
 {
-    let possibilities = copy_gen(lookup_epwing_kana.get(kana));
+    let possibilities = copy_gen(dict.lookup_json_kana.get(kana));
     if(!possibilities)
         return [];
     return possibilities;
 }
 
-function add_epwing_info(lookups, other_settings)
+function json_lookup_arbitrary_as_is(dict, text)
+{
+    let index = dict.lookup_json_kan.get(text);
+    if(index === undefined)
+        index = dict.lookup_json_kana.get(text);
+    if(index === undefined)
+        return undefined;
+    return copy(dict.entries[index]);
+}
+
+function add_json_info(lookups, other_settings)
 {
     for(let lookup of lookups)
     {
         for(let entry of lookup.result)
         {
-            // look for an epwing entry that matches this lookup and jmdict entry
-            let epwing_data = undefined;
-            let foundtext = undefined;
-            if(entry.orig_found.keb)
-                foundtext = entry.orig_found.keb;
-            else
-                foundtext = entry.orig_found.reb;
-            
-            if(entry.k_ele)
+            entry.json = [];
+            for(let dict of json_dicts)
             {
-                let spellings = [lookup.text, foundtext];
-                for(let spelling of entry.k_ele)
-                    spellings.push(spelling.keb);
-                let core_readings_a = [lookup.text, foundtext];
-                let core_readings_b = [entry.r_ele[0].reb];
-                let readings = [];
-                for(let reading of entry.r_ele)
-                    readings.push(reading.reb);
+                // look for an json entry that matches this lookup and jmdict entry
+                let json_data = undefined;
+                let foundtext = undefined;
+                if(entry.orig_found.keb)
+                    foundtext = entry.orig_found.keb;
+                else
+                    foundtext = entry.orig_found.reb;
                 
-                // try exact matches
-                let possibilities = epwing_lookup_kanji(spellings, core_readings_a, false);
-                if(possibilities.length == 0)
-                    possibilities = epwing_lookup_kanji(spellings, core_readings_b, false);
-                if(possibilities.length == 0)
-                    possibilities = epwing_lookup_kanji(spellings, readings, false);
-                // try inexact matches
-                if(!other_settings.strict_epwing)
+                if(entry.k_ele)
                 {
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji(spellings, core_readings_a, true);
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji(spellings, core_readings_b, true);
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kanji(spellings, readings, true);
-                }
-                
-                if(possibilities.length > 0)
-                    epwing_data = copy(epwing[possibilities[0]]);
-            }
-            else
-            {
-                let possibilities = epwing_lookup_kana_exact(foundtext);
-                if(!other_settings.strict_epwing)
-                {
+                    let spellings = [lookup.text, foundtext];
+                    for(let spelling of entry.k_ele)
+                        spellings.push(spelling.keb);
+                    let core_readings_a = [lookup.text, foundtext];
+                    let core_readings_b = [entry.r_ele[0].reb];
+                    let readings = [];
                     for(let reading of entry.r_ele)
+                        readings.push(reading.reb);
+                    
+                    // try exact matches
+                    let possibilities = json_lookup_kanji(dict, spellings, core_readings_a, false);
+                    if(possibilities.length == 0)
+                        possibilities = json_lookup_kanji(dict, spellings, core_readings_b, false);
+                    if(possibilities.length == 0)
+                        possibilities = json_lookup_kanji(dict, spellings, readings, false);
+                    // try inexact matches
+                    if(!other_settings.strict_epwing)
                     {
                         if(possibilities.length == 0)
-                            possibilities = epwing_lookup_kana_exact(reading.reb);
-                    }
-                    if(possibilities.length == 0)
-                        possibilities = epwing_lookup_kana_inexact(foundtext);
-                    for(let reading of entry.r_ele)
-                    {
+                            possibilities = json_lookup_kanji(dict, spellings, core_readings_a, true);
                         if(possibilities.length == 0)
-                            possibilities = epwing_lookup_kana_inexact(reading.reb);
+                            possibilities = json_lookup_kanji(dict, spellings, core_readings_b, true);
+                        if(possibilities.length == 0)
+                            possibilities = json_lookup_kanji(dict, spellings, readings, true);
                     }
+                    
+                    if(possibilities.length > 0)
+                        json_data = copy(dict.entries[possibilities[0]]);
                 }
-                if(possibilities.length > 0)
-                    epwing_data = copy(epwing[possibilities[0]]);
-            }
-            
-            if(epwing_data)
-            {
-                // add dictionary title
-                if(epwing_data && (typeof epwing[0] === 'string' || epwing[0] instanceof String))
-                    epwing_data["z"] = epwing[0];
-                // add to lookup
-                entry.epwing = epwing_data;
+                else
+                {
+                    let possibilities = json_lookup_kana_exact(foundtext);
+                    if(!other_settings.strict_epwing)
+                    {
+                        for(let reading of entry.r_ele)
+                        {
+                            if(possibilities.length == 0)
+                                possibilities = json_lookup_kana_exact(reading.reb);
+                        }
+                        if(possibilities.length == 0)
+                            possibilities = json_lookup_kana_inexact(foundtext);
+                        for(let reading of entry.r_ele)
+                        {
+                            if(possibilities.length == 0)
+                                possibilities = json_lookup_kana_inexact(reading.reb);
+                        }
+                    }
+                    if(possibilities.length > 0)
+                        json_data = copy(dict.entries[possibilities[0]]);
+                }
+                
+                if(json_data)
+                {
+                    // add dictionary title
+                    json_data["z"] = dict.name;
+                    // add to lookup
+                    entry.json.push(json_data);
+                }
             }
         }
     }
@@ -1256,7 +1306,7 @@ function add_extra_info(results, other_settings)
             }
         }
     }
-    return add_epwing_info(results, other_settings);
+    return add_json_info(results, other_settings);
 }
 
 // Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
@@ -1278,7 +1328,7 @@ function skip_rereferenced_entries(results, other_settings)
         if(newlookup.length > 0)
             newresults.push({text:lookup.text, result:newlookup});
     }
-    return add_extra_info(newresults, other_settings); // add extra information like epwing results and audio data now
+    return add_extra_info(newresults, other_settings); // add extra information like json results and audio data now
 }
 
 let last_lookup = "";
@@ -1494,6 +1544,16 @@ function open_livemining(info, tab)
         });
     } catch(err) {}
 }
+function open_jsonconfig(info, tab)
+{
+    try
+    {
+        browser.windows.create({
+            url:browser.extension.getURL("json_config.html"),
+            type:"popup"
+        });
+    } catch(err) {}
+}
 
 if(browser.contextMenus)
 {
@@ -1514,6 +1574,12 @@ if(browser.contextMenus)
         title: "Configure Live Mining",
         contexts: ["browser_action"],
         onclick: open_livemining
+    });
+    browser.contextMenus.create({
+        id: "nazeka-jsonconfig",
+        title: "Manage JSON Dictionaries",
+        contexts: ["browser_action"],
+        onclick: open_jsonconfig
     });
 }
 
@@ -1588,9 +1654,9 @@ browser.runtime.onMessage.addListener((req, sender) =>
     {
         clipboard_hook(sender.tab);
     }
-    else if (req.type == "refreshepwing")
+    else if (req.type == "refreshjson")
     {
-        refresh_epwing();
+        refresh_json();
     }
     else if (req.type == "ankiconnect_mine")
     {

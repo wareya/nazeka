@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Manage JSON Dictionaries</title>
+<style>
+body
+{
+    background-color: #111;
+    color: #CCC;
+    font-family: Verdana, Arial, IPAGothic, TakaoGothic, Noto Sans CJK JP Regular, Meiryo, sans-serif;
+    font-size: 1em;
+}
+option
+{
+    opacity: 0.999;
+}
+option.disabled
+{
+    opacity: 0.6;
+}
+div.buttons
+{
+    display:flex;
+    width: 200px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+div.buttons *
+{
+    width: 33%;
+}
+#delete
+{
+    margin-top: 20px;
+}
+</style>
+<script src="include/browser-polyfill.min.js" charset="UTF-8"></script>
+<script src="json_config.js" charset="UTF-8"></script>
+</head>
+
+<body lang="ja" visible="5">
+<select id=dicts size="10" style="width: 200px; box-sizing: border-box; border: none;">
+    <option value="wadai">Kenkyuusha/Wadai</option>
+    <option value="shinmeikai">Shinmeikai</option>
+    <option value="muramasa">Muramasa</option>
+</select>
+<div class=buttons>
+<button id=move_up>Move Up</button><button id=move_down>Move Down</button><button id=add disabled>Add Blank</button>
+<button id=import disabled>Import</button><button id=toggle>Toggle</button><button id=edit disabled>Edit</button>
+<button id=delete disabled>Delete</button></div>
+</body>
+
+</html>

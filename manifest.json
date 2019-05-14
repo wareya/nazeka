@@ -49,6 +49,8 @@
         "mining.html",
         "livemining.js",
         "livemining.html",
+        "json_config.js",
+        "json_config.html",
         "jmdictabbreviations.html"
     ],
 

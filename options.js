@@ -627,102 +627,6 @@ function buildpage()
     
     optionsection.appendChild(document.createElement("hr"));
     
-    // json dictionary
-    
-    let file = document.createElement("input");
-    file.type = "file";
-    file.id = "epwing_file";
-    file.addEventListener("change", () =>
-    {
-        let fname = document.querySelector("#epwing_file").files[0];
-        let reader = new FileReader();
-        reader.onload = async(e) =>
-        {
-            // FIXME: add asking for the unlimited storage permission
-            try
-            {
-                browser.storage.local.set({"epwing":JSON.stringify(JSON.parse(e.target.result))});
-                browser.runtime.sendMessage({type:"refreshepwing"});
-                document.querySelector("#import_label").textContent = "Imported. Might take a few seconds to apply.";
-            }
-            catch(except)
-            {
-                console.log(except.stack);
-            }
-        };
-        reader.readAsText(fname);
-    });
-    let label = document.createElement("label");
-    label.for = file.id;
-    label.id = "import_label";
-    label.textContent = "Import JSON dictionary.";
-    label.style.display = "block";
-    
-    function json_dict_reset()
-    {
-        browser.storage.local.set({"epwing":JSON.stringify(JSON.parse("[]"))});
-        browser.runtime.sendMessage({type:"refreshepwing"});
-        document.body.querySelector("#epwing_reset").innerText = "Delete JSON dictionary";
-        document.body.querySelector("#epwing_reset").addEventListener("click", json_dict_ask_reset, {once : true});
-    }
-
-    function json_dict_ask_reset()
-    {
-        document.body.querySelector("#epwing_reset").innerText = "Click again to make Nazeka to delete the JSON dictionary.";
-        document.body.querySelector("#epwing_reset").addEventListener("click", json_dict_reset, {once : true});
-    }
-    
-    let jsonresetbutton = document.createElement("button");
-    jsonresetbutton.type = "button";
-    jsonresetbutton.id = "epwing_reset";
-    jsonresetbutton.innerText = "Delete JSON dictionary";
-    jsonresetbutton.addEventListener("click", json_dict_ask_reset, {once : true});
-    
-    let dict_explanation = document.createElement("p");
-    dict_explanation.innerHTML = 
-`JSON dictionaries have the following format:
-<pre style='font-family:monospace !important' lang='en-US'>[
-    "The Worst Dictionary Ever",
-    {
-        "r":"あ",
-        "s":[
-            "亜",
-            "亞"
-        ],
-        "l":[
-            "this is a single line of a definition"
-        ]
-    },
-    {
-        "r":"ああ",
-        "s":[
-            ""
-        ],
-        "l":[
-            "1) yep",
-            "　　1 - this is a multi-line, multi-part definition",
-            "　　2 - dictionaries are crazy",
-            "2) why is this word in a dictionary?"
-        ]
-    },
-    //...
-]</pre>
-JSON dictionaries are JSON files consisting of a single array. The first entry is a string, the name of the dictionary. All remaining entries are objects, each containing the three keys "r", "s", and "l".<br>
-"r" maps to a single string, the reading of that entry.<br>
-"s" maps to an array listing strings that are all the possible spellings of the current entry. If the only spelling is the reading, there is a single blank string in the array of spellings.<br>
-"l" maps to an array of strings, each of which are one of the lines of the definition, in order.<br>
-This format is designed to be a sane generic mapping for EPWing dictionaries, after all the metadata is stripped out, and all "gaiji" encodings have been converted to unicode already.<br>
-You can currently only have one JSON dictionary at a time and cannot manage the one you have imported aside from replacing it.<br>
-Unfortunately, EPWING dictionaries can't be converted to this format in a general way. Someone has to write a script for every single EPWING dictionary out there, one at a time.<br>
-This format can be extended in the future if it becomes desirable to include more information, like pitch accent data, from dictionaries that have it.`;
-    
-    optionsection.appendChild(file);
-    optionsection.appendChild(label);
-    optionsection.appendChild(jsonresetbutton);
-    optionsection.appendChild(dict_explanation);
-    
-    optionsection.appendChild(document.createElement("hr"));
-    
     // backup
     
     let backup_save = document.createElement("button");
@@ -757,7 +661,7 @@ This format can be extended in the future if it becomes desirable to include mor
             try
             {
                 browser.storage.local.set(JSON.parse(e.target.result));
-                browser.runtime.sendMessage({type:"refreshepwing"});
+                browser.runtime.sendMessage({type:"refreshjson"});
                 document.querySelector("#backup_load_label").textContent = "Loaded backup. Might take a few seconds to apply.";
             }
             catch(except)
