@@ -901,20 +901,20 @@ function add_json_info(lookups, other_settings)
                 }
                 else
                 {
-                    let possibilities = json_lookup_kana_exact(foundtext);
+                    let possibilities = json_lookup_kana_exact(dict, foundtext);
                     if(!other_settings.strict_epwing)
                     {
                         for(let reading of entry.r_ele)
                         {
                             if(possibilities.length == 0)
-                                possibilities = json_lookup_kana_exact(reading.reb);
+                                possibilities = json_lookup_kana_exact(dict, reading.reb);
                         }
                         if(possibilities.length == 0)
-                            possibilities = json_lookup_kana_inexact(foundtext);
+                            possibilities = json_lookup_kana_inexact(dict, foundtext);
                         for(let reading of entry.r_ele)
                         {
                             if(possibilities.length == 0)
-                                possibilities = json_lookup_kana_inexact(reading.reb);
+                                possibilities = json_lookup_kana_inexact(dict, reading.reb);
                         }
                     }
                     if(possibilities.length > 0)
