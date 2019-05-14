@@ -1341,13 +1341,13 @@ async function send_lookup(lookup)
         {
             type:"search_kanji",
             divexisted:exists_div(),
-            text:lookup[0].charAt(0)
+            text:[...lookup[0]][0]
         });
         if(response)
             response = response["response"];
         if(response && response != "itsthesame")
         {
-            let mydiv = build_div_kanji(lookup[0].charAt(0), response, lookup[5], lookup[6]);
+            let mydiv = build_div_kanji([...lookup[0]][0], response, lookup[5], lookup[6]);
             if(mydiv)
                 display_div(mydiv, lookup[3], lookup[4]);
         }
