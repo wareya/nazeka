@@ -61,3 +61,11 @@ After clicking on the highlighted part of one of the entries, go back to a main 
 This shows a text field listing all the cards you've mined with Nazeka. Pressing "Reset" will clear Nazeka's memory of **all** mined cards. Don't do it unless you need to.
 
 Each line in this list is tab-separated-fields. Spelling, tab, reading, tab, definition, tab, JMDict ID. This list can be imported into Anki, but you need to make a compatible deck.
+
+# JSON Dictionaries
+
+Nazeka also supports custom dictionaries. This feature can be used to import covnerted EPWING dictionaries (see https://github.com/wareya/nazeka_epwing_converter ) or to make custom name/jargon dictionaries for specific stories you're going through right now.
+
+The manager and editor are pretty self-explanatory, but if you want to edit dictionaries directly, you have to mind the syntax. Don't worry, nothing will update if you end up breaking the syntax, so you can always reopen it and try again.
+
+![image: json dict manager](https://i.imgur.com/ZWOtw1O.png)
