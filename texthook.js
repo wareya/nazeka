@@ -1230,6 +1230,10 @@ async function settings_init()
         getvar("font", "");
         getvar("hlfont", "");
         
+        getvar("definition_fontsize", 13);
+        getvar("dict_item_fontsize", 18);
+        getvar("reading_fontsize", 15);
+        
         getvar("alternatives_mode", 3);
         getvar("strict_alternatives", true);
         getvar("definitions_mode", 0);
