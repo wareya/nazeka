@@ -1,3 +1,5 @@
+Note: some aspects of this tutorial are a little out of date. Just browse through everything Nazeka makes available and play with it for now.
+
 # Installation
 
 Install from [Mozilla's official Firefox addons website](https://addons.mozilla.org/en-US/firefox/addon/nazeka/), or [assemble an addon package yourself](https://github.com/wareya/nazeka/blob/master/readme.txt).
