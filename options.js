@@ -2,6 +2,29 @@
 
 'use strict';
 
+let platform = "win";
+
+async function get_real_platform()
+{
+    
+    let my_platform = undefined;
+    try {
+        my_platform = await browser.runtime.sendMessage({type:"platform"});
+        if(my_platform)
+            my_platform = my_platform["response"];
+    }catch(err){}
+    while(my_platform == "")
+    {
+        try {
+            my_platform = await browser.runtime.sendMessage({type:"platform"});
+            if(my_platform)
+                my_platform = my_platform["response"];
+        }catch(err){}
+    }
+    platform = my_platform;
+}
+get_real_platform();
+
 let settings = [];
 
 function defaults()
@@ -579,25 +602,40 @@ function buildpage()
         optionsection.appendChild(container);
     }
     
-    // mining
-    
-    let liveminingbutton = document.createElement("button");
-    liveminingbutton.type = "button";
-    liveminingbutton.innerText = "Configure live mining";
-    liveminingbutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
-    optionsection.appendChild(liveminingbutton);
-    
-    optionsection.appendChild(document.createElement("hr"));
-    
-    // import
-    
-    let jsonmanagebutton = document.createElement("button");
-    jsonmanagebutton.type = "button";
-    jsonmanagebutton.innerText = "Manage JSON Dictionaries";
-    jsonmanagebutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('json_config.html'),type:'popup'}); e.preventDefault();};
-    optionsection.appendChild(jsonmanagebutton);
-    
-    optionsection.appendChild(document.createElement("hr"));
+    if(platform != "android")
+    {
+        // mining
+        
+        let liveminingbutton = document.createElement("button");
+        liveminingbutton.type = "button";
+        liveminingbutton.innerText = "Configure live mining";
+        liveminingbutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('livemining.html'),type:'popup'}); e.preventDefault();};
+        optionsection.appendChild(liveminingbutton);
+        
+        optionsection.appendChild(document.createElement("hr"));
+        
+        // import
+        
+        let jsonmanagebutton = document.createElement("button");
+        jsonmanagebutton.type = "button";
+        jsonmanagebutton.innerText = "Manage JSON Dictionaries";
+        jsonmanagebutton.onclick = function(e){browser.windows.create({url:browser.extension.getURL('json_config.html'),type:'popup'}); e.preventDefault();};
+        optionsection.appendChild(jsonmanagebutton);
+        
+        optionsection.appendChild(document.createElement("hr"));
+    }
+    else
+    {
+        // import
+        
+        let jsonmanagebutton = document.createElement("button");
+        jsonmanagebutton.type = "button";
+        jsonmanagebutton.innerText = "Manage JSON Dictionaries";
+        jsonmanagebutton.onclick = function(e){browser.tabs.create({url:browser.extension.getURL('json_config.html')}); e.preventDefault();};
+        optionsection.appendChild(jsonmanagebutton);
+        
+        optionsection.appendChild(document.createElement("hr"));
+    }
     
     // deconjugation rules
     

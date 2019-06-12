@@ -61,8 +61,6 @@ only_selection: false
 
 let platform = "win";
 
-let last_seen_doc = undefined;
-
 async function get_real_platform()
 {
     
