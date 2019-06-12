@@ -1930,9 +1930,9 @@ async function mine_to_storage(object)
     browser.storage.local.set({cards:cards});
 }
 
-function get_audio_text(element) // [reading, spelling]
+function get_audio_text(index = 0) // [reading, spelling]
 {
-    let mydiv = element.querySelector(".nazeka_audioref");
+    let mydiv = get_div().getElementsByClassName("nazeka_audioref")[index];
     if(mydiv)
     {
         let text = mydiv.innerText;
@@ -1947,11 +1947,11 @@ function get_audio_text(element) // [reading, spelling]
     return undefined;
 }
 
-async function try_to_play_audio()
+async function try_to_play_audio(index = 0)
 {
     if(!exists_div())
         return;
-    let fields = get_audio_text(get_div());
+    let fields = get_audio_text(index);
     if(fields)
     {
         let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
@@ -2233,9 +2233,7 @@ function keytest(event)
             }
         }
         else if(exists_div())
-        {
-            
-        }
+            try_to_play_audio(index);
     }
     
     if(!exists_div())
