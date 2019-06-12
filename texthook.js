@@ -1,14 +1,5 @@
 // Copyright 2017; Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
 
-/*
- * TODO:
- * 
- * - Fix katakana-hiragana matching (only happens in lookups right now, not display generation)
- * - VNstats frequency data
- * - Integrate frequency into priority handling
- * 
- */
-
 'use strict';
 
 // updated by a timer looping function, based on local storage set by the options page
@@ -69,6 +60,8 @@ only_selection: false
 };
 
 let platform = "win";
+
+let last_seen_doc = undefined;
 
 async function get_real_platform()
 {
@@ -145,13 +138,13 @@ function is_not_frameset(root)
     }
     catch(err)
     {
-        return false;
+        return true;
     }
 }
 
 function get_doc()
 {
-    let find_root = window;
+    let find_root = document.defaultView;
     let mydoc = document;
     while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
@@ -160,7 +153,12 @@ function get_doc()
         {
             mydoc = find_root.document;
         }
-        catch(err) {}
+        catch(err)
+        {
+            console.log("hit error");
+            console.log(err);
+            break;
+        }
     }
     return mydoc;
 }
@@ -194,6 +192,8 @@ let last_display_x = 0;
 let last_display_y = 0;
 function display_div(middle, x, y)
 {
+    console.log("in display_div");
+    console.log(x, y);
     last_display_x = x;
     last_display_y = y;
     let font = settings.font.trim().replace(";","").replace("}","");
@@ -203,7 +203,7 @@ function display_div(middle, x, y)
     let border_text = (settings.disableborder)?("border: 0px solid transparent;"):(`border: 1px solid ${settings.fgcolor}`);
     middle.firstChild.style = `${border_text}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; text-align: left; font-size: ${settings.definition_fontsize}px;`;
     
-    let find_root = window;
+    let find_root = document.defaultView;
     let newx = x;
     let newy = y;
     let mydoc = document;
@@ -211,8 +211,6 @@ function display_div(middle, x, y)
     while(find_root.parent && find_root.parent != find_root && is_not_frameset(find_root))
     {
         let rect = find_root.frameElement.getBoundingClientRect();
-        //let rx = find_root.offsetLeft;//rect.x;
-        //let ry = find_root.offsetTop;//rect.y;
         let rx = rect.x;
         let ry = rect.y;
         let sx1 = find_root.parent.scrollX;
@@ -225,8 +223,14 @@ function display_div(middle, x, y)
         try
         {
             mydoc = find_root.document;
-        } catch(err) {}
+        }
+        catch(err)
+        {
+            break;
+        }
     }
+    console.log(newx, newy);
+    console.log(mydoc);
     
     // compensate for body being relative if it is, because our popup is absolute
     let relative_body = getComputedStyle(mydoc.body).position == "relative";
@@ -380,34 +384,14 @@ function display_div(middle, x, y)
 
 function exists_div()
 {
-    let find_root = window;
-    let mydoc = document;
-    while(find_root.parent && find_root.parent != find_root)
-    {
-        find_root = find_root.parent;
-        try
-        {
-            mydoc = find_root.document;
-        } catch(err) {}
-    }
-    
+    let mydoc = get_doc();
     let other = mydoc.body.getElementsByClassName(div_class);
     return (other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "");
 }
 
 function get_div()
 {
-    let find_root = window;
-    let mydoc = document;
-    while(find_root.parent && find_root.parent != find_root)
-    {
-        find_root = find_root.parent;
-        try
-        {
-            mydoc = find_root.document;
-        } catch(err) {}
-    }
-    
+    let mydoc = get_doc();
     let other = mydoc.body.getElementsByClassName(div_class);
     if(other.length > 0 && other[0].style.display != "none" && other[0].innerHTML != "")
         return other[0];
@@ -1302,6 +1286,7 @@ let last_manual_interaction = Date.now();
 
 async function send_lookup(lookup)
 {
+    console.log("in send_lookup");
     if(!settings.kanji_mode)
     {
         let response = await browser.runtime.sendMessage(
@@ -1695,6 +1680,30 @@ function true_next_sibling(node)
 let last_seen_event = undefined;
 let shift_down = false;
 let ctrl_down = false;
+
+function ele_data_from_point(doc, x, y)
+{
+    let ret = doc.elementFromPoint(x, y);
+    while (ret.tagName.toLowerCase() == "frame" || ret.tagName.toLowerCase() == "iframe")
+    {
+        let wind = ret.contentWindow;
+        let rect = ret.getBoundingClientRect();
+        let rx = rect.x;
+        let ry = rect.y;
+        let sx1 = wind.parent.scrollX;
+        let sy1 = wind.parent.scrollY;
+        let sx2 = wind.scrollX;
+        let sy2 = wind.scrollY;
+        x -= rx;
+        y -= ry;
+        x += sx2;
+        y += sy2;
+        doc = wind.document;
+        ret = doc.elementFromPoint(x, y);
+    }
+    return [ret, doc, x, y];
+}
+
 function update(event)
 {
     if(!event) return;
@@ -1763,20 +1772,24 @@ function update(event)
         {
             let xoffset = 0;
             let yoffset = 0;
-            let ele = document.elementFromPoint(x, y);
+            let data = ele_data_from_point(event.target.ownerDocument, x, y);
+            let ele = data[0];
+            let mydoc = data[1];
+            x = data[2];
+            y = data[3];
             if(ele && window.getComputedStyle(ele).writingMode.includes("vertical"))
                 yoffset = searchoffset;
             else
                 xoffset = searchoffset;
             
-            let caretdata = document.caretPositionFromPoint(x+xoffset, y+yoffset);
+            let caretdata = mydoc.caretPositionFromPoint(x+xoffset, y+yoffset);
             
             if(caretdata)
             {
                 textNode = caretdata.offsetNode;
                 offset = caretdata.offset;
                 
-                let range = document.createRange();
+                let range = mydoc.createRange();
                 range.selectNode(textNode);
                 hitrect = range.getBoundingClientRect();
             }
@@ -1845,7 +1858,6 @@ function update(event)
         }
         catch (err){}
     }
-    
     if (settings.only_selection)
     {
         if(selection_rejects_node(window.getSelection(), textNode, offset))
@@ -1905,7 +1917,7 @@ function errormessage(text)
     let mydiv = document.createElement("div");
     mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double red; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
     mydiv.textContent = text;
-    document.body.appendChild(mydiv);
+    get_doc().body.appendChild(mydiv);
     
     function delete_later()
     {
@@ -2124,7 +2136,7 @@ function mine(highlight)
 
 function keytest(event)
 {
-    if(event.target != document.body)
+    if(event.target != get_doc().body)
         return;
     if(settings.popup_requires_key == 2 && event.key == "Shift")
     {
@@ -2269,5 +2281,9 @@ function keyuntest(event)
 window.addEventListener("mousemove", update);
 window.addEventListener("keydown", keytest);
 window.addEventListener("keyup", keyuntest);
-document.addEventListener("touchstart", update_touch);
+get_doc().addEventListener("touchstart", update_touch);
 
+console.log("inited content script");
+console.log("inited at: " + get_doc().URL);
+console.log("inited via: " + document.URL);
+console.log("inited via: " + window.location);
