@@ -190,8 +190,6 @@ let last_display_x = 0;
 let last_display_y = 0;
 function display_div(middle, x, y)
 {
-    console.log("in display_div");
-    console.log(x, y);
     last_display_x = x;
     last_display_y = y;
     let font = settings.font.trim().replace(";","").replace("}","");
@@ -227,8 +225,6 @@ function display_div(middle, x, y)
             break;
         }
     }
-    console.log(newx, newy);
-    console.log(mydoc);
     
     // compensate for body being relative if it is, because our popup is absolute
     let relative_body = getComputedStyle(mydoc.body).position == "relative";
@@ -1284,7 +1280,6 @@ let last_manual_interaction = Date.now();
 
 async function send_lookup(lookup)
 {
-    console.log("in send_lookup");
     if(!settings.kanji_mode)
     {
         let response = await browser.runtime.sendMessage(
@@ -1940,9 +1935,8 @@ async function mine_to_storage(object)
     browser.storage.local.set({cards:cards});
 }
 
-function get_audio_text(index = 0) // [reading, spelling]
+function get_audio_text(mydiv, index = 0) // [reading, spelling]
 {
-    let mydiv = get_div().getElementsByClassName("nazeka_audioref")[index];
     if(mydiv)
     {
         let text = mydiv.innerText;
@@ -1961,7 +1955,8 @@ async function try_to_play_audio(index = 0)
 {
     if(!exists_div())
         return;
-    let fields = get_audio_text(index);
+    let mydiv = get_div().getElementsByClassName("nazeka_audioref")[index];
+    let fields = get_audio_text(mydiv, index);
     if(fields)
     {
         let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
@@ -2245,8 +2240,11 @@ function keytest(event)
                 }
             }
         }
-        else if(exists_div())
-            try_to_play_audio(index);
+        else
+        {
+            if(exists_div())
+                try_to_play_audio(index);
+        }
     }
     
     if(!exists_div())
