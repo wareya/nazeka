@@ -1303,7 +1303,6 @@ let last_manual_interaction = Date.now();
 
 async function send_lookup(lookup)
 {
-    last_lookup = lookup;
     if(!settings.kanji_mode)
     {
         let response = await browser.runtime.sendMessage(
@@ -1326,11 +1325,13 @@ async function send_lookup(lookup)
             if(!response.length)
             {
                 let mydiv = build_div(response.text, response.result, lookup[5], lookup[6]);
+                last_lookup = lookup;
                 if(mydiv)
                     display_div(mydiv, lookup[3], lookup[4]);
             }
             else
             {
+                last_lookup = lookup;
                 let mydiv = build_div_compound(response, lookup[5], lookup[6]);
                 if(mydiv)
                     display_div(mydiv, lookup[3], lookup[4]);
@@ -1351,6 +1352,7 @@ async function send_lookup(lookup)
             response = response["response"];
         if(response && response != "itsthesame")
         {
+            last_lookup = lookup;
             let mydiv = build_div_kanji([...lookup[0]][0], response, lookup[5], lookup[6]);
             if(mydiv)
                 display_div(mydiv, lookup[3], lookup[4]);
@@ -1716,7 +1718,11 @@ function update(event)
         //let middle = other.firstChild.cloneNode(true);
         let middle = other.firstChild;
         if(middle)
+        {
+            last_lookup[3] = event.pageX;
+            last_lookup[4] = event.pageY;
             display_div(middle, event.pageX, event.pageY);
+        }
         //move_div(event.pageX, event.pageY);
     }
     
