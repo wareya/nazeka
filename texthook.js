@@ -176,6 +176,11 @@ function delete_mining_ui()
         get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
 }
 
+function get_mining_ui()
+{
+    return get_doc().body.getElementsByClassName("nazeka_mining_ui")[0];
+}
+
 function getViewportSize(mydoc)
 {
     if (mydoc.compatMode == "CSS1Compat")
@@ -1270,10 +1275,7 @@ async function settings_init()
         if(!settings.enabled && exists_div())
             delete_div();
         if(!settings.enabled)
-        {
-            while(mining_ui_exists())
-                get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-        }
+            delete_mining_ui();
     } catch(err) {} // options not stored yet
 }
 
@@ -1292,10 +1294,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     if(!settings.enabled && exists_div())
         delete_div();
     if(!settings.enabled)
-    {
-        while(mining_ui_exists())
-            get_doc().body.getElementsByClassName("nazeka_mining_ui")[0].remove();
-    }
+        delete_mining_ui();
 });
 
 let last_lookup = undefined;
@@ -2212,8 +2211,36 @@ function keytest(event)
             send_lookup([last_text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], last_index]);
         }
     }
+    // audio (no mining ui) or mining (yes mining ui) based on number keys
+    if("123456789".includes(event.key))
+    {
+        let index = parseInt(event.key)-1;
+        if(mining_ui_exists())
+        {
+            if(settings.kanji_mode)
+                errormessage("Cannot mine isolated kanji (make kanji flashcards manually)");
+            else
+            {
+                let mydiv = get_mining_ui();
+                let possibilities = mydiv.getElementsByClassName("nazeka_main_keb");
+                if(index >= possibilities.length)
+                    errormessage("Mining index out of range");
+                else
+                {
+                    mine(possibilities[index]);
+                    delete_mining_ui();
+                }
+            }
+        }
+        else if(exists_div())
+        {
+            
+        }
+    }
+    
     if(!exists_div())
         return;
+    
     if(event.key == settings.hotkey_close)
     {
         lookup_cancel_force();
