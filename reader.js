@@ -14,6 +14,7 @@ reader_right_padding: "0px",
 reader_max_width: "1000px",
 reader_margin: "8px",
 reader_font: "",
+reader_auto: false
 };
 
 function update_styles()
@@ -49,6 +50,7 @@ async function reader_settings_init()
         getvar("reader_max_width", "1000px");
         getvar("reader_margin", "8px");
         getvar("reader_font", "");
+        getvar("reader_auto", false);
     } catch(err) {} // options not stored yet
 }
 
@@ -102,6 +104,25 @@ function reader_update(text)
     }
     
     document.getElementById("linecount").innerText = parseInt(document.getElementById("linecount").innerText)+1;
+    
+    let x = newnode.getBoundingClientRect().x - document.documentElement.getBoundingClientRect().x;
+    let y = newnode.getBoundingClientRect().y - document.documentElement.getBoundingClientRect().y;
+    y += Math.min(5, newnode.getBoundingClientRect().height/2);
+    
+    if(reader_settings.reader_auto)
+        send_lookup_request(x, y, text);
+}
+
+async function send_lookup_request(x, y, text)
+{
+    let id = (await browser.tabs.getCurrent()).id;
+    browser.runtime.sendMessage({id:id, type:"reader_lookup", x:x, y:y, text:text});
+}
+
+async function send_reader_mode(x, y, text)
+{
+    let id = (await browser.tabs.getCurrent()).id;
+    browser.runtime.sendMessage({id:id, type:"reader_mode"});
 }
 
 let reader_text_previous = "";
@@ -141,4 +162,8 @@ browser.runtime.onMessage.addListener((req, sender) =>
     return Promise.resolve(undefined);
 });
 
-window.onload = update_styles;
+window.onload = () =>
+{
+    send_reader_mode();
+    update_styles();
+}

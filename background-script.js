@@ -1697,6 +1697,14 @@ browser.runtime.onMessage.addListener((req, sender) =>
     {
         refresh_json();
     }
+    else if (req.type == "reader_lookup")
+    {
+        browser.tabs.sendMessage(req.id, {type:req.type, x:req.x, y:req.y, text:req.text});
+    }
+    else if (req.type == "reader_mode")
+    {
+        browser.tabs.sendMessage(req.id, {type:req.type});
+    }
     else if (req.type == "ankiconnect_mine")
     {
         console.log("got request");

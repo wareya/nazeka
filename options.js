@@ -365,12 +365,6 @@ function defaults()
         label: "Reader window default height"
     });
     settings.push({
-        id: "reader_reverse",
-        kind: "checkbox",
-        default: false,
-        label: "Reader insert at bottom"
-    });
-    settings.push({
         id: "reader_leeway",
         kind: "number",
         min: 0,
@@ -378,6 +372,24 @@ function defaults()
         step: 1,
         default: 200,
         label: "Reader autoscroll leeway (when \"insert at bottom\" is enabled) (0 disables)"
+    });
+    settings.push({
+        id: "reader_sticky",
+        kind: "checkbox",
+        default: false,
+        label: "Force 'sticky' mode in reader"
+    });
+    settings.push({
+        id: "reader_auto",
+        kind: "checkbox",
+        default: false,
+        label: "Automatically look up the beginning of new text in the reader"
+    });
+    settings.push({
+        id: "reader_reverse",
+        kind: "checkbox",
+        default: false,
+        label: "Reader insert at bottom"
     });
     
     settings.push({

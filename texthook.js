@@ -17,6 +17,7 @@ disableborder: false,
 space_saver: false,
 hide_deconj: false,
 showoriginal: true,
+reader_sticky: false,
 definitions_mode: 0,
 normal_definitions_in_mining: false,
 alternatives_mode: 3, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
@@ -60,6 +61,7 @@ only_selection: false
 };
 
 let platform = "win";
+let is_reader = false;
 
 async function get_real_platform()
 {
@@ -184,6 +186,11 @@ function getViewportSize(mydoc)
     return { w: mydoc.body.clientWidth, h: mydoc.body.clientHeight };
 }
 
+function is_sticky()
+{
+    return (settings.sticky && platform != "android" && !mining_ui_exists()) || (is_reader && settings.reader_sticky);
+}
+
 // here we set all the styling and positioning of the div, passing "middle" as the actual contents of it.
 // this is rather elaborate because of 1) a lack of shadow DOM, even for just styling 2) options 3) """features""" of how HTML viewport stuff works that are actually terrible
 let last_display_x = 0;
@@ -295,7 +302,7 @@ function display_div(middle, x, y)
     
     let corner = settings.corner;
     
-    if(settings.sticky && platform != "android" && !mining_ui_exists())
+    if(is_sticky())
         set_sticky_styles(outer);
     else
     {
@@ -600,7 +607,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
         
-        if(first_of_many && (platform == "android" || (settings.sticky && !mining_ui_exists())))
+        if(first_of_many && is_sticky())
         {
             let buttons = document.createElement("div");
             let left_arrow = document.createElement("img");
@@ -1205,6 +1212,7 @@ async function settings_init()
         getvar("space_saver", false);
         getvar("hide_deconj", false);
         getvar("showoriginal", true);
+        getvar("reader_sticky", false);
         
         getvar("bgcolor", "#111111");
         getvar("fgcolor", "#CCCCCC");
@@ -1344,7 +1352,7 @@ function lookup_enqueue(text, x, y, x2, y2, moreText, index)
 
 function lookup_cancel()
 {
-    if(!settings.sticky || mining_ui_exists() || platform == "android")
+    if(!is_sticky())
         delete_div();
 }
 
@@ -1713,7 +1721,7 @@ function update(event)
     
     if(!settings.enabled) return;
     
-    if(settings.popup_follows_mouse && exists_div() && platform != "android" && (!settings.sticky || mining_ui_exists()))
+    if(settings.popup_follows_mouse && exists_div() && !is_sticky())
     {
         let other = get_div();
         //let middle = other.firstChild.cloneNode(true);
@@ -1787,7 +1795,7 @@ function update(event)
                 hitrect = range.getBoundingClientRect();
             }
             // sticky mode and android need to break out on parent detection
-            if(ele && !ele.contains(textNode) && platform != "android" && (!settings.sticky || mining_ui_exists()))
+            if(ele && !ele.contains(textNode) && is_sticky())
             {
                 textNode = undefined;
                 offset = undefined;
@@ -1808,7 +1816,7 @@ function update(event)
             hitpage(event.clientX, 0, event.clientY);
         }
         
-        if ((platform == "android" || (settings.sticky && !mining_ui_exists())) && exists_div())
+        if (exists_div() && is_sticky())
         {
             let ele = get_div();
             if(ele.contains(textNode))
@@ -2276,6 +2284,17 @@ function keyuntest(event)
         ctrl_down = false;
     
 }
+
+browser.runtime.onMessage.addListener((req, sender) =>
+{
+    if(req.type == "reader_lookup")
+        send_lookup([req.text, req.x, req.y, req.x, req.y, req.text, 0]);
+    else if(req.type == "reader_mode")
+    {
+        console.log("we a readuh!");
+        is_reader = true;
+    }
+});
 
 window.addEventListener("mousemove", update);
 window.addEventListener("keydown", keytest);
