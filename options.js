@@ -23,7 +23,6 @@ async function get_real_platform()
     }
     platform = my_platform;
 }
-get_real_platform();
 
 let settings = [];
 
@@ -517,7 +516,7 @@ function removeListeners()
     }
 }
 
-function buildpage()
+async function buildpage()
 {
     let optionsection = document.querySelector("#optionsection");
     for(let option of settings)
@@ -613,6 +612,9 @@ function buildpage()
         container.style.marginBottom = "8px";
         optionsection.appendChild(container);
     }
+    
+    
+    await get_real_platform();
     
     if(platform != "android")
     {
