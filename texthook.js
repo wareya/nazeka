@@ -1286,8 +1286,23 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 let last_lookup = undefined;
 let last_manual_interaction = Date.now();
 
+function may_contain_japanese(text)
+{
+    for(let c of text.split(""))
+        if(c.codePointAt(0) > 0x3000)
+            return true;
+    return false;
+}
+
+function is_number(c)
+{
+    return "1234567890".includes(c);
+}
+
 async function send_lookup(lookup)
 {
+    if(is_number(lookup[0].split("")[0]) && !may_contain_japanese(lookup[5]))
+        return;
     if(!settings.kanji_mode)
     {
         let response = await browser.runtime.sendMessage(
