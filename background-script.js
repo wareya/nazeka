@@ -42,7 +42,7 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
     }
 });
 
-// We use JMdict converted to JSON. It's like 32MB so we don't want to load it for every tab.
+// We use JMdict converted to JSON. It's like 32MB (larger after converting into a data structure) so we don't want to load it for every tab.
 // So we need to use a background script and send messages to it from the content script.
 // Unfortunately webextensions don't have an easy way to load files, even from in the extension.
 // We have to send an HTTP request and store the result in a string before parsing it into an object.
@@ -455,6 +455,30 @@ function search(text)
         return re_ret;
     }
 }
+
+// priority rules
+let priority_rules = [];
+
+function load_priority_rules(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", () =>
+    {
+        if (req.readyState === 4)
+        {
+            console.log("loaded priority rules");
+            if (req.status === 200)
+                priority_rules = JSON.parse(req.responseText);
+            else
+                console.error(req.statusText);
+        }
+    });
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+
+load_priority_rules("dict/priority.json");
 
 // deconjugation rules
 let rules = [];
@@ -1096,31 +1120,128 @@ function sort_results(text, results)
     {
         let result_kana = is_kana(entry);
         entry.priority = (entry.seq-1000000)/-10000000; // divided by one more order of magnitude
+        entry.priorityTags = [];
         
         if(weird_lookup(entry.found))
+        {
             entry.priority -= 50;
+            entry.priorityTags.push("weird");
+        }
         if(reading_kana == result_kana && !entry.deconj) // !entry.deconj fixes なって
+        {
             entry.priority += 100;
+            entry.priorityTags.push("exact kana");
+        }
         if(has_pri(entry))
+        {
             entry.priority += 30;
-        if((!reading_kana) == prefers_kanji(entry))
+            entry.priorityTags.push("pri");
+        }
+        if(!reading_kana && prefers_kanji(entry))
+        {
             entry.priority += 12;
-        if(reading_kana == prefers_kana(entry))
+            entry.priorityTags.push("kanji prefers kanji");
+        }
+        if(reading_kana && prefers_kana(entry))
+        {
             entry.priority += 10;
-        // moves さき below まえ for 前
-        if(entry.k_ele && entry.k_ele.length == 1 && !weird_lookup(entry.k_ele[0]))
-            entry.priority += 4;
-        // moves まえ above ぜん for 前
-        if(entry.sense && entry.sense.length >= 6)
-            entry.priority += 1;
+            entry.priorityTags.push("kana prefers kana");
+        }
+        if(reading_kana && prefers_kanji(entry))
+        {
+            entry.priority -= 12;
+            entry.priorityTags.push("kanji disprefers kana");
+        }
+        if(!reading_kana && prefers_kana(entry))
+        {
+            entry.priority -= 10;
+            entry.priorityTags.push("kana disprefers kanji");
+        }
         if(entry.sense && entry.sense.length >= 3)
+        {
             entry.priority += 3;
+            entry.priorityTags.push("many senses");
+        }
         // FIXME: affects words with only one obscure/rare/obsolete sense
         if(all_senses_have_a_tag(entry, ["obsc", "rare", "obs"]))
+        {
             entry.priority -= 5;
-        // FIXME: prefer short deconjugations to long deconjugations, not just no deconjugations to any deconjugations
-        if(entry.deconj)
+            entry.priorityTags.push("obscure");
+        }
+        if(entry.deconj && entry.deconj[0].process.length == 0)
+        {
+            entry.priority += 1;
+            entry.priorityTags.push("no deconj");
+        }
+        if(entry.deconj && entry.deconj[0].process.length > 2)
+        {
             entry.priority -= 1;
+            entry.priorityTags.push("long deconj");
+        }
+        
+        let boost = 0;
+        // looked up and found kanji
+        if(entry.found.keb)
+        {
+            for(let r of entry.r_ele)
+            {
+                for(let rule of priority_rules)
+                {
+                    if(rule[0] == entry.found.keb && rule[1] == r.reb)
+                    {
+                        if(boost == 0)
+                            boost = rule[2];
+                        else
+                            boost = Math.max(boost, rule[2]);
+                    }
+                }
+            }
+        }
+        // looked up kana and found a kanji word
+        else if(entry.k_ele)
+        {
+            for(let k of entry.k_ele)
+            {
+                for(let rule of priority_rules)
+                {
+                    // this fallback only happens when searching against text looked up in kana
+                    if(is_kana(rule[0]))
+                    {
+                        if(rule[0] == text && rule[1] == k.keb)
+                        {
+                            if(boost == 0)
+                                boost = rule[2];
+                            else
+                                boost = Math.max(boost, rule[2]);
+                        }
+                    }
+                    else if(rule[0] == k.keb && rule[1] == entry.found.reb)
+                    {
+                        if(boost == 0)
+                            boost = rule[2];
+                        else
+                            boost = Math.max(boost, rule[2]);
+                    }
+                }
+            }
+        }
+        // looked up kana and found a word with no kanji
+        else
+        {
+            for(let rule of priority_rules)
+            {
+                if(rule[0] == "" && rule[1] == entry.found.reb)
+                {
+                    if(boost == 0)
+                        boost = rule[2];
+                    else
+                        boost = Math.max(boost, rule[2]);
+                }
+            }
+        }
+        if(boost != 0)
+            entry.priorityTags.push("boost");
+        entry.priority += boost;
     }
     
     results.sort((a,b)=>
@@ -1475,7 +1596,14 @@ function lookup_indirect(text, time, divexisted, other_settings)
     }
 }
 
-
+function lookup_indirect_for_tests(text)
+{
+    let old_last_lookup = last_lookup;
+    last_lookup = "";
+    let ret = lookup_indirect(text, Date.now(), false, {alternatives_mode: 3, strict_alternatives:true, strict_epwing:true});
+    last_lookup = old_last_lookup;
+    return ret[0].result;
+}
 
 let last_kanji_lookup = "";
 function lookup_kanji_character(c, divexisted)
@@ -1750,3 +1878,121 @@ browser.contextMenus.create({
     documentUrlPatterns: ["moz-extension://*/reader.html"],
     onclick: toggle_enabled
 });
+
+function sleep(ms)
+{
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+function assert_id_location(text, id, loc_exp = 0)
+{
+    let result = lookup_indirect_for_tests(text);
+    console.log(result);
+    let i = 0;
+    let forceout = false;
+    for(let entry of result)
+    {
+        if(entry.seq == id)
+            forceout = true;
+        if(forceout) break;
+        i++;
+    }
+    try
+    {
+        console.assert(loc_exp(i), result, id, loc_exp);
+    }
+    catch(e)
+    {
+        console.assert(i == loc_exp, result, id, loc_exp);
+    }
+    return result.length;
+}
+function assert_reading_location(text, reading, loc_exp = 0)
+{
+    let result = lookup_indirect_for_tests(text);
+    let i = 0;
+    let forceout = false;
+    for(let entry of result)
+    {
+        for(let r_ele of entry.r_ele)
+        {
+            if(r_ele.reb == reading)
+                forceout = true;
+            if(forceout) break;
+        }
+        if(forceout) break;
+        i++;
+    }
+    try
+    {
+        console.assert(loc_exp(i), result, reading, loc_exp);
+    }
+    catch(e)
+    {
+        console.assert(i == loc_exp, result, reading, loc_exp);
+    }
+    return result.length;
+}
+function assert_spelling_location(text, spelling, loc_exp = 0)
+{
+    let result = lookup_indirect_for_tests(text);
+    let i = 0;
+    let forceout = false;
+    for(let entry of result)
+    {
+        if(!entry.k_ele)
+            continue;
+        for(let k_ele of entry.k_ele)
+        {
+            if(k_ele.keb == spelling)
+                forceout = true;
+            if(forceout) break;
+        }
+        if(forceout) break;
+        i++;
+    }
+    try
+    {
+        console.assert(loc_exp(i), result, spelling, loc_exp);
+    }
+    catch(e)
+    {
+        console.assert(i == loc_exp, result, spelling, loc_exp);
+    }
+    return result.length;
+}
+async function regression_tests()
+{
+    await sleep(4 * 1000);
+    console.log("enter regression tests");
+    
+    assert_id_location("は", 2028920);
+    assert_id_location("みたい", 2016410);
+    assert_id_location("へ", 2029000);
+    assert_id_location("で", 2028980);
+    assert_id_location("し", 2086640);
+    
+    assert_reading_location("主", "あるじ", (a) => a < 6);
+    assert_reading_location("家", "け", (a) => a > 3);
+    assert_reading_location("前", "ぜん", 1);
+    assert_reading_location("前", "まえ");
+    assert_reading_location("先", "さき");
+    assert_reading_location("浮かべる", "うかべる");
+    assert_reading_location("願い", "ねがい");
+    assert_reading_location("始めまして", "はじめまして");
+    assert_reading_location("初めまして", "はじめまして");
+    assert_reading_location("一分", "いちぶん", 2);
+    assert_reading_location("持たせて", "もたせる");
+    assert_reading_location("会", "かい");
+    assert_reading_location("額", "ひたい");
+    
+    assert_spelling_location("そうそう", "然う然う");
+    assert_spelling_location("かたくな", "頑な");
+    assert_spelling_location("にとって", "に取って");
+    assert_spelling_location("こと", "琴", (a) => a > 3);
+    assert_spelling_location("はじめまして", "初めまして");
+    assert_spelling_location("初めまして", "そめる", (a) => a > 0);
+    assert_spelling_location("それ", "逸れる", (a) => a > 1);
+    
+    console.log("exit regression tests");
+}
+regression_tests();
