@@ -4,24 +4,9 @@ Nazeka was the first nontrivial thing I wrote in Javascript. The code is terribl
 
 ***Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.***
 
-# Options
+# Settings
 
-Nazeka has added many options since it was first created, and they're documented within the options page. The following is an example of what options it has:
-
-- Enabled: whether to search pages for text
-- Compact: definitions on same line or with linebreaks
-- Show original text: shows the string of text that nazeka used to look up a set of definitions
-- Super border: add an additional level to the double border
-- Fixed width: always use maximum width for popup width, don't shrink to small contents
-- Search length: maximum length to search for words
-- Matching mode: what kinds of alternative lookups to display
-- Strict matching for alternative matches: if true, ***alternative*** lookups of hiragana strings will not produce definitions that are not at least usually kana (the longest lookup will always show all possibilities)
-- Lookup popup scale: zoom factor for entire popup
-- Lookup popup width: maximum width for the lookup
-- Lookup throttle: minimum milliseconds between the start of lookups
-- Colors: the colors of the popup
-- Font override: font override for the whole popup, max priority but will fall back to default fonts for characters not in the font override
-- Font override (highlighted text only): for the main spelling of a definition
+See the [tutorial](https://github.com/wareya/nazeka/blob/master/tutorial.md#settings).
 
 # Building
 
