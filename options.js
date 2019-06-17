@@ -613,7 +613,6 @@ async function buildpage()
         optionsection.appendChild(container);
     }
     
-    
     await get_real_platform();
     
     if(platform != "android")
