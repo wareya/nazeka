@@ -7,7 +7,7 @@ Install from [Mozilla's official Firefox addons website](https://addons.mozilla.
 # General Use Advice
 
 * Nazeka's default hotkeys are P (audio), K (kanji), M (mining), N (close), and B (sticky mode).
-* You can play audio with "P" or the number keys (1-9) while the dictionary popup is open. This audio comes from languagepod101, and only works when you have an internet connection.
+* You can play audio with "P" or the number keys (1-9) while the dictionary popup is open. This audio comes from languagepod101, and only works when you have an internet connection. You can also use the number keys for mining (more on that later).
 * Nazeka is not a parser. It doesn't try to figure out where words *actually* end. It will try to find the longest possible dictionary word it can, even if it's not actually being used as a word by the text. You need to use your brain.
 * Nazeka has a kanji lookup mode. This is mostly useful for checking joyo readings and kanji composition information.
 * Nazeka supports automatic flashcard creation, called "Mining". Take it easy and don't mine tons of obscure stuff if you're still a beginner. It's always better to learn things that are more important to you right now than things that won't be important for many months.
