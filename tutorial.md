@@ -46,7 +46,7 @@ Nazeka has many settings, and many of them only need to be changed if you run in
 
 Right click Nazeka's toggle icon and select "Open Reader".
 
-![image: context menu](https://i.imgur.com/nJe6HQr.png)
+![image: context menu](https://i.imgur.com/0cBEbmn.png)
 
 This page will watch the clipboard and copy the clipboard into itself if it contains Japanese text.
 
