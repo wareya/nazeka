@@ -50,6 +50,7 @@
   "detail": "(izenkei)"
  },
  "the potential of v5r-i verbs does not use a simple e ending, it uses the ren'youkei (infinitive) followed by える, thus ありえる",
+ "stem-e is exclusively used by the ~ba form",
  {
   "type": "neverfinalrule",
   "dec_end": "る",
@@ -62,6 +63,14 @@
   "type": "neverfinalrule",
   "dec_end": "する",
   "con_end": "すれ",
+  "dec_tag": "vs-i",
+  "con_tag": "stem-e",
+  "detail": "(izenkei)"
+ },
+ {
+  "type": "neverfinalrule",
+  "dec_end": ["くる","来る"],
+  "con_end": ["くれ","来れ"],
   "dec_tag": "vs-i",
   "con_tag": "stem-e",
   "detail": "(izenkei)"
@@ -185,6 +194,7 @@
   "con_tag": "stem-a",
   "detail": "('a' stem)"
  },
+ "note: stem-a goes to passive, causative, AND negative. don't use it for categories with irregular behavior among these three",
  "unvoiced past stems",
  {
   "type": "neverfinalrule",
@@ -198,6 +208,8 @@
    "る",
    "う",
    "く",
+   "くる",
+   "来る",
    "する"
   ],
   "con_end": [
@@ -210,6 +222,8 @@
    "",
    "う",
    "っ",
+   "き",
+   "来",
    "し"
   ],
   "dec_tag": [
@@ -222,6 +236,8 @@
    "v1",
    "v5u-s",
    "v5k-s",
+   "vk",
+   "vk",
    "vs-i"
   ],
   "con_tag": "stem-ren-less",
@@ -266,6 +282,8 @@
    "む",
    "う",
    "く",
+   "くる",
+   "来る",
    "する"
   ],
   "con_end": [
@@ -280,6 +298,8 @@
    "み",
    "い",
    "き",
+   "き",
+   "来",
    "し"
   ],
   "dec_tag": [
@@ -294,6 +314,8 @@
    "v5m",
    "v5u-s",
    "v5k-s",
+   "vk",
+   "vk",
    "vs-i"
   ],
   "con_tag": "stem-ren",
@@ -362,6 +384,8 @@
    "る",
    "う",
    "く",
+   "くる",
+   "来る",
    "する"
   ],
   "con_end": [
@@ -378,6 +402,8 @@
    "よう",
    "おう",
    "こう",
+   "こよう",
+   "来よう",
    "しよう"
   ],
   "dec_tag": [
@@ -394,6 +420,8 @@
    "v1",
    "v5u-s",
    "v5k-s",
+   "vk",
+   "vk",
    "vs-i"
   ],
   "con_tag": "form-volition",
@@ -783,6 +811,14 @@
   "con_tag": "v1",
   "detail": "potential"
  },
+ {
+  "type": "stdrule",
+  "dec_end": ["くる", "来る"],
+  "con_end": ["これる", "来れる"],
+  "dec_tag": "vk",
+  "con_tag": "v1",
+  "detail": "potential"
+ },
  "note: ichidan (i.e. v1) verbs cannot conjugate to stem-a",
  {
   "type": "stdrule",
@@ -801,27 +837,36 @@
   "detail": "passive/potential"
  },
  {
-  "type": "stdrule",
+  "type": "rewriterule",
   "dec_end": "する",
   "con_end": "される",
   "dec_tag": "vs-i",
   "con_tag": "v1",
   "detail": "passive"
  },
+ {
+  "type": "stdrule",
+  "dec_end": ["くる", "来る"],
+  "con_end": ["こられる", "来られる"],
+  "dec_tag": "vk",
+  "con_tag": "v1",
+  "detail": "passive/potential"
+ },
  "causative",
+ {
+  "type": "contextrule",
+  "contextrule": "saspecial",
+  "dec_end": "",
+  "con_end": "す",
+  "dec_tag": "stem-a",
+  "con_tag": "v5s",
+  "detail": "short causative"
+ },
  {
   "type": "stdrule",
   "dec_end": "",
   "con_end": "せる",
   "dec_tag": "stem-a",
-  "con_tag": "v1",
-  "detail": "causative"
- },
- {
-  "type": "stdrule",
-  "dec_end": "する",
-  "con_end": "させる",
-  "dec_tag": "vs-i",
   "con_tag": "v1",
   "detail": "causative"
  },
@@ -834,13 +879,20 @@
   "detail": "causative"
  },
  {
-  "type": "contextrule",
-  "contextrule": "saspecial",
-  "dec_end": "",
-  "con_end": "す",
-  "dec_tag": "stem-a",
-  "con_tag": "v5s",
-  "detail": "short causative"
+  "type": "rewriterule",
+  "dec_end": "する",
+  "con_end": "させる",
+  "dec_tag": "vs-i",
+  "con_tag": "v1",
+  "detail": "causative"
+ },
+ {
+  "type": "stdrule",
+  "dec_end": ["くる", "来る"],
+  "con_end": ["こされる", "来させる"],
+  "dec_tag": "vk",
+  "con_tag": "v1",
+  "detail": "causative"
  },
  "===te-based forms===",
  "mere te auxiliaries",
@@ -1133,7 +1185,7 @@
   "con_tag": "uninflectable",
   "detail": "slurred"
  },
- "// TODO: support for other verb types like vk (くる) (started, incomplete), vs_i (true する verbs), v5aru (なさる, くださる, etc), v4r (ござる, etc), ...",
+ "// TODO: support for other verb types like v5aru (なさる, くださる, etc), v4r (ござる, etc), ...",
  {
   "type": "substitution",
   "dec_end": [
