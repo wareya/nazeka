@@ -60,6 +60,14 @@
  },
  {
   "type": "neverfinalrule",
+  "dec_end": "する",
+  "con_end": "すれ",
+  "dec_tag": "vs-i",
+  "con_tag": "stem-e",
+  "detail": "(izenkei)"
+ },
+ {
+  "type": "neverfinalrule",
   "dec_end": "",
   "con_end": "",
   "dec_tag": "stem-izenkei",
@@ -85,7 +93,9 @@
    "う",
    "く",
    "くる",
-   "来る"
+   "来る",
+   "する",
+   "する"
   ],
   "con_end": [
    "け",
@@ -103,7 +113,9 @@
    "え",
    "け",
    "こい",
-   "来い"
+   "来い",
+   "しろ",
+   "せよ"
   ],
   "dec_tag": [
    "v5k",
@@ -121,7 +133,9 @@
    "v5u-s",
    "v5k-s",
    "vk",
-   "vk"
+   "vk",
+   "vs-i",
+   "vs-i"
   ],
   "con_tag": "uninflectable",
   "detail": "imperative"
@@ -183,7 +197,8 @@
    "る",
    "る",
    "う",
-   "く"
+   "く",
+   "する"
   ],
   "con_end": [
    "い",
@@ -194,7 +209,8 @@
    "っ",
    "",
    "う",
-   "っ"
+   "っ",
+   "し"
   ],
   "dec_tag": [
    "v5k",
@@ -205,7 +221,8 @@
    "v5r-i",
    "v1",
    "v5u-s",
-   "v5k-s"
+   "v5k-s",
+   "vs-i"
   ],
   "con_tag": "stem-ren-less",
   "detail": "(unstressed infinitive)"
@@ -248,7 +265,8 @@
    "ぬ",
    "む",
    "う",
-   "く"
+   "く",
+   "する"
   ],
   "con_end": [
    "き",
@@ -261,7 +279,8 @@
    "に",
    "み",
    "い",
-   "き"
+   "き",
+   "し"
   ],
   "dec_tag": [
    "v5k",
@@ -274,7 +293,8 @@
    "v5n",
    "v5m",
    "v5u-s",
-   "v5k-s"
+   "v5k-s",
+   "vs-i"
   ],
   "con_tag": "stem-ren",
   "detail": "(infinitive)"
@@ -304,20 +324,23 @@
    "",
    "る",
    "くる",
-   "来る"
+   "来る",
+   "する"
   ],
   "con_end": [
    "",
    "",
    "こ",
-   "来"
+   "来",
+   "し"
   ],
   "dec_tag": [
    "stem-a",
    "v1",
    "vk",
    "vk",
-   "vk"
+   "vk",
+   "vs-i"
   ],
   "con_tag": "stem-mizenkei",
   "detail": "(mizenkei)"
@@ -338,7 +361,8 @@
    "む",
    "る",
    "う",
-   "く"
+   "く",
+   "する"
   ],
   "con_end": [
    "こう",
@@ -353,7 +377,8 @@
    "もう",
    "よう",
    "おう",
-   "こう"
+   "こう",
+   "しよう"
   ],
   "dec_tag": [
    "v5k",
@@ -368,7 +393,8 @@
    "v5m",
    "v1",
    "v5u-s",
-   "v5k-s"
+   "v5k-s",
+   "vs-i"
   ],
   "con_tag": "form-volition",
   "detail": "volitional"
@@ -575,6 +601,39 @@
   "con_tag": "adj-i",
   "detail": "negative"
  },
+ "suru negative",
+ {
+  "type": "stdrule",
+  "dec_end": "する",
+  "con_end": "しない",
+  "dec_tag": "vs-i",
+  "con_tag": "adj-i",
+  "detail": "negative"
+ },
+ {
+  "type": "rewriterule",
+  "dec_end": "する",
+  "con_end": "せず",
+  "dec_tag": "vs-i",
+  "con_tag": "uninflectable",
+  "detail": "adverbial negative"
+ },
+ {
+  "type": "rewriterule",
+  "dec_end": "する",
+  "con_end": "せずに",
+  "dec_tag": "vs-i",
+  "con_tag": "uninflectable",
+  "detail": "without doing so"
+ },
+ {
+  "type": "rewriterule",
+  "dec_end": "する",
+  "con_end": "せぬ",
+  "dec_tag": "vs-i",
+  "con_tag": "uninflectable",
+  "detail": "archaic negative"
+ },
  "special negative inflections where the intermediate stage (e.g. 赤くある) is not a valid synthetic phrase like the end result (e.g. 赤くありません) is",
  {
   "type": "stdrule",
@@ -741,12 +800,28 @@
   "con_tag": "v1",
   "detail": "passive/potential"
  },
+ {
+  "type": "stdrule",
+  "dec_end": "する",
+  "con_end": "される",
+  "dec_tag": "vs-i",
+  "con_tag": "v1",
+  "detail": "passive"
+ },
  "causative",
  {
   "type": "stdrule",
   "dec_end": "",
   "con_end": "せる",
   "dec_tag": "stem-a",
+  "con_tag": "v1",
+  "detail": "causative"
+ },
+ {
+  "type": "stdrule",
+  "dec_end": "する",
+  "con_end": "させる",
+  "dec_tag": "vs-i",
   "con_tag": "v1",
   "detail": "causative"
  },
