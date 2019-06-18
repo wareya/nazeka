@@ -1960,6 +1960,7 @@ async function mine_to_storage(object)
 
 function get_audio_text(mydiv, index = 0) // [reading, spelling]
 {
+    mydiv = mydiv.getElementsByClassName("nazeka_audioref")[index]
     if(mydiv)
     {
         let text = mydiv.innerText;
@@ -1978,7 +1979,7 @@ async function try_to_play_audio(index = 0)
 {
     if(!exists_div())
         return;
-    let mydiv = get_div().getElementsByClassName("nazeka_audioref")[index];
+    let mydiv = get_div();
     let fields = get_audio_text(mydiv, index);
     if(fields)
     {
