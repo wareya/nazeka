@@ -437,6 +437,36 @@ function defaults()
     // hotkeys
     settings.push({
         kind: "dummy",
+        label: "Kanji mode"
+    });
+    settings.push({
+        id: "kanji_show_stroke_count",
+        kind: "checkbox",
+        default: true,
+        label: "Show stroke count"
+    });
+    settings.push({
+        id: "kanji_show_readings",
+        kind: "checkbox",
+        default: true,
+        label: "Show jouyou readings"
+    });
+    settings.push({
+        id: "kanji_show_composition",
+        kind: "checkbox",
+        default: true,
+        label: "Show composition"
+    });
+    settings.push({
+        id: "kanji_show_quality_warning",
+        kind: "checkbox",
+        default: true,
+        label: "Show data quality warning"
+    });
+    
+    // hotkeys
+    settings.push({
+        kind: "dummy",
         label: "Hotkeys (KeyboardEvent.key values)"
     });
     settings.push({

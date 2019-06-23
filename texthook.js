@@ -47,6 +47,10 @@ popup_requires_key: 0, // 0: none; 1: ctrl; 2: shift
 x_dodge: 1,
 y_dodge: 0,
 sticky_maxheight: 0,
+kanji_show_stroke_count: true,
+kanji_show_readings: true,
+kanji_show_composition: true,
+kanji_show_quality_warning: true,
 hotkey_mine: "m",
 hotkey_close: "n",
 hotkey_sticky: "b",
@@ -1182,14 +1186,19 @@ function build_div_kanji(text, kanjidata, moreText, index)
     composition.textContent = "Composition: " + kanjidata["z"];
     
     info.appendChild(grade);
-    info.appendChild(strokes);
-    if(added_readings > 0)
+    if(settings.kanji_show_stroke_count)
+        info.appendChild(strokes);
+    if(settings.kanji_show_readings && added_readings > 0)
         info.appendChild(readings);
-    info.appendChild(composition);
+    if(settings.kanji_show_composition)
+        info.appendChild(composition);
     
-    tail.appendChild(document.createTextNode("Data for non-jouyou kanji may contain errors."));
-    tail.appendChild(document.createElement("br"));
-    tail.appendChild(document.createTextNode("Composition might not render correctly if it contains obscure characters."));
+    if(settings.kanji_show_quality_warning)
+    {
+        tail.appendChild(document.createTextNode("Data for non-jouyou kanji may contain errors."));
+        tail.appendChild(document.createElement("br"));
+        tail.appendChild(document.createTextNode("Composition might not render correctly if it contains obscure characters."));
+    }
     tail.style.marginBottom = "4px";
     
     target.appendChild(head);
@@ -1267,6 +1276,11 @@ async function settings_init()
         
         getvar("use_selection", false);
         getvar("only_selection", false);
+        
+        getvar("kanji_show_stroke_count", true);
+        getvar("kanji_show_readings", true);
+        getvar("kanji_show_composition", true);
+        getvar("kanji_show_quality_warning", true);
         
         if(!settings.enabled && exists_div())
             delete_div();
