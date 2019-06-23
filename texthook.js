@@ -607,7 +607,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
         
-        if(first_of_many && is_sticky())
+        if(first_of_many && (platform == "android" || is_sticky()))
         {
             let buttons = document.createElement("div");
             let left_arrow = document.createElement("img");
