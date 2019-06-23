@@ -1805,9 +1805,16 @@ function update(event)
                 textNode = caretdata.offsetNode;
                 offset = caretdata.offset;
                 
-                let range = mydoc.createRange();
-                range.selectNode(textNode);
-                hitrect = range.getBoundingClientRect();
+                try
+                {
+                    let range = mydoc.createRange();
+                    range.selectNode(textNode);
+                    hitrect = range.getBoundingClientRect();
+                }
+                catch(e)
+                {
+                    hitrect = undefined;
+                }
             }
             // sticky mode and android need to break out on parent detection
             if(ele && !ele.contains(textNode) && is_sticky())
