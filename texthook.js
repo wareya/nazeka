@@ -635,6 +635,16 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 close_button.style.padding = "initial";
                 buttons.appendChild(close_button);
             }
+            else
+            {
+                let close_button = document.createElement("img");
+                close_button.src = browser.extension.getURL("img/closebutton24.png");
+                close_button.onclick = manual_disable_sticky;
+                close_button.style.marginTop = "-3px";
+                close_button.style.display = "inline";
+                close_button.style.padding = "initial";
+                buttons.appendChild(close_button);
+            }
             buttons.style.float = "right";
             original.appendChild(buttons);
         }
@@ -1375,6 +1385,13 @@ function manual_close()
 {
     delete_div();
     last_manual_interaction = Date.now();
+}
+
+function manual_disable_sticky()
+{
+    settings.sticky = false;
+    browser.storage.local.set({"sticky":false});
+    delete_div();
 }
 
 function lookup_cancel_force()
