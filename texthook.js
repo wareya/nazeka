@@ -1855,7 +1855,7 @@ function update(event)
             hitpage(event.clientX, 0, event.clientY);
         }
         
-        if (exists_div() && is_sticky())
+        if (exists_div() && (platform == "android" || is_sticky()))
         {
             let ele = get_div();
             if(ele.contains(textNode))
