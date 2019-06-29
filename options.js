@@ -169,6 +169,13 @@ function defaults()
         default: false,
         label: "Only look up text when mousing over selection (only when something is selected, setting ignored otherwise)"
     });
+    settings.push({
+        id: "freqlist_mode",
+        kind: "combobox",
+        options: ["None", "Visual Novels", "Narou"],
+        default: 1,
+        label: "Frequency data source"
+    });
     
     // display
     settings.push({

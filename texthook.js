@@ -727,6 +727,7 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             }
         }
         
+        
         // for mining
         
         let reading_data_holder = document.createElement("div");
@@ -984,6 +985,19 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 temptag.appendChild(makespan(")"));
         }
         container.appendChild(temptag);
+        
+        if(term.freq && term.freq.length > 0)
+        {
+            let vn_freq_data = document.createElement("span");
+            vn_freq_data.style = "font-size: 80%; margin-top: 4px; opacity: 0.7; margin-left: 5px;"
+            if(term.freq[0] != term.freq[1])
+                vn_freq_data.innerText = "#" + term.freq[2] + " (" + term.freq[0] + ":" + term.freq[1] + ")";
+            else
+                vn_freq_data.innerText = "#" + term.freq[2] + " (" + term.freq[0] + ")";
+            vn_freq_data.innerText += " (" + Math.round(term.freq[3]*100)/100 + "ppm)";
+            container.appendChild(vn_freq_data);
+        }
+        
         container.appendChild(document.createElement("br"));
         
         let definition = document.createElement("div");

@@ -9,6 +9,7 @@ let settings = {
 reader_width: 800,
 reader_height: 300,
 deconjugator_rules_json: "",
+freqlist_mode: 1,
 };
 
 async function settings_init()
@@ -25,6 +26,7 @@ async function settings_init()
         getvar("reader_width", 800);
         getvar("reader_height", 300);
         getvar("deconjugator_rules_json", "");
+        getvar("freqlist_mode", 1);
     } catch(err) {} // options not stored yet
 }
 
@@ -479,6 +481,52 @@ function load_priority_rules(filename)
 }
 
 load_priority_rules("dict/priority.json");
+
+// vn frequency data
+let freq_vns = {};
+
+function load_freqlist_vns(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", () =>
+    {
+        if (req.readyState === 4)
+        {
+            console.log("loaded vn freq data");
+            if (req.status === 200)
+                freq_vns = JSON.parse(req.responseText);
+            else
+                console.error(req.statusText);
+        }
+    });
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+load_freqlist_vns("dict/freqlist_vns.json");
+
+// narou frequency data
+let freq_narou = {};
+
+function load_freqlist_narou(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", () =>
+    {
+        if (req.readyState === 4)
+        {
+            console.log("loaded narou freq data");
+            if (req.status === 200)
+                freq_narou = JSON.parse(req.responseText);
+            else
+                console.error(req.statusText);
+        }
+    });
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+load_freqlist_narou("dict/freqlist_narou.json");
 
 // deconjugation rules
 let rules = [];
@@ -1466,7 +1514,52 @@ function add_extra_info(results, other_settings)
             }
         }
     }
-    return add_json_info(results, other_settings);
+    let ret = add_json_info(results, other_settings);
+    
+    if(settings.freqlist_mode > 0)
+    {
+        for(let lookup of results)
+        {
+            for(let entry of lookup.result)
+            {
+                let seen = new Set();
+                for(let r of entry.r_ele)
+                    seen.add(r.reb);
+                if(entry.k_ele)
+                    for(let k of entry.k_ele)
+                        seen.add(k.keb);
+                entry.freq = [];
+                for(let r of entry.r_ele)
+                {
+                    let reading = r.reb;
+                    let freq = undefined;
+                    if(settings.freqlist_mode == 1)
+                        freq = freq_vns;
+                    else
+                        freq = freq_narou;
+                    if(freq[reading])
+                    {
+                        for(let possibility of freq[reading])
+                        {
+                            if(seen.has(possibility[0]))
+                            {
+                                if(reading == possibility[0] && entry.k_ele)
+                                    continue;
+                                if(entry.freq.length == 0)
+                                    entry.freq = [possibility[0], reading, possibility[1], possibility[2]];
+                                else
+                                {
+                                    if(entry.freq[2] > possibility[1]) // worse rank
+                                        entry.freq = [possibility[0], reading, possibility[1], possibility[2]];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 // Skip JMdict entries reappearing in alternative lookups (so only the first one is shown)
