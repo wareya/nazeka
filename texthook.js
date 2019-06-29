@@ -994,7 +994,12 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
                 vn_freq_data.innerText = "#" + term.freq[2] + " (" + term.freq[0] + ":" + term.freq[1] + ")";
             else
                 vn_freq_data.innerText = "#" + term.freq[2] + " (" + term.freq[0] + ")";
-            vn_freq_data.innerText += " (" + Math.round(term.freq[3]*100)/100 + "ppm)";
+            if(term.freq[3] > 0.005)
+                vn_freq_data.innerText += " (" + Math.round(term.freq[3]*100)/100 + "ppm)";
+            else if(term.freq[3] > 0.0005)
+                vn_freq_data.innerText += " (" + Math.round(term.freq[3]*1000)/1000 + "ppm)";
+            else
+                vn_freq_data.innerText += " (" + Math.round(term.freq[3]*10000)/10000 + "ppm)";
             container.appendChild(vn_freq_data);
         }
         
