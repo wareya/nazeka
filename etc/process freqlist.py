@@ -7,7 +7,9 @@ def replace_kata_with_hira(text):
     newtext = ""
     for c in text:
         codepoint = ord(c)
-        if codepoint >= 0x30A0 and codepoint <= 0x30FF:
+        if codepoint >= 0x30A0 and codepoint <= 0x30F6:
+            codepoint -= (0x30A0 - 0x3040)
+        elif codepoint >= 0x30FD and codepoint <= 0x30FE:
             codepoint -= (0x30A0 - 0x3040)
         newtext += chr(codepoint)
     return newtext

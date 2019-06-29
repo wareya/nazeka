@@ -397,7 +397,9 @@ function replace_hira_with_kata(text)
     for(let i = 0; i < text.length; i++)
     {
         let codepoint = text.codePointAt(i);
-        if(codepoint >= 0x3040 && codepoint <= 0x309F)
+        if(codepoint >= 0x3040 && codepoint <= 0x3096)
+            codepoint += (0x30A0 - 0x3040);
+        else if(codepoint >= 0x309D && codepoint <= 0x309E)
             codepoint += (0x30A0 - 0x3040);
         newtext += String.fromCodePoint(codepoint);
     }
@@ -410,7 +412,9 @@ function replace_kata_with_hira(text)
     for(let i = 0; i < text.length; i++)
     {
         let codepoint = text.codePointAt(i);
-        if(codepoint >= 0x30A0 && codepoint <= 0x30FF)
+        if(codepoint >= 0x30A0 && codepoint <= 0x30F6)
+            codepoint -= (0x30A0 - 0x3040);
+        else if(codepoint >= 0x30FD && codepoint <= 0x30FE)
             codepoint -= (0x30A0 - 0x3040);
         newtext += String.fromCodePoint(codepoint);
     }
@@ -1531,7 +1535,7 @@ function add_extra_info(results, other_settings)
                 entry.freq = [];
                 for(let r of entry.r_ele)
                 {
-                    let reading = r.reb;
+                    let reading = replace_kata_with_hira(r.reb);
                     let freq = undefined;
                     if(settings.freqlist_mode == 1)
                         freq = freq_vns;
