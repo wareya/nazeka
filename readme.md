@@ -2,7 +2,7 @@ Nazeka is a rikai replacement.
 
 Nazeka was the first nontrivial thing I wrote in Javascript. The code is terrible and a lot of it is bundled into a small number of files. I need help splitting it up into multiple files, or being told how to split it up into multiple first without requiring any build tools.
 
-***Nazeka is not ready for general use yet; it does not yet have all the necessary behaviors that rikai variants have.***
+***Nazeka is ready for general testing; it's still missing a few behaviors from rikaisama, and it's still clunky, but it's close to complete.***
 
 # Settings
 
