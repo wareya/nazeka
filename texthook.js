@@ -1786,7 +1786,7 @@ function update(event)
     
     if(!settings.enabled) return;
     
-    if(settings.popup_follows_mouse && exists_div() && !is_sticky())
+    if(settings.popup_follows_mouse && exists_div() && !is_sticky() && platform != "android" )
     {
         let other = get_div();
         //let middle = other.firstChild.cloneNode(true);
@@ -1867,7 +1867,7 @@ function update(event)
                 }
             }
             // sticky mode and android need to break out on parent detection
-            if(ele && !ele.contains(textNode) && is_sticky())
+            if(ele && !ele.contains(textNode) && is_sticky() && platform != "android" )
             {
                 textNode = undefined;
                 offset = undefined;
