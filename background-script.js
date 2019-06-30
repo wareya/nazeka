@@ -532,6 +532,29 @@ function load_freqlist_narou(filename)
 }
 load_freqlist_narou("dict/freqlist_narou.json");
 
+// narou frequency data
+let freq_novels = {};
+
+function load_freqlist_novels(filename)
+{
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", () =>
+    {
+        if (req.readyState === 4)
+        {
+            console.log("loaded novels freq data");
+            if (req.status === 200)
+                freq_novels = JSON.parse(req.responseText);
+            else
+                console.error(req.statusText);
+        }
+    });
+    req.open("GET", browser.extension.getURL(filename));
+    req.send();
+    return req;
+}
+load_freqlist_novels("dict/freqlist_novels.json");
+
 // deconjugation rules
 let rules = [];
 
@@ -1539,8 +1562,10 @@ function add_extra_info(results, other_settings)
                     let freq = undefined;
                     if(settings.freqlist_mode == 1)
                         freq = freq_vns;
-                    else
+                    else if(settings.freqlist_mode == 2)
                         freq = freq_narou;
+                    else
+                        freq = freq_novels;
                     if(freq[reading])
                     {
                         for(let possibility of freq[reading])

@@ -172,7 +172,7 @@ function defaults()
     settings.push({
         id: "freqlist_mode",
         kind: "combobox",
-        options: ["None", "Visual Novels", "Narou"],
+        options: ["None", "Visual Novels", "Narou", "Novels"],
         default: 1,
         label: "Frequency data source"
     });
