@@ -1342,17 +1342,24 @@ function is_number(c)
     return "1234567890".includes(c);
 }
 
-async function send_lookup(lookup)
+let last_send_time = performance.now();
+let currently_looking_up = false;
+async function send_lookup(lookup, time)
 {
+    if(currently_looking_up)
+        return;
+    let my_time = time + 1;
+    my_time -= 1;
     if(is_number(lookup[0].split("")[0]) && !may_contain_japanese(lookup[5]))
         return;
     if(!settings.kanji_mode)
     {
+        currently_looking_up = true;
         let response = await browser.runtime.sendMessage(
         {
             type:"search",
             text:lookup[0],
-            time:Date.now(),
+            time:my_time,
             divexisted:exists_div(),
             settings:{
                 alternatives_mode:settings.alternatives_mode,
@@ -1360,8 +1367,13 @@ async function send_lookup(lookup)
                 strict_epwing:settings.strict_epwing
             }
         });
+        currently_looking_up = false;
         if(response)
             response = response["response"];
+        
+        if(my_time < last_send_time)
+            return;
+        last_send_time = my_time;
         
         if(response && response != "itsthesame")
         {
@@ -1403,9 +1415,9 @@ async function send_lookup(lookup)
         
     }
 }
-function lookup_enqueue(text, x, y, x2, y2, moreText, index)
+function lookup_enqueue(text, x, y, x2, y2, moreText, index, time)
 {
-    send_lookup([text, x, y, x2, y2, moreText, index]);
+    send_lookup([text, x, y, x2, y2, moreText, index], time);
 }
 
 function lookup_cancel()
@@ -1447,7 +1459,7 @@ function lookup_left()
     text = text.substring(index);
     
     last_manual_interaction = Date.now();
-    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
+    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index], performance.now());
 }
 
 function lookup_right()
@@ -1462,7 +1474,7 @@ function lookup_right()
     text = text.substring(index);
     
     last_manual_interaction = Date.now();
-    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index]);
+    send_lookup([text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], index], performance.now());
 }
 
 let time_of_last = Date.now();
@@ -1770,10 +1782,19 @@ function ele_data_from_point(doc, x, y)
     return [ret, doc, x, y];
 }
 
+
+let last_event_time = 0;
 function update(event)
 {
+    if(!settings.enabled) return;
     if(!event) return;
+    if(event.timeStamp < last_event_time)
+        return;
+    last_event_time = event.timeStamp;
     last_seen_event = event;
+    
+    shift_down = event.shiftKey;
+    ctrl_down = event.ctrlKey;
     
     if((settings.popup_requires_key == 2 && !shift_down)
     || (settings.popup_requires_key == 1 && !ctrl_down))
@@ -1784,12 +1805,9 @@ function update(event)
         return;
     }
     
-    if(!settings.enabled) return;
-    
     if(settings.popup_follows_mouse && exists_div() && !is_sticky() && platform != "android" )
     {
         let other = get_div();
-        //let middle = other.firstChild.cloneNode(true);
         let middle = other.firstChild;
         if(middle)
         {
@@ -1797,7 +1815,6 @@ function update(event)
             last_lookup[4] = event.pageY;
             display_div(middle, event.pageX, event.pageY);
         }
-        //move_div(event.pageX, event.pageY);
     }
     
     if(Date.now() - time_of_last < settings.lookuprate)
@@ -1968,7 +1985,7 @@ function update(event)
         text = text.substring(0, Math.min(text.length, settings.length));
         
         if(text != "")
-            lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY, moreText, index);
+            lookup_enqueue(text, event.clientX, event.clientY, event.pageX, event.pageY, moreText, index, event.timeStamp);
         else
             lookup_cancel();
     }
@@ -2286,7 +2303,7 @@ function keytest(event)
         settings.kanji_mode = !settings.kanji_mode;
         browser.storage.local.set({"kanji_mode":settings.kanji_mode});
         if(exists_div())
-            send_lookup(last_lookup);
+            send_lookup(last_lookup, performance.now());
     }
     if(event.key == settings.hotkey_sticky)
     {
@@ -2296,8 +2313,8 @@ function keytest(event)
         {
             let last_text = last_lookup[0];
             let last_index = last_lookup[6];
-            send_lookup([" ", last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], 0]);
-            send_lookup([last_text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], last_index]);
+            send_lookup([" ", last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], 0], performance.now());
+            send_lookup([last_text, last_lookup[1], last_lookup[2], last_lookup[3], last_lookup[4], last_lookup[5], last_index], performance.now());
         }
     }
     // audio (no mining ui) or mining (yes mining ui) based on number keys
@@ -2361,7 +2378,7 @@ function keyuntest(event)
 browser.runtime.onMessage.addListener((req, sender) =>
 {
     if(req.type == "reader_lookup")
-        send_lookup([req.text, req.x, req.y, req.x, req.y, req.text, 0]);
+        send_lookup([req.text, req.x, req.y, req.x, req.y, req.text, 0], performance.now());
     else if(req.type == "reader_mode")
     {
         console.log("we a readuh!");
