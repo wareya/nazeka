@@ -1355,18 +1355,27 @@ async function send_lookup(lookup, time)
     if(!settings.kanji_mode)
     {
         currently_looking_up = true;
-        let response = await browser.runtime.sendMessage(
+        let response = undefined;
+        try
         {
-            type:"search",
-            text:lookup[0],
-            time:my_time,
-            divexisted:exists_div(),
-            settings:{
-                alternatives_mode:settings.alternatives_mode,
-                strict_alternatives:settings.strict_alternatives,
-                strict_epwing:settings.strict_epwing
-            }
-        });
+            response = await browser.runtime.sendMessage(
+            {
+                type:"search",
+                text:lookup[0],
+                time:my_time,
+                divexisted:exists_div(),
+                settings:{
+                    alternatives_mode:settings.alternatives_mode,
+                    strict_alternatives:settings.strict_alternatives,
+                    strict_epwing:settings.strict_epwing
+                }
+            });
+        }
+        catch(e)
+        {
+            currently_looking_up = false;
+            return;
+        }
         currently_looking_up = false;
         if(response)
             response = response["response"];
