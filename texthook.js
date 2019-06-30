@@ -1842,6 +1842,20 @@ function update(event)
     let nodeResetList = [];
     let nodeResetSeen = new Set();
     
+    function reset_nodes()
+    {
+        for(let toreset of nodeResetList)
+        {
+            try
+            {
+                let element = toreset[0];
+                let z_index = toreset[1];
+                element.style.zIndex = z_index;
+            }
+            catch (err){}
+        }
+    }
+    
     function acceptable_element(node)
     {
         if(!textNode) return false;
@@ -1918,10 +1932,13 @@ function update(event)
         {
             let ele = get_div();
             if(ele.contains(textNode))
+            {
+                reset_nodes();
                 return;
+            }
         }
         
-        if(false && textNode !== undefined)
+        if(textNode !== undefined)
         {
             // we hit an node, see if it's a transparent element and try to move it under everything temporarily if it is
             try
@@ -1947,16 +1964,7 @@ function update(event)
             }
         }
     }
-    for(let toreset of nodeResetList)
-    {
-        try
-        {
-            let element = toreset[0];
-            let z_index = toreset[1];
-            element.style.zIndex = z_index;
-        }
-        catch (err){}
-    }
+    reset_nodes();
     if (settings.only_selection)
     {
         if(selection_rejects_node(window.getSelection(), textNode, offset))
