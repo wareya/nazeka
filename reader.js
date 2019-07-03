@@ -74,7 +74,8 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
 function reader_might_have_japanese(text)
 {
     for(let char of text)
-        if(char && char.length > 0 && char.codePointAt(0) >= 0x2E80)
+        if(char && char.length > 0 &&
+            (char.codePointAt(0) >= 0x2E80 || char === "…"))
             return true;
     return false;
 }
