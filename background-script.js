@@ -1801,6 +1801,16 @@ async function init_icon()
 
 init_icon();
 
+function open_options(info, tab)
+{
+    try
+    {
+        browser.tabs.create({
+            url:browser.extension.getURL("options.html")
+        });
+    } catch(err) {}
+}
+
 function open_reader(info, tab)
 {
     try
@@ -1846,6 +1856,12 @@ function open_jsonconfig(info, tab)
 
 if(browser.contextMenus)
 {
+    browser.contextMenus.create({
+        id: "nazeka-options",
+        title: "Options",
+        contexts: ["browser_action"],
+        onclick: open_options
+    });
     browser.contextMenus.create({
         id: "nazeka-reader",
         title: "Open Reader",
