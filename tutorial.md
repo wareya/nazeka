@@ -13,7 +13,7 @@ Install from [Mozilla's official Firefox addons website](https://addons.mozilla.
 * The frequency feature does not fall back to kanji-only or kana-only lookups.
   * It only finds exact matches. This means that if the frequency list disagrees with jmdict about how to spell a word, it won't find the frequency information for it.
 * The convert-hiragana-and-katakana fallback only happens if there are no results for a given bit of text.
-  * This means that mousing using over モノ doesn't bring up definitions for もの, because an entry for just plain モノ already exists. However, mousing over カタナ looks up かたな, because there's no entry associated with カタナ.
+  * This means that mousing using over モノ won't bring up definitions for もの, because an entry for just plain モノ already exists. However, mousing over カタナ looks up かたな, because there's no entry associated with カタナ.
 
 # General Use Advice
 
