@@ -408,7 +408,13 @@ function defaults()
         id: "reader_fg",
         kind: "color",
         default: "#CCCCCC",
-        label: "Reader text color"
+        label: "Reader new text color"
+    });
+    settings.push({
+        id: "reader_fg_old",
+        kind: "color",
+        default: "#B0B0B0",
+        label: "Reader old text color"
     });
     settings.push({
         id: "reader_font_size",
@@ -439,6 +445,15 @@ function defaults()
         kind: "text",
         default: "",
         label: "Reader font override (without trailing comma)"
+    });
+    settings.push({
+        id: "reader_throttle",
+        kind: "number",
+        min: 5,
+        max: 1000,
+        step: 5,
+        default: 200,
+        label: "Reader clipboard access interval"
     });
     
     // hotkeys

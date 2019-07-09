@@ -9,25 +9,32 @@ reader_reverse: false,
 reader_leeway: 200,
 reader_bg: "#111111",
 reader_fg: "#CCCCCC",
+reader_fg_old: "#B0B0B0",
 reader_font_size: "1.4em",
 reader_right_padding: "0px",
 reader_max_width: "1000px",
 reader_margin: "8px",
 reader_font: "",
-reader_auto: false
+reader_auto: false,
+reader_throttle: 200
 };
 
 function update_styles()
 {
     let target = document.body.style;
     target.backgroundColor = reader_settings.reader_bg;
-    target.color = reader_settings.reader_fg;
+    target.color = reader_settings.reader_fg_old;
     target.fontSize = reader_settings.reader_font_size;
     target.paddingRight = reader_settings.reader_right_padding;
     target.maxWidth = reader_settings.reader_max_width;
     target.marginLeft = reader_settings.reader_margin;
     target.marginRight = reader_settings.reader_margin;
     target.fontFamily = reader_settings.reader_font;
+    let target2 = document.querySelector("#new_color_style");
+    target2.cssText = `body > p:nth-of-type(1)
+{
+    color: ${reader_settings.reader_fg};
+}`;
 }
 
 async function reader_settings_init()
@@ -45,12 +52,14 @@ async function reader_settings_init()
         getvar("reader_leeway", 200);
         getvar("reader_bg", "#111111");
         getvar("reader_fg", "#CCCCCC");
+        getvar("reader_fg_old", "#B0B0B0");
         getvar("reader_font_size","1.4em");
         getvar("reader_right_padding", "0px");
         getvar("reader_max_width", "1000px");
         getvar("reader_margin", "8px");
         getvar("reader_font", "");
         getvar("reader_auto", false);
+        getvar("reader_throttle", 200);
     } catch(err) {} // options not stored yet
 }
 
@@ -142,7 +151,6 @@ function reader_gimmetext()
     browser.runtime.sendMessage({type:"gimmetext"});
 }
 
-let interval = 250;
 async function reader_checkpaste()
 {
     try
@@ -152,9 +160,9 @@ async function reader_checkpaste()
     }
     catch(error){}
     
-    setTimeout(reader_checkpaste, interval);
+    setTimeout(reader_checkpaste, reader_settings.reader_throttle);
 }
-setTimeout(reader_checkpaste, interval);
+setTimeout(reader_checkpaste, reader_settings.reader_throttle);
 
 browser.runtime.onMessage.addListener((req, sender) =>
 {
