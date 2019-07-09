@@ -2,7 +2,18 @@ Note: some aspects of this tutorial are a little out of date. Just browse throug
 
 # Installation
 
-Install from [Mozilla's official Firefox addons website](https://addons.mozilla.org/en-US/firefox/addon/nazeka/), or [assemble an addon package yourself](https://github.com/wareya/nazeka/blob/master/readme.md).
+Install from [Mozilla's official Firefox addons website](https://addons.mozilla.org/en-US/firefox/addon/nazeka/), or [assemble an addon package yourself (not recommended)](https://github.com/wareya/nazeka/blob/master/readme.md).
+
+# Non-obvious Behavior
+
+* The default hotkeys for sticky mode and kanji mode are B and K.
+* The number keys (1 through 9) can play audio (during normal mouseovers) or mine specific words (when the mining UI is open).
+* If you enable the "Use text selection to limit lookup length and force context" option, then the selected chunk of text will be used for the context sentence when mining, instead of the autodeteced sentence.
+* There are several options for how the reader inserts text and functions in general.
+* The frequency feature does not fall back to kanji-only or kana-only lookups. It only finds exact matches.
+  * This means that if the frequency list disagrees with jmdict about how to spell a word, it won't find the frequency information for it.
+* The convert-hiragana-and-katakana fallback only happens if there are no results for a given bit of text.
+  * This means that mousing using over モノ won't bring up definitions for もの, because an entry for just plain モノ already exists. However, mousing over カタナ looks up かたな, because there's no entry associated with カタナ.
 
 # General Use Advice
 
