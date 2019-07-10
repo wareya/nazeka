@@ -397,6 +397,12 @@ function defaults()
         default: false,
         label: "Reader insert at bottom"
     });
+    settings.push({
+        id: "reader_convert_newlines",
+        kind: "checkbox",
+        default: false,
+        label: "Reader force newlines into linebreaks"
+    });
     
     settings.push({
         id: "reader_bg",

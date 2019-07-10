@@ -16,7 +16,8 @@ reader_max_width: "1000px",
 reader_margin: "8px",
 reader_font: "",
 reader_auto: false,
-reader_throttle: 200
+reader_throttle: 200,
+reader_convert_newlines: false
 };
 
 function update_styles()
@@ -60,6 +61,7 @@ async function reader_settings_init()
         getvar("reader_font", "");
         getvar("reader_auto", false);
         getvar("reader_throttle", 200);
+        getvar("reader_convert_newlines", false);
     } catch(err) {} // options not stored yet
 }
 
@@ -96,7 +98,17 @@ function reader_update(text)
     
     let target = document.body;
     let newnode = document.createElement("p");
-    newnode.textContent = text;
+    if(reader_settings.reader_convert_newlines)
+    {
+        newnode.textContent = "";
+        for(let line of text.split("\n"))
+        {
+            newnode.appendChild(document.createTextNode(line));
+            newnode.appendChild(document.createElement("br"));
+        }   
+    }
+    else
+        newnode.textContent = text;
     
     if(!reader_settings.reader_reverse)
         target.insertBefore(newnode, document.body.firstChild);
