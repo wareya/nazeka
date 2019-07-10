@@ -52,6 +52,7 @@ kanji_show_readings: true,
 kanji_show_composition: true,
 kanji_show_quality_warning: true,
 hotkey_mine: "m",
+hotkey_nazeka_toggle: "j",
 hotkey_close: "n",
 hotkey_sticky: "b",
 hotkey_audio: "p",
@@ -103,12 +104,6 @@ function delete_div()
     {
         other.innerHTML = "";
         other.removeAttribute('style');
-        /*
-        other.style.display = "none";
-        if(other.children.length > 0)
-            other.children[0].innerHTML = "";
-        other.style.position = "relative";
-        */
     }
 }
 
@@ -1285,6 +1280,7 @@ async function settings_init()
         getvar("sticky_maxheight", 0);
         
         getvar("hotkey_mine", "m");
+        getvar("hotkey_nazeka_toggle", "j");
         getvar("hotkey_close", "n");
         getvar("hotkey_sticky", "b");
         getvar("hotkey_audio", "p");
@@ -1446,6 +1442,14 @@ function manual_disable_sticky()
     settings.sticky = false;
     browser.storage.local.set({"sticky":false});
     delete_div();
+}
+
+function manual_toggle_enabled()
+{
+    settings.enabled = !settings.enabled;
+    browser.storage.local.set({"enabled":settings.enabled});
+    if(!settings.enabled)
+        delete_div();
 }
 
 function lookup_cancel_force()
@@ -2361,26 +2365,20 @@ function keytest(event)
                 try_to_play_audio(index);
         }
     }
+    if(event.key == settings.hotkey_nazeka_toggle)
+        manual_toggle_enabled();
     
     if(!exists_div())
         return;
     
     if(event.key == settings.hotkey_close)
-    {
         lookup_cancel_force();
-    }
     if(event.key == settings.hotkey_audio)
-    {
         try_to_play_audio();
-    }
     if(event.key == settings.hotkey_nudge_left)
-    {
         lookup_left();
-    }
     if(event.key == settings.hotkey_nudge_right)
-    {
         lookup_right();
-    }
 }
 
 function keyuntest(event)

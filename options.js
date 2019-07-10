@@ -504,10 +504,16 @@ function defaults()
         label: "Mining UI hotkey"
     });
     settings.push({
+        id: "hotkey_nazeka_toggle",
+        kind: "text",
+        default: "j",
+        label: "Toggle nazeka on/off"
+    });
+    settings.push({
         id: "hotkey_close",
         kind: "text",
         default: "n",
-        label: "Close popup"
+        label: "Close popup (does not disable nazeka)"
     });
     settings.push({
         id: "hotkey_sticky",

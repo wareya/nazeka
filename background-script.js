@@ -41,6 +41,8 @@ browser.storage.onChanged.addListener((updates, storageArea) =>
         let value = setting[1];
         if(Object.keys(settings).includes(option))
             settings[option] = value.newValue;
+        if(option == "enabled")
+            fixicon();
     }
 });
 
