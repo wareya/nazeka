@@ -30,6 +30,7 @@ bgcolor: "#111111",
 fgcolor: "#CCCCCC",
 hlcolor: "#99DDFF",
 hlcolor2: "#99FF99",
+titlecolor: "#E0A070",
 font: "",
 hlfont: "",
 definition_fontsize: 13,
@@ -63,7 +64,8 @@ volume: 0.2,
 live_mining: false,
 use_selection: false,
 only_selection: false,
-audio_force_https: false
+audio_force_https: false,
+highlight_dict_headers: true
 };
 
 let platform = "win";
@@ -507,7 +509,10 @@ function elementize_json_defs(json)
         for(let entry of json)
         {
             let json_head = document.createElement("div");
-            json_head.appendChild(document.createTextNode("―"+entry["z"]+"―"));
+            let json_title = document.createElement("span");
+            json_title.appendChild(document.createTextNode("―"+entry["z"]+"―"));
+            json_title.className = "json_title";
+            json_head.appendChild(json_title);
             json_head.appendChild(document.createElement("br"));
             let json_head_text = entry["r"];
             if(entry["s"] && entry["s"][0] != "")
@@ -570,6 +575,11 @@ function get_style()
 .jmdict_definitions{margin: 0 4px 6px;}
 .json_definition{margin: 0 4px 6px;}
 .kanji_info{margin: 2px 4px 2px;}
+`;
+    if(settings.highlight_dict_headers)
+        style.textContent += 
+`.jmdict_title{color:${settings.titlecolor}}
+.json_title{color:${settings.titlecolor}}
 `;
     return style;
 }
@@ -1021,7 +1031,13 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             if(json_div) definition.appendChild(json_div);
             if(jmdict_div)
             {
-                jmdict_div.insertBefore(document.createTextNode("jmdict: "), jmdict_div.firstChild);
+                let jmdict_head_div = document.createElement("div");
+                let jmdict_head_span = document.createElement("span");
+                jmdict_head_span.appendChild(document.createTextNode("―jmdict―"));
+                jmdict_head_span.className = "jmdict_title";
+                jmdict_head_div.className = "jmdict_head";
+                jmdict_head_div.appendChild(jmdict_head_span);
+                jmdict_div.insertBefore(jmdict_head_div, jmdict_div.firstChild);
                 definition.appendChild(jmdict_div);
             }
         }
@@ -1252,6 +1268,7 @@ async function settings_init()
         getvar("fgcolor", "#CCCCCC");
         getvar("hlcolor", "#99DDFF");
         getvar("hlcolor2", "#99FF99");
+        getvar("hlcolor2", "#E0A070");
         getvar("font", "");
         getvar("hlfont", "");
         
@@ -1299,6 +1316,7 @@ async function settings_init()
         getvar("kanji_show_quality_warning", true);
         
         getvar("audio_force_https", false);
+        getvar("highlight_dict_headers", true);
         
         if(!settings.enabled && exists_div())
             delete_div();

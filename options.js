@@ -127,6 +127,12 @@ function defaults()
         label: "Strict matching for json dictionary matches"
     });
     settings.push({
+        id: "highlight_dict_headers",
+        kind: "checkbox",
+        default: true,
+        label: "Highlight dictionary headers"
+    });
+    settings.push({
         id: "popup_requires_key",
         kind: "combobox",
         options: ["None", "Ctrl", "Shift"],
@@ -303,6 +309,12 @@ function defaults()
         kind: "color",
         default: "#99FF99",
         label: "Reading highlight color"
+    });
+    settings.push({
+        id: "titlecolor",
+        kind: "color",
+        default: "#E0A070",
+        label: "Dictionary title color (for when using json dictionaries)"
     });
     settings.push({
         id: "font",
