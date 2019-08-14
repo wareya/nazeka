@@ -139,9 +139,15 @@ function defaults()
         label: "Character to replace json dictionary linebreaks with"
     });
     settings.push({
+        id: "json_ignore_entries",
+        kind: "text",
+        default: "一,二,三,四,五,六,七,八,九,〇",
+        label: "Ignore json dictionary entries with these spellings"
+    });
+    settings.push({
         id: "highlight_dict_headers",
         kind: "checkbox",
-        default: true,
+        default: false,
         label: "Highlight dictionary headers"
     });
     settings.push({

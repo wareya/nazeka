@@ -67,7 +67,7 @@ live_mining: false,
 use_selection: false,
 only_selection: false,
 audio_force_https: false,
-highlight_dict_headers: true
+highlight_dict_headers: false
 };
 
 let platform = "win";

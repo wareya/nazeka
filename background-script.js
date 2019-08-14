@@ -10,7 +10,8 @@ reader_width: 800,
 reader_height: 300,
 deconjugator_rules_json: "",
 freqlist_mode: 1,
-ankiconnect_force_sync: false
+ankiconnect_force_sync: false,
+json_ignore_entries: "一,二,三,四,五,六,七,八,九,〇"
 };
 
 async function settings_init()
@@ -28,6 +29,7 @@ async function settings_init()
         getvar("deconjugator_rules_json");
         getvar("freqlist_mode");
         getvar("ankiconnect_force_sync");
+        getvar("json_ignore_entries");
     } catch(err) {} // options not stored yet
 }
 
@@ -949,6 +951,7 @@ function build_lookup_comb(forms)
 
 function json_lookup_kanji(dict, spelling_list, readings, inexact)
 {
+    let exclude = settings.json_ignore_entries.split(",").map(x => x.trim());
     let indexes_set = new Set();
     let indexes = [];
     for(let spelling of spelling_list)
@@ -958,6 +961,17 @@ function json_lookup_kanji(dict, spelling_list, readings, inexact)
             continue;
         for(let id of dict.lookup_json_kan.get(spelling))
         {
+            let bad = false;
+            for(let spelling of dict.entries[id]["s"])
+            {
+                if(exclude.includes(spelling))
+                {
+                    bad = true;
+                    break;
+                }
+            }
+            if(bad)
+                break;
             if(inexact || readings.includes(dict.entries[id]["r"]))
             {
                 if(!indexes_set.has(id))
@@ -973,6 +987,7 @@ function json_lookup_kanji(dict, spelling_list, readings, inexact)
 
 function json_lookup_kana_exact(dict, kana)
 {
+    let exclude = settings.json_ignore_entries.split(",").map(x => x.trim());
     let possibilities = dict.lookup_json_kana.get(kana);
     if(!possibilities)
         return [];
@@ -986,6 +1001,8 @@ function json_lookup_kana_exact(dict, kana)
         {
             for(let spelling of spellings)
             {
+                if(exclude.includes(spelling))
+                    break;
                 if(replace_kata_with_hira(spelling) == replace_kata_with_hira(kana))
                 {
                     actual_possibilities.push(index);
