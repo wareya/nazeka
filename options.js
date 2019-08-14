@@ -127,6 +127,18 @@ function defaults()
         label: "Strict matching for json dictionary matches"
     });
     settings.push({
+        id: "json_newlines_replace",
+        kind: "checkbox",
+        default: false,
+        label: "Replace json dictionary linebreaks with this character (blank for newlines)"
+    });
+    settings.push({
+        id: "json_newlines_character",
+        kind: "text",
+        default: " ⬥ ",
+        label: "Character to replace json dictionary linebreaks with"
+    });
+    settings.push({
         id: "highlight_dict_headers",
         kind: "checkbox",
         default: true,
@@ -313,7 +325,7 @@ function defaults()
     settings.push({
         id: "titlecolor",
         kind: "color",
-        default: "#E0A070",
+        default: "#D8A888",
         label: "Dictionary title color (for when using json dictionaries)"
     });
     settings.push({

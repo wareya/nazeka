@@ -23,6 +23,8 @@ normal_definitions_in_mining: false,
 alternatives_mode: 3, // 0: longest only; 1: longest and shortest; 2: longest and second longest; 3: all matches
 strict_alternatives: true, // if true, alternatives looked up in all kana can not return results with kanji glosses that don't have any usually/exclusively kana info
 strict_epwing: true,
+json_newlines_replace: false,
+json_newlines_character: " ⬥ ",
 scale: 1,
 width: 600,
 lookuprate: 8,
@@ -30,7 +32,7 @@ bgcolor: "#111111",
 fgcolor: "#CCCCCC",
 hlcolor: "#99DDFF",
 hlcolor2: "#99FF99",
-titlecolor: "#E0A070",
+titlecolor: "#D8A888",
 font: "",
 hlfont: "",
 definition_fontsize: 13,
@@ -534,7 +536,12 @@ function elementize_json_defs(json)
             for(let line of entry["l"])
             {
                 if(!isfirst)
+                {
                     json_definition.appendChild(document.createElement("br"));
+                    let filler = document.createElement("span");
+                    filler.className = "json_newline_filler";
+                    json_definition.appendChild(filler);
+                }
                 let def_line = document.createElement("span");
                 def_line.textContent = line;
                 json_definition.appendChild(def_line);
@@ -553,13 +560,23 @@ function elementize_json_defs(json)
     }
 }
 
+function filter_for_css(text)
+{
+    return text.replace(";","").replace("}","").replace("'","").replace('"',"");
+}
+function filter_for_css_trimmed(text)
+{
+    return filter_for_css(text).trim();
+}
+
 function get_style()
 {
     // styling for highlighted stuff and the lookup text
     let style = document.createElement("style");
     style.type = "text/css";
-    let font = settings.hlfont.trim().replace(";","").replace("}","");
-    let morefont = settings.font.trim().replace(";","").replace("}","");
+    let font = filter_for_css_trimmed(settings.hlfont);
+    let morefont = filter_for_css_trimmed(settings.font);
+    let newline_char = filter_for_css(settings.json_newlines_character);
     if(font != "")
         font += ",";
     if(morefont != "")
@@ -580,6 +597,11 @@ function get_style()
         style.textContent += 
 `.jmdict_title{color:${settings.titlecolor}}
 .json_title{color:${settings.titlecolor}}
+`;
+    if(settings.json_newlines_replace)
+        style.textContent +=
+`.json_definition br{display: none;}
+.json_definition .json_newline_filler::before{content: '${newline_char}';}
 `;
     return style;
 }
@@ -1242,81 +1264,82 @@ async function settings_init()
 {
     try
     {
-        async function getvar(name, defval)
+        async function getvar(name)
         {
             let temp = (await browser.storage.local.get(name))[name];
-            if(temp == undefined)
-                temp = defval;
-            settings[name] = temp;
+            if(temp != undefined)
+                settings[name] = temp;
         }
-        getvar("enabled", false);
-        getvar("compact", true);
-        getvar("length", 25);
-        getvar("scale", 1);
-        getvar("width", 600);
-        getvar("lookuprate", 8);
-        getvar("fixedwidth", false);
-        getvar("fixedwidthpositioning", false);
-        getvar("superborder", false);
-        getvar("disableborder", false);
-        getvar("space_saver", false);
-        getvar("hide_deconj", false);
-        getvar("showoriginal", true);
-        getvar("reader_sticky", false);
+        getvar("enabled");
+        getvar("compact");
+        getvar("length");
+        getvar("scale");
+        getvar("width");
+        getvar("lookuprate");
+        getvar("fixedwidth");
+        getvar("fixedwidthpositioning");
+        getvar("superborder");
+        getvar("disableborder");
+        getvar("space_saver");
+        getvar("hide_deconj");
+        getvar("showoriginal");
+        getvar("reader_sticky");
         
-        getvar("bgcolor", "#111111");
-        getvar("fgcolor", "#CCCCCC");
-        getvar("hlcolor", "#99DDFF");
-        getvar("hlcolor2", "#99FF99");
-        getvar("hlcolor2", "#E0A070");
-        getvar("font", "");
-        getvar("hlfont", "");
+        getvar("bgcolor");
+        getvar("fgcolor");
+        getvar("hlcolor");
+        getvar("hlcolor2");
+        getvar("hlcolor2");
+        getvar("font");
+        getvar("hlfont");
         
-        getvar("definition_fontsize", 13);
-        getvar("dict_item_fontsize", 18);
-        getvar("reading_fontsize", 15);
+        getvar("definition_fontsize");
+        getvar("dict_item_fontsize");
+        getvar("reading_fontsize");
         
-        getvar("alternatives_mode", 3);
-        getvar("strict_alternatives", true);
-        getvar("definitions_mode", 0);
-        getvar("normal_definitions_in_mining", false);
-        getvar("strict_epwing", true);
+        getvar("alternatives_mode");
+        getvar("strict_alternatives");
+        getvar("definitions_mode");
+        getvar("normal_definitions_in_mining");
+        getvar("strict_epwing");
+        getvar("json_newlines_replace");
+        getvar("json_newlines_character");
         
-        getvar("corner", 0);
-        getvar("xoffset", 5);
-        getvar("yoffset", 22);
+        getvar("corner");
+        getvar("xoffset");
+        getvar("yoffset");
         
-        getvar("strip_spaces", true);
-        getvar("ignore_linebreaks", true);
-        getvar("ignore_divs", false);
-        getvar("sticky", false);
-        getvar("popup_follows_mouse", true);
-        getvar("popup_requires_key", 0);
+        getvar("strip_spaces");
+        getvar("ignore_linebreaks");
+        getvar("ignore_divs");
+        getvar("sticky");
+        getvar("popup_follows_mouse");
+        getvar("popup_requires_key");
         
-        getvar("x_dodge", 1);
-        getvar("y_dodge", 0);
-        getvar("sticky_maxheight", 0);
+        getvar("x_dodge");
+        getvar("y_dodge");
+        getvar("sticky_maxheight");
         
-        getvar("hotkey_mine", "m");
-        getvar("hotkey_nazeka_toggle", "j");
-        getvar("hotkey_close", "n");
-        getvar("hotkey_sticky", "b");
-        getvar("hotkey_audio", "p");
-        getvar("hotkey_nudge_left", "ArrowLeft");
-        getvar("hotkey_nudge_right", "ArrowRight");
-        getvar("volume", 0.2);
-        getvar("live_mining", false);
+        getvar("hotkey_mine");
+        getvar("hotkey_nazeka_toggle");
+        getvar("hotkey_close");
+        getvar("hotkey_sticky");
+        getvar("hotkey_audio");
+        getvar("hotkey_nudge_left");
+        getvar("hotkey_nudge_right");
+        getvar("volume");
+        getvar("live_mining");
         
-        getvar("use_selection", false);
-        getvar("only_selection", false);
+        getvar("use_selection");
+        getvar("only_selection");
         
-        getvar("kanji_show_stroke_count", true);
-        getvar("kanji_show_readings", true);
-        getvar("kanji_show_composition", true);
-        getvar("kanji_show_quality_warning", true);
+        getvar("kanji_show_stroke_count");
+        getvar("kanji_show_readings");
+        getvar("kanji_show_composition");
+        getvar("kanji_show_quality_warning");
         
-        getvar("audio_force_https", false);
-        getvar("highlight_dict_headers", true);
+        getvar("audio_force_https");
+        getvar("highlight_dict_headers");
         
         if(!settings.enabled && exists_div())
             delete_div();
