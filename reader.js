@@ -95,9 +95,9 @@ function reader_update(text)
 {
     if(!reader_might_have_japanese(text))
         return;
-    
     let target = document.body;
     let newnode = document.createElement("p");
+    newnode.className = "nazeka_reader_insertion";
     if(reader_settings.reader_convert_newlines)
     {
         newnode.textContent = "";
@@ -150,6 +150,8 @@ async function send_reader_mode(x, y, text)
 let reader_text_previous = "";
 function reader_cycle_text(text)
 {
+    if(document.getElementById("button_pause").innerText != "Pause")
+        return;
     if(text != "" && text != reader_text_previous)
     {
         reader_update(text);
@@ -183,8 +185,29 @@ browser.runtime.onMessage.addListener((req, sender) =>
     return Promise.resolve(undefined);
 });
 
+function toggle_pause()
+{
+    let target = document.getElementById("button_pause");
+    if(target.innerText == "Pause")
+        target.innerText = "Unpause";
+    else
+        target.innerText = "Pause";
+}
+
+function delete_newest()
+{
+    let target = document.getElementsByTagName("p")[0];
+    if(target.className == "nazeka_reader_insertion")
+    {
+        target.remove();
+        document.getElementById("linecount").innerText = parseInt(document.getElementById("linecount").innerText)-1;
+    }
+}
+
 window.onload = () =>
 {
     send_reader_mode();
     update_styles();
+    document.getElementById("button_pause").onclick = toggle_pause;
+    document.getElementById("button_delete").onclick = delete_newest;
 }

@@ -1289,7 +1289,7 @@ async function settings_init()
         getvar("fgcolor");
         getvar("hlcolor");
         getvar("hlcolor2");
-        getvar("hlcolor2");
+        getvar("titlecolor");
         getvar("font");
         getvar("hlfont");
         
