@@ -176,6 +176,12 @@ function defaults()
         label: "Enable live mining (configured via the button below under \"Other\")"
     });
     settings.push({
+        id: "ankiconnect_force_sync",
+        kind: "checkbox",
+        default: false,
+        label: "Force Anki to sync to AnkiWeb after each mined card"
+    });
+    settings.push({
         id: "use_selection",
         kind: "checkbox",
         default: false,

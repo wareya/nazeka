@@ -2208,25 +2208,48 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
     }, (e) => {console.log(e);});
 }
 
+async function get_url_blob_base64(url)
+{
+    let data = await browser.runtime.sendMessage({type:"get_audio_base64", url:url});
+    return data;
+}
+
 async function mine_to_ankiconnect(object)
 {
-    let audio_base64 = "";
-    if(object.audio !== undefined)
+    try
     {
-        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + object.audio[0] + "&kanji=" + object.audio[1];
-        let reader = new FileReader();
-        reader.onload = () =>
+        let audio_base64 = "";
+        if(object.audio !== undefined)
         {
-            let fname = "nazeka_audio_" + object.audio[0] + "_" + object.audio[1] + ".mp3";
-            let result = reader.result.replace(/[^,]*,/, "");
-            mine_to_ankiconnect_with_base64_audio(object, fname, result);
-        };
-        fetch(url)
-        .then((response) => response.blob())
-        .then((myBlob) => reader.readAsDataURL(myBlob));
+            let url = "";
+            if(settings.audio_force_https)
+                url = "https://";
+            else
+                url = "http://";
+            url += "assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + object.audio[0] + "&kanji=" + object.audio[1];
+            let response = await get_url_blob_base64(url);
+            if(response)
+            {
+                let res = response.response;
+                console.log("loaded");
+                let fname = "nazeka_audio_" + object.audio[0] + "_" + object.audio[1] + ".mp3";
+                let result = res.replace(/[^,]*,/, "");
+                mine_to_ankiconnect_with_base64_audio(object, fname, result);
+            }
+            else
+            {
+                console.log("errored");
+                errormessage("AnkiConnect mining partially failed: Failed to connect to languagepod101 to grab audio (going to try mining without audio)");
+                mine_to_ankiconnect_with_base64_audio(object, "", "");
+            }
+        }
+        else
+            mine_to_ankiconnect_with_base64_audio(object, "", "");
     }
-    else
-        mine_to_ankiconnect_with_base64_audio(object, "", "");
+    catch(e)
+    {
+        errormessage("AnkiConnect failed: " + e);
+    }
 }
 
 function mine(highlight)

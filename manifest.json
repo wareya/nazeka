@@ -18,7 +18,8 @@
         "storage",
         "tabs",
         "clipboardRead",
-        "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?*"
+        "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?*",
+        "http://assets.languagepod101.com/dictionary/japanese/audiomp3.php?*"
     ],
     
     "background": {

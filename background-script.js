@@ -10,23 +10,24 @@ reader_width: 800,
 reader_height: 300,
 deconjugator_rules_json: "",
 freqlist_mode: 1,
+ankiconnect_force_sync: false
 };
 
 async function settings_init()
 {
     try
     {
-        async function getvar(name, defval)
+        async function getvar(name)
         {
             let temp = (await browser.storage.local.get(name))[name];
-            if(temp == undefined)
-                temp = defval;
-            settings[name] = temp;
+            if(temp != undefined)
+                settings[name] = temp;
         }
-        getvar("reader_width", 800);
-        getvar("reader_height", 300);
-        getvar("deconjugator_rules_json", "");
-        getvar("freqlist_mode", 1);
+        getvar("reader_width");
+        getvar("reader_height");
+        getvar("deconjugator_rules_json");
+        getvar("freqlist_mode");
+        getvar("ankiconnect_force_sync");
     } catch(err) {} // options not stored yet
 }
 
@@ -1053,8 +1054,6 @@ function add_json_info(lookups, other_settings)
                 }
                 else
                 {
-                    console.log("testing thing");
-                    console.log(entry);
                     let possibilities = json_lookup_kana_exact(dict, foundtext);
                     if(!other_settings.strict_epwing)
                     {
@@ -1950,7 +1949,7 @@ function send_error(tab, error)
     } catch (err) {}
 }
 
-browser.runtime.onMessage.addListener((req, sender) =>
+browser.runtime.onMessage.addListener(async (req, sender) =>
 {
     if (req.type == "search")
     {
@@ -2001,6 +2000,15 @@ browser.runtime.onMessage.addListener((req, sender) =>
             {
                 if(response.error)
                     send_error(sender.tab.id, "AnkiConnect mining failed: " + response.error);
+                else
+                {
+                    if(settings.ankiconnect_force_sync)
+                    {
+                        let newxhr = new XMLHttpRequest();
+                        newxhr.open("POST", req.host, true);
+                        newxhr.send('{"action": "sync","version": 6}');
+                    }
+                }
             } catch (e) { }
         });
         xhr.addEventListener('error', () =>
@@ -2020,6 +2028,18 @@ browser.runtime.onMessage.addListener((req, sender) =>
         audio.play();
         console.log("tried to play audio");
         console.log(req.host);
+    }
+    else if (req.type == "get_audio_base64")
+    {
+        let blob = await (await fetch(req.url)).blob();
+        let reader = new FileReader();
+        let result_base64 = await new Promise((resolve) =>
+        {
+            let fileReader = new FileReader();
+            fileReader.onload = (e) => resolve(fileReader.result);
+            fileReader.readAsDataURL(blob);
+        });
+        return Promise.resolve({"response" : result_base64});
     }
     return Promise.resolve(undefined);
 });
