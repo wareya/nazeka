@@ -22,7 +22,7 @@ You don't. Well, you can. Just use the option that makes nazeka only perform loo
 The JSON dictionary feature doubles as an EPWING dictionary feature. I can't help you acquire EPWING dictionary data. There are tools for converting the EPWING data to nazeka's JSON dictionary format on my github.
 
 ## Manual mining context
-You can grap more than a single sentence for context when mining. This is done by selecting the chunk of text that you want nazeka to use for the context fields on your cards. This must be enabled in the options first. Options -> Behavior -> "Use text selection to limit lookup length and force context".
+You can grab more than a single sentence for context when mining. This is done by selecting the chunk of text that you want nazeka to use for the context fields on your cards. This must be enabled in the options first. Options -> Behavior -> "Use text selection to limit lookup length and force context".
 
 ## Bilingual lookups in monolingual definitions
 Nazeka supports the workflow of reading with only J-J definitions, then using both a J-E and J-J dictionary when looking up words in the J-J definitions, seamlessly. Set "Where to look for definitions" to "From json dictionary only" and enable "Force "From jmdict then json" definitions mode when mining UI is open". Now when you mouse over J-J definitions in the mining UI, J-E definitions will appear even if they're normally disabled outside of the mining UI. Note: Because JMDict actually has pretty good spellings/readings data, it's impossible to turn off JMDict readings.
