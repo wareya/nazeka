@@ -972,7 +972,7 @@ function json_lookup_kanji(dict, spelling_list, readings, inexact)
 
 function json_lookup_kana_exact(dict, kana)
 {
-    let possibilities = dict.lookup_json_kana.get(dict, kana);
+    let possibilities = dict.lookup_json_kana.get(kana);
     if(!possibilities)
         return [];
     let actual_possibilities = [];
@@ -981,6 +981,17 @@ function json_lookup_kana_exact(dict, kana)
         let spellings = dict.entries[index]["s"]
         if(spellings.length == 1 && spellings[0] === "")
             actual_possibilities.push(index);
+        else
+        {
+            for(let spelling of spellings)
+            {
+                if(replace_kata_with_hira(spelling) == replace_kata_with_hira(kana))
+                {
+                    actual_possibilities.push(index);
+                    break;
+                }
+            }
+        }
     }
     return actual_possibilities;
 }
@@ -1042,6 +1053,8 @@ function add_json_info(lookups, other_settings)
                 }
                 else
                 {
+                    console.log("testing thing");
+                    console.log(entry);
                     let possibilities = json_lookup_kana_exact(dict, foundtext);
                     if(!other_settings.strict_epwing)
                     {
