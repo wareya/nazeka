@@ -554,6 +554,12 @@ function defaults()
         default: 0.2,
         label: "Audio playback volume (press \"p\" while popup is open)"
     });
+    settings.push({
+        id: "audio_force_https",
+        kind: "checkbox",
+        default: false,
+        label: "Grab audio files over HTTPS instead of HTTP"
+    });
     
     // other (added imperatively)
     settings.push({

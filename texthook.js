@@ -62,7 +62,8 @@ hotkey_nudge_right: "ArrowRight",
 volume: 0.2,
 live_mining: false,
 use_selection: false,
-only_selection: false
+only_selection: false,
+audio_force_https: false
 };
 
 let platform = "win";
@@ -1297,6 +1298,8 @@ async function settings_init()
         getvar("kanji_show_composition", true);
         getvar("kanji_show_quality_warning", true);
         
+        getvar("audio_force_https", false);
+        
         if(!settings.enabled && exists_div())
             delete_div();
         if(!settings.enabled)
@@ -2078,7 +2081,12 @@ async function try_to_play_audio(index = 0)
     let fields = get_audio_text(mydiv, index);
     if(fields)
     {
-        let url = "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
+        let url = "";
+        if(settings.audio_force_https)
+            url = "https://";
+        else
+            url = "http://";
+        url += "assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
         browser.runtime.sendMessage({type:"play_audio", host:url, volume:settings.volume});
     }
 }
