@@ -32,10 +32,16 @@ function update_styles()
     target.marginRight = reader_settings.reader_margin;
     target.fontFamily = reader_settings.reader_font;
     let target2 = document.querySelector("#new_color_style");
-    target2.cssText = `body > p:nth-of-type(1)
+    let elements = document.body.getElementsByTagName("p");
+    let which = String(reader_settings.reader_reverse ? elements.length : 1);
+    target2.textContent = `body > p:nth-of-type(${which})
 {
     color: ${reader_settings.reader_fg};
 }`;
+    console.log("attempted to update styles");
+    console.log(target2.textContent);
+    console.log(which);
+    console.log(reader_settings.reader_reverse);
 }
 
 async function reader_settings_init()
@@ -196,7 +202,9 @@ function toggle_pause()
 
 function delete_newest()
 {
-    let target = document.getElementsByTagName("p")[0];
+    let elements = document.getElementsByTagName("p");
+    let which = reader_settings.reader_reverse ? elements.length-1 : 0;
+    let target = document.getElementsByTagName("p")[which];
     if(target.className == "nazeka_reader_insertion")
     {
         target.remove();
