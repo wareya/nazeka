@@ -1970,7 +1970,7 @@ function send_error(tab, error)
     } catch (err) {}
 }
 
-browser.runtime.onMessage.addListener(async (req, sender) =>
+browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
@@ -2052,15 +2052,19 @@ browser.runtime.onMessage.addListener(async (req, sender) =>
     }
     else if (req.type == "get_audio_base64")
     {
-        let blob = await (await fetch(req.url)).blob();
-        let reader = new FileReader();
-        let result_base64 = await new Promise((resolve) =>
+        let f = async () =>
         {
-            let fileReader = new FileReader();
-            fileReader.onload = (e) => resolve(fileReader.result);
-            fileReader.readAsDataURL(blob);
-        });
-        return Promise.resolve({"response" : result_base64});
+            let blob = await (await fetch(req.url)).blob();
+            let reader = new FileReader();
+            let result_base64 = await new Promise((resolve) =>
+            {
+                let fileReader = new FileReader();
+                fileReader.onload = (e) => resolve(fileReader.result);
+                fileReader.readAsDataURL(blob);
+            });
+            return Promise.resolve({"response" : result_base64});
+        };
+        return f();
     }
     return Promise.resolve(undefined);
 });
