@@ -996,7 +996,11 @@ function json_lookup_kana_exact(dict, kana)
     {
         let spellings = dict.entries[index]["s"]
         if(spellings.length == 1 && spellings[0] === "")
+        {
+            if(exclude.includes(kana))
+                continue;
             actual_possibilities.push(index);
+        }
         else
         {
             for(let spelling of spellings)
