@@ -50,7 +50,6 @@ button
     position: fixed;
     right: 5px;
     height: 2em;
-    bottom: calc( 10px + 2em );
 }
 #button_delete
 {
@@ -58,13 +57,20 @@ button
     position: fixed;
     right: 5px;
     height: 2em;
-    bottom: 5px;
 }
 </style>
-<style id=new_color_style>
+<style id=new_style>
 body > p:nth-of-type(1)
 {
     color: #CCCCCC;
+}
+#button_delete
+{
+    bottom: 5px;
+}
+#button_pause
+{
+    bottom: calc( 10px + 2em );
 }
 </style>
 <script src="include/browser-polyfill.min.js" charset="UTF-8"></script>

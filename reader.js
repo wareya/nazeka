@@ -31,12 +31,27 @@ function update_styles()
     target.marginLeft = reader_settings.reader_margin;
     target.marginRight = reader_settings.reader_margin;
     target.fontFamily = reader_settings.reader_font;
-    let target2 = document.querySelector("#new_color_style");
+    let target2 = document.querySelector("#new_style");
     let elements = document.body.getElementsByTagName("p");
     let which = String(reader_settings.reader_reverse ? elements.length : 1);
+    let delete_css = "bottom: 5px";
+    let pause_css = "bottom: calc( 10px + 2em )";
+    if(reader_settings.reader_reverse)
+    {
+        delete_css = "top: 5px";
+        pause_css = "top: calc( 10px + 2em )";
+    }
     target2.textContent = `body > p:nth-of-type(${which})
 {
     color: ${reader_settings.reader_fg};
+}
+#button_delete
+{
+    ${delete_css};
+}
+#button_pause
+{
+    ${pause_css};
 }`;
     console.log("attempted to update styles");
     console.log(target2.textContent);
