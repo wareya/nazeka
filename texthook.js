@@ -1936,12 +1936,12 @@ function update(event)
             else
                 xoffset = searchoffset;
             
-            let caretdata = mydoc.caretPositionFromPoint(x+xoffset, y+yoffset);
+            let caretdata = mydoc.caretRangeFromPoint(x+xoffset, y+yoffset);
             
             if(caretdata)
             {
-                textNode = caretdata.offsetNode;
-                offset = caretdata.offset;
+                textNode = caretdata.startContainer;
+                offset = caretdata.startOffset;
                 
                 try
                 {

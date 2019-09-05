@@ -2073,7 +2073,7 @@ browser.contextMenus.create({
     id: "nazeka-toggle",
     title: "Toggle Nazeka",
     contexts: ["page", "selection"],
-    documentUrlPatterns: ["moz-extension://*/reader.html"],
+    documentUrlPatterns: ["chrome-extension://*/reader.html"],
     onclick: toggle_enabled
 });
 
