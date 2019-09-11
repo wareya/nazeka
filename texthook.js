@@ -67,7 +67,18 @@ live_mining: false,
 use_selection: false,
 only_selection: false,
 audio_force_https: false,
-highlight_dict_headers: false
+highlight_dict_headers: false,
+dropshadow: false,
+dropshadowradius: 10,
+dropshadowcolor: "#000000",
+padding: 2,
+novalign: 2,
+inserthr: false,
+info_styling: false,
+info_fgcolor: "#CCCCCC",
+info_bgcolor_pos: "#606060",
+info_bgcolor_num: "#406080",
+info_bgcolor_etc: "#608040"
 };
 
 let platform = "win";
@@ -208,7 +219,7 @@ function display_div(middle, x, y)
         font += ",";
     middle.style = `background-color: ${settings.bgcolor}; border-radius: 2.5px; border: 1px solid ${settings.bgcolor};`;
     let border_text = (settings.disableborder)?("border: 0px solid transparent;"):(`border: 1px solid ${settings.fgcolor}`);
-    middle.firstChild.style = `${border_text}; border-radius: 2px; padding: 2px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; text-align: left; font-size: ${settings.definition_fontsize}px;`;
+    middle.firstChild.style = `${border_text}; border-radius: 2px; padding: ${settings.padding}px; background-color: ${settings.bgcolor}; color: ${settings.fgcolor}; font-family: ${font} Arial, sans-serif; text-align: left; font-size: ${settings.definition_fontsize}px;`;
     
     let find_root = document.defaultView;
     let newx = x;
@@ -272,6 +283,15 @@ function display_div(middle, x, y)
         styletext += `border-radius: 3px; background-color: ${settings.bgcolor}; z-index: 1000000000000000000000;`;
     
     styletext += "writing-mode: horizontal-tb; line-height: initial; white-space: initial;";
+    if(settings.dropshadow)
+    {
+        let v = parseInt(settings.dropshadowcolor.substring(1), 16);
+        let r = Math.floor(v / 256 / 256);
+        let g = Math.floor(v / 256) % 256;
+        let b = Math.floor(v) % 256;
+        let rgba = "rgba(" + r + "," + g + "," + b + ",0.5)";
+        styletext += `box-shadow: 0 0 ${settings.dropshadowradius}px ${rgba};`
+    }
     
     let other = mydoc.body.getElementsByClassName(div_class);
     let outer = undefined;
@@ -426,7 +446,7 @@ function elementize_jmdict_defs(goodsenses)
     {
         let sense = goodsenses[j];
         
-        if(sense.pos == lastpos)
+        if(sense.pos + "" == lastpos) // removing this + "" breaks repetitive sense hiding in chrome
             sense.pos = undefined;
         else
             lastpos = sense.pos;
@@ -581,10 +601,25 @@ function get_style()
         font += ",";
     if(morefont != "")
         font += morefont + ",";
+    let valign = ".nazeka_word * {vertical-align: middle}";
+    if(settings.novalign)
+        valign = "";
+    let infostyle = "";
+    if(settings.info_styling)
+    {
+        infostyle =
+`.nazeka_pos, .nazeka_num, .nazeka_misc {font-size:80%; border-radius:3px; padding: 1px 3px 2px; color:${settings.info_fgcolor}; display:inline-block; position: relative; bottom: 1px; margin-bottom: -5px;}
+.nazeka_pos {background-color:${settings.info_bgcolor_pos};}
+.nazeka_num {background-color:${settings.info_bgcolor_num};}
+.nazeka_misc {background-color:${settings.info_bgcolor_etc};}
+`;
+    }
     style.textContent =
 `.nazeka_main_keb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
 .nazeka_main_reb{font-size:${settings.dict_item_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif;color:${settings.hlcolor}}
-.nazeka_word * {vertical-align: middle}
+${valign}
+${infostyle}
+.${div_class} hr{margin: 0.5em; padding: 0; border: none; border-top: 1px solid ${settings.fgcolor}; opacity: 0.25}
 .nazeka_sub_keb{font-size:${settings.reading_fontsize}px;white-space:nowrap;font-family: ${font}IPAGothic,TakaoGothic,Noto Sans CJK JP Regular,Meiryo,sans-serif}
 .nazeka_sub_reb{font-size:${settings.reading_fontsize}px;white-space:nowrap;color:${settings.hlcolor2}}
 .nazeka_original{float: right; margin-right: 2px; margin-left:4px; opacity:0.7;}
@@ -1126,9 +1161,17 @@ function build_div_compound (results, moreText, index)
     for(let lookup of results)
     {
         if(settings.corner == 2 || settings.corner == 3)
+        {
+            if(!first && settings.inserthr)
+                middle.firstChild.insertBefore(document.createElement("hr"), middle.firstChild.children[0]);
             middle.firstChild.insertBefore(build_div_inner(lookup.text, lookup.result, moreText, index, first), middle.firstChild.children[0]);
+        }
         else
+        {
+            if(!first && settings.inserthr)
+                middle.firstChild.appendChild(document.createElement("hr"));
             middle.firstChild.appendChild(build_div_inner(lookup.text, lookup.result, moreText, index, first));
+        }
         first = false;
     }
     return middle;
@@ -1340,6 +1383,19 @@ async function settings_init()
         
         getvar("audio_force_https");
         getvar("highlight_dict_headers");
+        
+        getvar("dropshadow");
+        getvar("dropshadowradius");
+        getvar("dropshadowcolor");
+        getvar("padding");
+        getvar("novalign");
+        getvar("inserthr");
+        
+        getvar("info_styling");
+        getvar("info_fgcolor");
+        getvar("info_bgcolor_pos");
+        getvar("info_bgcolor_num");
+        getvar("info_bgcolor_etc");
         
         if(!settings.enabled && exists_div())
             delete_div();
