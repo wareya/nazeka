@@ -145,12 +145,6 @@ function defaults()
         label: "Ignore json dictionary entries with these spellings"
     });
     settings.push({
-        id: "highlight_dict_headers",
-        kind: "checkbox",
-        default: false,
-        label: "Highlight dictionary headers"
-    });
-    settings.push({
         id: "popup_requires_key",
         kind: "combobox",
         options: ["None", "Ctrl", "Shift"],
@@ -262,6 +256,18 @@ function defaults()
         default: false,
         label: "Fixed width"
     });
+    settings.push({
+        id: "novalign",
+        kind: "checkbox",
+        default: false,
+        label: "Disable use of `vertical-align: middle;` for reading/etc info"
+    });
+    settings.push({
+        id: "inserthr",
+        kind: "checkbox",
+        default: false,
+        label: "Insert horizontal bar between entries"
+    });
     /*
     // currently broken
     settings.push({
@@ -311,6 +317,12 @@ function defaults()
         label: "Disable border"
     });
     settings.push({
+        id: "dropshadow",
+        kind: "checkbox",
+        default: false,
+        label: "Enable dropshadow"
+    });
+    settings.push({
         id: "bgcolor",
         kind: "color",
         default: "#111111",
@@ -339,6 +351,26 @@ function defaults()
         kind: "color",
         default: "#D8A888",
         label: "Dictionary title color (for when using json dictionaries)"
+    });
+    settings.push({
+        id: "highlight_dict_headers",
+        kind: "checkbox",
+        default: false,
+        label: "Highlight dictionary headers"
+    });
+    settings.push({
+        id: "dropshadowcolor",
+        kind: "color",
+        default: "#000000",
+        label: "Dropshadow color"
+    });
+    settings.push({
+        id: "dropshadowradius",
+        kind: "number",
+        min: 1,
+        max: 50,
+        default: 10,
+        label: "Dropshadow radius"
     });
     settings.push({
         id: "font",
@@ -381,6 +413,44 @@ function defaults()
         kind: "checkbox",
         default: false,
         label: "Sticky mode"
+    });
+    settings.push({
+        id: "padding",
+        kind: "number",
+        min: 0,
+        max: 10,
+        default: 2,
+        label: "Padding"
+    });
+    settings.push({
+        id: "info_styling",
+        kind: "checkbox",
+        default: false,
+        label: "Yomichan-like definition info tag styling"
+    });
+    settings.push({
+        id: "info_fgcolor",
+        kind: "color",
+        default: "#CCCCCC",
+        label: "Yomichan-like info tag text color"
+    });
+    settings.push({
+        id: "info_bgcolor_pos",
+        kind: "color",
+        default: "#284880",
+        label: "Yomichan-like info tag background for part-of-speech tags"
+    });
+    settings.push({
+        id: "info_bgcolor_num",
+        kind: "color",
+        default: "#484848",
+        label: "Yomichan-like info tag background color for sense numbers"
+    });
+    settings.push({
+        id: "info_bgcolor_etc",
+        kind: "color",
+        default: "#305028",
+        label: "Yomichan-like info tag background color for etc tags"
     });
     
     // reader
