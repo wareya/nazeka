@@ -608,7 +608,7 @@ function get_style()
     if(settings.info_styling)
     {
         infostyle =
-`.nazeka_pos, .nazeka_num, .nazeka_misc {font-size:80%; border-radius:3px; padding: 1px 3px 2px; color:${settings.info_fgcolor}; display:inline-block; position: relative; bottom: 1px; margin-bottom: -5px;}
+`.nazeka_pos, .nazeka_num, .nazeka_misc {font-size:80%; border-radius:3px; padding: 1px 3px 2px; color:${settings.info_fgcolor}; display:inline-block; position: relative; bottom: 1px; margin-bottom: -1px;}
 .nazeka_pos {background-color:${settings.info_bgcolor_pos};}
 .nazeka_num {background-color:${settings.info_bgcolor_num};}
 .nazeka_misc {background-color:${settings.info_bgcolor_etc};}
