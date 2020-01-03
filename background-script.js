@@ -1967,7 +1967,7 @@ function send_error(tab, error)
     try
     {
         browser.tabs.sendMessage(tab, {type:"error",error:error});
-    } catch (err) {}
+    } catch (err) {console.log("failed to send error to origin tab")}
 }
 
 browser.runtime.onMessage.addListener((req, sender) =>
@@ -2011,6 +2011,7 @@ browser.runtime.onMessage.addListener((req, sender) =>
         console.log("got request");
         let xhr = new XMLHttpRequest();
         xhr.open("POST", req.host, true);
+        xhr.overrideMimeType('application/json');
         //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
         console.log(req.command);
         xhr.addEventListener('load', () =>
@@ -2030,11 +2031,14 @@ browser.runtime.onMessage.addListener((req, sender) =>
                         newxhr.send('{"action": "sync","version": 6}');
                     }
                 }
-            } catch (e) { }
+            } catch (e) {
+                console.log(e);
+            }
         });
-        xhr.addEventListener('error', () =>
+        xhr.addEventListener('error', (e) =>
         {
             send_error(sender.tab.id, "AnkiConnect mining failed: unspecified error (Anki is probably not open)");
+            console.log(e);
         });
         xhr.addEventListener('timeout', () =>
         {

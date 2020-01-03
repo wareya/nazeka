@@ -89,7 +89,7 @@ function saveConfig()
         "livemining_deckname": document.querySelector("#deckname").value,
         "livemining_modelname": document.querySelector("#modelname").value,
         "livemining_fields": mappings,
-        "livemining_host": document.querySelector("#host").value
+        "livemining_host2": "http://127.0.0.1:8765"
     };
     console.log(setstuff);
     browser.storage.local.set(setstuff);
@@ -97,15 +97,13 @@ function saveConfig()
 
 function loadConfig()
 {
-    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host"]);
+    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host2"]);
     promise.then((storage) => 
     {
         if(storage["livemining_deckname"] !== undefined)
             document.querySelector("#deckname").value = storage["livemining_deckname"];
         if(storage["livemining_modelname"] !== undefined)
             document.querySelector("#modelname").value = storage["livemining_modelname"];
-        if(storage["livemining_host"] !== undefined)
-            document.querySelector("#host").value = storage["livemining_host"];
         reset_fields();
         for(let pair of storage["livemining_fields"])
             add_field(pair[0], pair[1]);
@@ -117,7 +115,7 @@ function buildpage()
 {
     document.getElementById("autofields").onclick = (e) =>
     {
-        let host = document.getElementById("host").value;
+        let host = "http://127.0.0.1:8765";
 
         let request = JSON.parse(`
         {"action":"modelFieldNames",
@@ -167,6 +165,7 @@ function buildpage()
     };
     
     document.getElementById("applyfields").onclick = saveConfig;
+    document.getElementById("host").onclick = saveConfig;
     
     loadConfig();
     
