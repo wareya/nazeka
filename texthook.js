@@ -1594,42 +1594,40 @@ let time_of_last = Date.now();
 
 let search_x_offset = -3;
 
-function selection_filter_enabled(selection)
+function selection_filter_enabled(selection_range)
 {
     if(!settings.use_selection)
         return false;
-    if(!selection)
+    if(!selection_range)
         return false;
-    if(selection.toString() == "")
+    if(selection_range.startOffset == selection_range.endOffset)
         return false;
     return true;
 }
 
-function selection_rejects_node(selection, textNode, offset)
+function selection_rejects_node(selection_range, textNode, offset)
 {
-    if(!selection)
+    if(!selection_range)
         return false;
-    if(selection + "" == "")
+    if(selection_range.startOffset == selection_range.endOffset)
         return false;
-    let range = selection.getRangeAt(0);
     try
     {
-        if(!range.isPointInRange(textNode, offset) || !range.isPointInRange(textNode, offset+1))
+        if(!selection_range.isPointInRange(textNode, offset) || !selection_range.isPointInRange(textNode, offset+1))
             return true;
     }
     catch(e){}
     return false;
 }
 
-function selection_clip_node_with_offsets(node, selection)
+function selection_clip_node_with_offsets(node, selection_range)
 {
-    if (!selection_filter_enabled(selection))
+    if (!selection_filter_enabled(selection_range))
     {
         return [node.textContent, 0];
     }
-    let range = selection.getRangeAt(0);
     
-    if(!range.intersectsNode(node))
+    if(!selection_range.intersectsNode(node))
         return ["", 0];
     
     let start = 0;
@@ -1637,14 +1635,14 @@ function selection_clip_node_with_offsets(node, selection)
     
     while(start < end)
     {
-        if(!range.isPointInRange(node, start))
+        if(!selection_range.isPointInRange(node, start))
             start += 1;
         else
             break;
     }
     while(end > start)
     {
-        if(!range.isPointInRange(node, end))
+        if(!selection_range.isPointInRange(node, end))
             end -= 1;
         else
             break;
@@ -1652,11 +1650,11 @@ function selection_clip_node_with_offsets(node, selection)
     return [node.data.slice(start, end), start];
 }
 
-function get_element_text_with_offsets(element, selection)
+function get_element_text_with_offsets(element, selection_range)
 {
     if(!(element instanceof Element))
     {
-        return selection_clip_node_with_offsets(element, selection);
+        return selection_clip_node_with_offsets(element, selection_range);
     }
     try
     {
@@ -1671,7 +1669,7 @@ function get_element_text_with_offsets(element, selection)
         let ret_offset = -1;
         for(let child of element.childNodes)
         {
-            let asdf = get_element_text_with_offsets(child, selection);
+            let asdf = get_element_text_with_offsets(child, selection_range);
             ret += asdf[0];
             if(ret_offset == -1)
                 ret_offset = asdf[1];
@@ -1685,15 +1683,17 @@ function get_element_text_with_offsets(element, selection)
     return ["", 0];
 }
 
-function get_element_text(element, selection)
+function get_element_text(element, selection_range)
 {
-    let ret = get_element_text_with_offsets(element, selection)[0];
+    let ret = get_element_text_with_offsets(element, selection_range)[0];
     return ret;
 }
 
-function grab_more_text(textNode, selection, direction = 1)
+let hard_length_limit = 3000;
+
+function grab_more_text(textNode, selection_range, direction = 1)
 {
-    let ignore_normal_boundaries = selection_filter_enabled(selection);
+    let ignore_normal_boundaries = selection_filter_enabled(selection_range);
     
     if(direction > 0)
         direction = 1;
@@ -1708,6 +1708,8 @@ function grab_more_text(textNode, selection, direction = 1)
              )
          )
     {
+        if(text.length > hard_length_limit)
+            break;
         iters += 1;
         if(current_node == undefined) break;
         // search up parent element only if current element is inline-like
@@ -1741,10 +1743,12 @@ function grab_more_text(textNode, selection, direction = 1)
         i += direction;
         while(i < current_node.parentNode.childNodes.length && i >= 0 && (ignore_normal_boundaries || (text.length < settings.contextlength && (!text.includes("\n") || settings.ignore_linebreaks))))
         {
+            if(text.length > hard_length_limit)
+                break;
             let next_node = current_node.parentNode.childNodes[i];
             i += direction;
             
-            if(selection_filter_enabled(selection) && !selection.getRangeAt(0).intersectsNode(next_node))
+            if(ignore_normal_boundaries && !selection_range.intersectsNode(next_node))
                 break;
             
             let tagname = next_node.tagName ? next_node.tagName.toLowerCase() : "";
@@ -1763,7 +1767,7 @@ function grab_more_text(textNode, selection, direction = 1)
                 // FIXME get real inline vs block detection
                 if(ignore_normal_boundaries || (display != "block" && display != "grid" && display != "table" && display != "none"))
                 {
-                    let current = get_element_text(next_node, selection);
+                    let current = get_element_text(next_node, selection_range);
                     
                     if(direction > 0)
                         ttext += current;
@@ -1778,9 +1782,9 @@ function grab_more_text(textNode, selection, direction = 1)
             catch(err)
             {
                 if(direction > 0)
-                    text += get_element_text(next_node, selection);
+                    text += get_element_text(next_node, selection_range);
                 else
-                    text = get_element_text(next_node, selection) + text;
+                    text = get_element_text(next_node, selection_range) + text;
             }
         }
         if(text.length < settings.contextlength)
@@ -1794,10 +1798,10 @@ function grab_more_text(textNode, selection, direction = 1)
 
 function grab_text(textNode, offset, elemental)
 {
-    let selection = window.getSelection();
+    let selection_range = window.getSelection().getRangeAt(0);
     
-    if(selection_filter_enabled(selection) && selection_rejects_node(selection, textNode, offset))
-        selection = undefined;
+    if(selection_filter_enabled(selection_range) && selection_rejects_node(selection_range, textNode, offset))
+        selection_range = undefined;
     
     let text = "";
     let moreText = "";
@@ -1808,14 +1812,14 @@ function grab_text(textNode, offset, elemental)
     }
     else
     {
-        let etc = get_element_text_with_offsets(textNode, selection);
+        let etc = get_element_text_with_offsets(textNode, selection_range);
         moreText = etc[0];
         offset -= etc[1];
         text = moreText.substring(offset, moreText.length);
     }
     
-    let lhs = grab_more_text(textNode, selection, -1);
-    let rhs = grab_more_text(textNode, selection);
+    let lhs = grab_more_text(textNode, selection_range, -1);
+    let rhs = grab_more_text(textNode, selection_range);
     text += rhs;
     moreText = lhs + moreText + rhs;
     
@@ -1836,7 +1840,7 @@ function grab_text(textNode, offset, elemental)
     let leftwards = 0;
     let rightwards = 0;
     
-    if (!selection_filter_enabled(selection))
+    if (!selection_filter_enabled(selection_range))
     {
         while(!japaneseSeparators.includes(moreText[index + leftwards]) && moreText[index + leftwards] != "\n" && index + leftwards >= 0)
             leftwards--;
@@ -2071,7 +2075,7 @@ function update(event)
     reset_nodes();
     if (settings.only_selection)
     {
-        if(selection_rejects_node(window.getSelection(), textNode, offset))
+        if(selection_rejects_node(window.getSelection().getRangeAt(0), textNode, offset))
         {
             lookup_cancel();
             return;
