@@ -75,6 +75,8 @@ function add_field(fieldname, preselect="")
     document.getElementById("containfields").appendChild(div);
 }
 
+var __host = "http://127.0.0.1:8765";
+
 function saveConfig()
 {
     let mappings = new Array();
@@ -89,7 +91,6 @@ function saveConfig()
         "livemining_deckname": document.querySelector("#deckname").value,
         "livemining_modelname": document.querySelector("#modelname").value,
         "livemining_fields": mappings,
-        "livemining_host2": "http://127.0.0.1:8765"
     };
     console.log(setstuff);
     browser.storage.local.set(setstuff);
@@ -97,7 +98,7 @@ function saveConfig()
 
 function loadConfig()
 {
-    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host2"]);
+    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields"]);
     promise.then((storage) => 
     {
         if(storage["livemining_deckname"] !== undefined)
@@ -105,8 +106,9 @@ function loadConfig()
         if(storage["livemining_modelname"] !== undefined)
             document.querySelector("#modelname").value = storage["livemining_modelname"];
         reset_fields();
-        for(let pair of storage["livemining_fields"])
-            add_field(pair[0], pair[1]);
+        if(storage["livemining_fields"] !== undefined)
+            for(let pair of storage["livemining_fields"])
+                add_field(pair[0], pair[1]);
     }, (e) => {console.log(e);});
 }
 
@@ -115,8 +117,6 @@ function buildpage()
 {
     document.getElementById("autofields").onclick = (e) =>
     {
-        let host = "http://127.0.0.1:8765";
-
         let request = JSON.parse(`
         {"action":"modelFieldNames",
          "version":6,
@@ -128,7 +128,7 @@ function buildpage()
         console.log(json);
         
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", host, true);
+        xhr.open("POST", __host, true);
         //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
         xhr.addEventListener('load', () =>
         {
@@ -165,7 +165,6 @@ function buildpage()
     };
     
     document.getElementById("applyfields").onclick = saveConfig;
-    document.getElementById("host").onclick = saveConfig;
     
     loadConfig();
     
@@ -173,14 +172,12 @@ function buildpage()
     
     document.getElementById("upgrade").onclick = (e) =>
     {
-        let host = document.getElementById("host").value;
-        
         let json = `
         {"action":"upgrade",
          "version":6
         }`;
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", host, true);
+        xhr.open("POST", __host, true);
         xhr.send(json);
         xhr.addEventListener('load', () =>
         {

@@ -2199,14 +2199,14 @@ function send_ankiconnect_command(host, command)
     browser.runtime.sendMessage({type:"ankiconnect_mine", host:host, command:json});
 }
 
+var __host = "http://127.0.0.1:8765"
+
 async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audiodata)
 {
     let object_keys = Object.keys(object);
-    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields", "livemining_host2"]);
+    let promise = browser.storage.local.get(["livemining_deckname", "livemining_modelname", "livemining_fields"]);
     promise.then((storage) =>
     {
-        if(storage["livemining_host2"] === undefined)
-            storage["livemining_host2"] = "http://127.0.0.1:8765";
         if(storage["livemining_deckname"] === undefined)
             storage["livemining_deckname"] = "Default";
         if(storage["livemining_modelname"] === undefined)
@@ -2250,7 +2250,7 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
                                 "data": audiodata
                             }
                         };
-                        send_ankiconnect_command(storage["livemining_host2"], mediafilecommand);
+                        send_ankiconnect_command(__host, mediafilecommand);
                         audioadded = true;
                     }
                     // for some reason not even anki 2.0 supports this
@@ -2264,7 +2264,7 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
             }
         }
         note["params"]["note"]["fields"] = fields;
-        send_ankiconnect_command(storage["livemining_host2"], note);
+        send_ankiconnect_command(__host, note);
     }, (e) => {console.log(e);});
 }
 
