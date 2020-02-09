@@ -27,7 +27,6 @@
     },
 
     "web_accessible_resources": [
-        "include/browser-polyfill.min.js",
         "img/closebutton24.png",
         "img/leftarrow24.png",
         "img/rightarrow24.png",
@@ -58,7 +57,7 @@
     "content_scripts": [
         {
             "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file:///*"],
-            "js": ["include/browser-polyfill.min.js", "texthook.js"],
+            "js": ["texthook.js"],
             "all_frames": true
         }
     ],
