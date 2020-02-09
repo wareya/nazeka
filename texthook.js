@@ -1798,7 +1798,9 @@ function grab_more_text(textNode, selection_range, direction = 1)
 
 function grab_text(textNode, offset, elemental)
 {
-    let selection_range = window.getSelection().getRangeAt(0);
+    let selection_range = window.getSelection();
+    if(selection_range)
+        selection_range = selection_range.getRangeAt(0);
     
     if(selection_filter_enabled(selection_range) && selection_rejects_node(selection_range, textNode, offset))
         selection_range = undefined;
@@ -2075,11 +2077,15 @@ function update(event)
     reset_nodes();
     if (settings.only_selection)
     {
-        if(selection_rejects_node(window.getSelection().getRangeAt(0), textNode, offset))
+        try
         {
-            lookup_cancel();
-            return;
+            if(selection_rejects_node(window.getSelection().getRangeAt(0), textNode, offset))
+            {
+                lookup_cancel();
+                return;
+            }
         }
+        catch(e){ }
     }
     
     // if there was text, use it
