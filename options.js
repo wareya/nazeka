@@ -559,6 +559,12 @@ function defaults()
         label: "Reader font override (without trailing comma)"
     });
     settings.push({
+        id: "reader_line_height",
+        kind: "text",
+        default: "normal",
+        label: "Reader line height size (default: 'normal' example: '140%')"
+    });
+    settings.push({
         id: "reader_throttle",
         kind: "number",
         min: 5,

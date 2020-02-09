@@ -15,6 +15,7 @@ reader_right_padding: "0px",
 reader_max_width: "1000px",
 reader_margin: "8px",
 reader_font: "",
+reader_line_height: "normal",
 reader_auto: false,
 reader_throttle: 200,
 reader_convert_newlines: false
@@ -31,6 +32,7 @@ function update_styles()
     target.marginLeft = reader_settings.reader_margin;
     target.marginRight = reader_settings.reader_margin;
     target.fontFamily = reader_settings.reader_font;
+    target.lineHeight = reader_settings.reader_line_height;
     let target2 = document.querySelector("#new_style");
     let elements = document.body.getElementsByTagName("p");
     let which = String(reader_settings.reader_reverse ? elements.length : 1);
