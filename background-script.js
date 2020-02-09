@@ -109,7 +109,12 @@ async function refresh_json()
                 for(let spelling of entries[i]["s"])
                     add_json_spelling(dict, spelling, i);
             }
-        } catch(e){}
+        }
+        catch(e)
+        {
+            console.log("error while loading/reloading json dictionary:");
+            console.log(e);
+        }
         new_json_dicts.push(dict);
     }
     json_dicts = new_json_dicts;
@@ -459,10 +464,10 @@ function search(text)
             k_ele.push({keb: spelling});
         }
         let re_ret = undefined;
-        if(k_ele != [])
-            re_ret = [{k_ele: k_ele, r_ele: r_ele, seq: seq, sense: sense, from: text, found: k_ele[0]}];
-        else
+        if(k_ele == undefined || k_ele.length == 0)
             re_ret = [{r_ele: r_ele, seq: seq, sense: sense, from: text, found: r_ele[0]}];
+        else
+            re_ret = [{k_ele: k_ele, r_ele: r_ele, seq: seq, sense: sense, from: text, found: k_ele[0]}];
         return re_ret;
     }
 }
@@ -827,7 +832,12 @@ function deconjugate(mytext)
     {
         if(settings.deconjugator_rules_json != "")
             myrules = JSON.parse(settings.deconjugator_rules_json);
-    } catch(err) { console.log(err); }
+    }
+    catch(err)
+    {
+        console.log("error while parsing deconjugation rules:");
+        console.log(err);
+    }
     
     while(novel.size > 0)
     {
@@ -1731,23 +1741,41 @@ function lookup_indirect(text, time, divexisted, other_settings)
     {
         let results = [];
         let first = true;
+        console.log("collecting result for text `" + text + "`");
         while(text.length > 0)
         {
+            console.log("current text: `" + text + "`");
             let forms = deconjugate(text);
             let result = build_lookup_comb(forms);
             
             if(!first && other_settings.strict_alternatives && is_kana(text))
+            {
+                console.log("filter-testing kana result");
                 result = filter_kana_ish_results(result);
+            }
             
             if(result !== undefined && result.length > 0)
             {
-                result = sort_results(text, result);
+                console.log("pushing result");
+                console.log(result);
+                try
+                {
+                    result = sort_results(text, result);
+                }
+                catch(e)
+                {
+                    console.log("hit error sorting lookup results:");
+                    console.log(e);
+                    console.log(result);
+                }
                 results.push({text:text, result:result});
             }
             text = text.substring(0, text.length-1);
             if(results.length > 0)
                 first = false;
         }
+        console.log("results:");
+        console.log(results);
         if(results.length > 0)
             return skip_rereferenced_entries(results, other_settings);
     }
@@ -1794,7 +1822,7 @@ async function update_icon(enabled)
                 "32": "img/enabled32.png",
                 "512": "img/enabled512.png"
             }},);
-        } catch (err) {}
+        } catch (err) {} // don't care
     }
     else
     {
@@ -1806,7 +1834,7 @@ async function update_icon(enabled)
                 "32": "img/action32.png",
                 "512": "img/action512.png"
             }},);
-        } catch (err) {}
+        } catch (err) {} // don't care
     }
 }
 
@@ -1843,7 +1871,7 @@ function open_options(info, tab)
         browser.tabs.create({
             url:browser.extension.getURL("options.html")
         });
-    } catch(err) {}
+    } catch(err) {} // don't care
 }
 
 function open_reader(info, tab)
@@ -1856,7 +1884,7 @@ function open_reader(info, tab)
             width:settings.reader_width,
             height:settings.reader_height
         });
-    } catch(err) {}
+    } catch(err) {} // don't care
 }
 function open_mining(info, tab)
 {
@@ -1866,7 +1894,7 @@ function open_mining(info, tab)
             url:browser.extension.getURL("mining.html"),
             type:"popup"
         });
-    } catch(err) {}
+    } catch(err) {} // don't care
 }
 function open_livemining(info, tab)
 {
@@ -1876,7 +1904,7 @@ function open_livemining(info, tab)
             url:browser.extension.getURL("livemining.html"),
             type:"popup"
         });
-    } catch(err) {}
+    } catch(err) {} // don't care
 }
 function open_jsonconfig(info, tab)
 {
@@ -1886,7 +1914,7 @@ function open_jsonconfig(info, tab)
             url:browser.extension.getURL("json_config.html"),
             type:"popup"
         });
-    } catch(err) {}
+    } catch(err) {} // don't care
 }
 
 if(browser.contextMenus)
@@ -1967,14 +1995,21 @@ function send_error(tab, error)
     try
     {
         browser.tabs.sendMessage(tab, {type:"error",error:error});
-    } catch (err) {console.log("failed to send error to origin tab")}
+    }
+    catch (err)
+    {
+        console.log("failed to send error to origin tab");
+        console.log(err);
+    }
 }
 
 browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
+        console.log("opening lookup");
         let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.settings);
+        console.log("completing lookup");
         return Promise.resolve({"response" : asdf});
     }
     if (req.type == "search_kanji")
@@ -2031,7 +2066,10 @@ browser.runtime.onMessage.addListener((req, sender) =>
                         newxhr.send('{"action": "sync","version": 6}');
                     }
                 }
-            } catch (e) {
+            }
+            catch (e)
+            {
+                console.log("error while interacting with ankiconnect:");
                 console.log(e);
             }
         });

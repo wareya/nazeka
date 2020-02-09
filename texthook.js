@@ -92,14 +92,14 @@ async function get_real_platform()
         my_platform = await browser.runtime.sendMessage({type:"platform"});
         if(my_platform)
             my_platform = my_platform["response"];
-    }catch(err){}
+    }catch(err){}// don't care
     while(my_platform == "")
     {
         try {
             my_platform = await browser.runtime.sendMessage({type:"platform"});
             if(my_platform)
                 my_platform = my_platform["response"];
-        }catch(err){}
+        }catch(err){}// don't care
     }
     platform = my_platform;
 }
@@ -170,7 +170,7 @@ function get_doc()
         }
         catch(err)
         {
-            console.log("hit error");
+            console.log("hit error trying to find root; nazeka might behave incoherently");
             console.log(err);
             break;
         }
@@ -1616,7 +1616,7 @@ function selection_rejects_node(selection_range, textNode, offset)
         if(!selection_range.isPointInRange(textNode, offset) || !selection_range.isPointInRange(textNode, offset+1))
             return true;
     }
-    catch(e){}
+    catch(e){} // selection range was strange
     return false;
 }
 
@@ -1678,6 +1678,7 @@ function get_element_text_with_offsets(element, selection_range)
     }
     catch(err)
     {
+        console.log("encountered error while trying to grab element text");
         console.log(err);
     }
     return ["", 0];
@@ -1727,7 +1728,7 @@ function grab_more_text(textNode, selection_range, direction = 1)
                 if(ruby_interior || !inline_like)
                     break;
             }
-            catch(err){}
+            catch(err){} // doesn't work with getComputedStyle or maybe tagName
         }
         if(iters > 100)
         {
@@ -1962,7 +1963,7 @@ function update(event)
                 let z_index = toreset[1];
                 element.style.zIndex = z_index;
             }
-            catch (err){}
+            catch (err){} // don't care just reset everything correctly
         }
     }
     
@@ -2085,7 +2086,7 @@ function update(event)
                 return;
             }
         }
-        catch(e){ }
+        catch(e){ } // window.getSelection() was null or null-like
     }
     
     // if there was text, use it
