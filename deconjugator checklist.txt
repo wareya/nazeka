@@ -1,0 +1,20 @@
+full or nearly full support:
+v1
+v5r, other normal v5 tags
+v5k-s
+v5r-i
+v5u-s
+vs-i (suru itself)
+
+no or virtually no support:
+v5aru (nasaru, kudasaru, ~ssharu, etc)
+vs-c (su equivalents of suru verbs)
+vs-s (aisuru, tassuru, etc)
+vz (zuru verbs)
+v4r (gozaru, etc)
+v1-s (kureru)
+
+no plan to support:
+vs (nouns followed by する)
+v4~
+v2~

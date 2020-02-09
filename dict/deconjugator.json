@@ -149,7 +149,7 @@
   "con_tag": "uninflectable",
   "detail": "imperative"
  },
- "~a stem",
+ "~a stem (used for passives, causatives, and negatives)",
  {
   "type": "neverfinalrule",
   "dec_end": [
