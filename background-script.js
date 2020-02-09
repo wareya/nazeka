@@ -1741,23 +1741,18 @@ function lookup_indirect(text, time, divexisted, other_settings)
     {
         let results = [];
         let first = true;
-        console.log("collecting result for text `" + text + "`");
         while(text.length > 0)
         {
-            console.log("current text: `" + text + "`");
             let forms = deconjugate(text);
             let result = build_lookup_comb(forms);
             
             if(!first && other_settings.strict_alternatives && is_kana(text))
             {
-                console.log("filter-testing kana result");
                 result = filter_kana_ish_results(result);
             }
             
             if(result !== undefined && result.length > 0)
             {
-                console.log("pushing result");
-                console.log(result);
                 try
                 {
                     result = sort_results(text, result);
@@ -1774,8 +1769,6 @@ function lookup_indirect(text, time, divexisted, other_settings)
             if(results.length > 0)
                 first = false;
         }
-        console.log("results:");
-        console.log(results);
         if(results.length > 0)
             return skip_rereferenced_entries(results, other_settings);
     }
@@ -2007,9 +2000,7 @@ browser.runtime.onMessage.addListener((req, sender) =>
 {
     if (req.type == "search")
     {
-        console.log("opening lookup");
         let asdf = lookup_indirect(req.text, req.time, req.divexisted, req.settings);
-        console.log("completing lookup");
         return Promise.resolve({"response" : asdf});
     }
     if (req.type == "search_kanji")
@@ -2043,15 +2034,13 @@ browser.runtime.onMessage.addListener((req, sender) =>
     }
     else if (req.type == "ankiconnect_mine")
     {
-        console.log("got request");
+        console.log("handling ankiconnect mining request");
         let xhr = new XMLHttpRequest();
         xhr.open("POST", req.host, true);
         xhr.overrideMimeType('application/json');
         //xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
-        console.log(req.command);
         xhr.addEventListener('load', () =>
         {
-            console.log(xhr.responseText);
             let response = JSON.parse(xhr.responseText);
             try
             {
