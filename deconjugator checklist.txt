@@ -7,7 +7,7 @@ v5u-s
 vs-i (suru itself)
 
 no or virtually no support:
-v5aru (nasaru, kudasaru, ~ssharu, etc)
+v5aru (nasaru, kudasaru, ~ssharu, etc) (would get away with only sai, tta, tte, masu, mashita, mashite, mase)
 vs-c (su equivalents of suru verbs)
 vs-s (aisuru, tassuru, etc)
 vz (zuru verbs)
