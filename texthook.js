@@ -1800,8 +1800,10 @@ function grab_more_text(textNode, selection_range, direction = 1)
 function grab_text(textNode, offset, elemental)
 {
     let selection_range = window.getSelection();
-    if(selection_range)
+    if(selection_range && selection_range.rangeCount > 0)
         selection_range = selection_range.getRangeAt(0);
+    else
+        selection_range = undefined;
     
     if(selection_filter_enabled(selection_range) && selection_rejects_node(selection_range, textNode, offset))
         selection_range = undefined;
