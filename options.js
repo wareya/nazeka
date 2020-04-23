@@ -592,6 +592,12 @@ function defaults()
         label: "Show jouyou readings"
     });
     settings.push({
+        id: "kanji_show_vietnamese_readings",
+        kind: "checkbox",
+        default: false,
+        label: "Show Vietnamese readings"
+    });
+    settings.push({
         id: "kanji_show_composition",
         kind: "checkbox",
         default: true,

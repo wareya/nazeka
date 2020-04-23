@@ -52,6 +52,7 @@ y_dodge: 0,
 sticky_maxheight: 0,
 kanji_show_stroke_count: true,
 kanji_show_readings: true,
+kanji_show_vietnamese_readings: false,
 kanji_show_composition: true,
 kanji_show_quality_warning: true,
 hotkey_mine: "m",
@@ -1280,6 +1281,16 @@ function build_div_kanji(text, kanjidata, moreText, index)
         add_readings(onyomi, kanjidata["ks"]);
         readings.appendChild(onyomi);
     }
+    if("vn" in kanjidata && settings.kanji_show_vietnamese_readings)
+    {
+        let vietnamese = document.createElement("div");
+        vietnamese.innerText = "Phiên âm: ";
+        let reading_div = document.createElement("span");
+        reading_div.className = "nazeka_sub_reb";
+        reading_div.innerText = kanjidata["vn"];
+        vietnamese.appendChild(reading_div);
+        readings.appendChild(vietnamese);
+    }
     
     let composition = document.createElement("div");
     composition.textContent = "Composition: " + kanjidata["z"];
@@ -1381,6 +1392,7 @@ async function settings_init()
         
         getvar("kanji_show_stroke_count");
         getvar("kanji_show_readings");
+        getvar("kanji_show_vietnamese_readings");
         getvar("kanji_show_composition");
         getvar("kanji_show_quality_warning");
         
