@@ -1184,7 +1184,7 @@ function build_div_kanji(text, kanjidata, moreText, index)
     if(platform != "android")
         head.innerText = "Currently in individual kanji mode. Press [" + settings.hotkey_kanji_mode + "] to cancel.";
     else
-        head.innerText = "Currently in individual kanji mode. Tap 漢to cancel.";
+        head.innerText = "Currently in individual kanji mode. Tap 漢 to cancel.";
     
     // Create Kanji toggle button and close button if on Android or in sticky mode
     if (platform == "android" || is_sticky())
