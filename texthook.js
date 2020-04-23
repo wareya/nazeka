@@ -645,11 +645,51 @@ ${infostyle}
 // note that we can get multiple lookups and this function only handles a single lookup
 function build_div_inner(text, result, moreText, index, first_of_many = false)
 {
+    let buttons = document.createElement("div");
     let temp = document.createElement("div");
     temp.style.position = "relative";
+
+    if(first_of_many && (platform == "android" || is_sticky()))
+    {
+        let kanji_button = document.createElement("img");
+        kanji_button.src = browser.extension.getURL("img/kanjibutton24.png");
+        kanji_button.onclick = toggle_kanji_mode;
+        let close_button = document.createElement("img");
+        close_button.src = browser.extension.getURL("img/closebutton24.png");
+        close_button.onclick = platform == "android" ? manual_close : manual_disable_sticky;
+
+        let button_array = [kanji_button, close_button];
+        if(settings.showoriginal)
+        {
+            let left_arrow = document.createElement("img");
+            left_arrow.src = browser.extension.getURL("img/leftarrow24.png");
+            left_arrow.onclick = lookup_left;
+            button_array.concat(left_arrow);
+            let right_arrow = document.createElement("img");
+            right_arrow.src = browser.extension.getURL("img/rightarrow24.png");
+            right_arrow.onclick = lookup_right;
+            button_array.concat(right_arrow);
+        }
+
+        button_array.forEach(function(button) {
+            button.style.marginTop = "-3px";
+            button.style.display = "inline";
+            button.style.padding = "initial";
+            buttons.appendChild(button);
+        });
+        buttons.style.float = "right";
+    }
+
+    let original_inner = document.createElement("span");
+    original_inner.className = "nazeka_lookup";
+    original_inner.textContent = text;
+
     // the "Looked up XXXX" text
     if(settings.showoriginal)
     {
+        original_inner.style.fontWeight = "bold";
+        original_inner.style.color = `${settings.hlcolor}`;
+
         // nesting it like this lets us access nazeka_lookup when we want to get the text we looked up, if we have text in front of it, which we don't anymore
         let original = document.createElement("div");
         original.className = "nazeka_original";
@@ -664,91 +704,32 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
         {
             moreText_end = moreText_end.substring(0, 3)+"…";
         }
-        
-        let original_inner = document.createElement("span");
-        original_inner.className = "nazeka_lookup";
-        original_inner.textContent = text;
-        original_inner.style.fontWeight = "bold";
-        original_inner.style.color = `${settings.hlcolor}`;
+
         original.appendChild(document.createTextNode(moreText_start));
         original.appendChild(original_inner);
         original.appendChild(document.createTextNode(moreText_end));
-        
-        if(first_of_many && (platform == "android" || is_sticky()))
-        {
-            let buttons = document.createElement("div");
-            let left_arrow = document.createElement("img");
-            let right_arrow = document.createElement("img");
-            left_arrow.src = browser.extension.getURL("img/leftarrow24.png");
-            right_arrow.src = browser.extension.getURL("img/rightarrow24.png");
-            left_arrow.onclick = lookup_left;
-            right_arrow.onclick = lookup_right;
-            left_arrow.style.marginTop = "-3px";
-            right_arrow.style.marginTop = "-3px";
-            left_arrow.style.display = "inline";
-            right_arrow.style.display = "inline";
-            left_arrow.style.padding = "initial";
-            right_arrow.style.padding = "initial";
-            buttons.appendChild(left_arrow);
-            buttons.appendChild(right_arrow);
-            
-            if(platform == "android")
-            {
-                let close_button = document.createElement("img");
-                close_button.src = browser.extension.getURL("img/closebutton24.png");
-                close_button.onclick = manual_close;
-                close_button.style.marginTop = "-3px";
-                close_button.style.display = "inline";
-                close_button.style.padding = "initial";
-                buttons.appendChild(close_button);
-            }
-            else
-            {
-                let close_button = document.createElement("img");
-                close_button.src = browser.extension.getURL("img/closebutton24.png");
-                close_button.onclick = manual_disable_sticky;
-                close_button.style.marginTop = "-3px";
-                close_button.style.display = "inline";
-                close_button.style.padding = "initial";
-                buttons.appendChild(close_button);
-            }
-            buttons.style.float = "right";
-            original.appendChild(buttons);
-        }
+        if(first_of_many) original.appendChild(buttons);
         temp.appendChild(original);
-        
-        let original_sentence = document.createElement("span");
-        original_sentence.className = "nazeka_lookup_sentence";
-        original_sentence.textContent = moreText;
-        original_sentence.style.display = "none";
-        temp.appendChild(original_sentence);
-        
-        let original_index = document.createElement("span");
-        original_index.className = "nazeka_lookup_index";
-        original_index.textContent = `${index}`;
-        original_index.style.display = "none";
-        temp.appendChild(original_index);
     }
     else
     {
-        let original_inner = document.createElement("span");
-        original_inner.className = "nazeka_lookup";
-        original_inner.textContent = text;
         original_inner.style.display = "none";
+        if(first_of_many) original_inner.appendChild(buttons);
         temp.appendChild(original_inner);
-        
-        let original_sentence = document.createElement("span");
-        original_sentence.className = "nazeka_lookup_sentence";
-        original_sentence.textContent = moreText;
-        original_sentence.style.display = "none";
-        temp.appendChild(original_sentence);
-        
-        let original_index = document.createElement("span");
-        original_index.className = "nazeka_lookup_index";
-        original_index.textContent = `${index}`;
-        original_index.style.display = "none";
-        temp.appendChild(original_index);
     }
+
+    let original_sentence = document.createElement("span");
+    original_sentence.className = "nazeka_lookup_sentence";
+    original_sentence.textContent = moreText;
+    original_sentence.style.display = "none";
+    temp.appendChild(original_sentence);
+    
+    let original_index = document.createElement("span");
+    original_index.className = "nazeka_lookup_index";
+    original_index.textContent = `${index}`;
+    original_index.style.display = "none";
+    temp.appendChild(original_index);
+
     let style = get_style();
     temp.appendChild(style);
     
@@ -1202,13 +1183,35 @@ function build_div_kanji(text, kanjidata, moreText, index)
     if(platform != "android")
         head.innerText = "Currently in individual kanji mode. Press [" + settings.hotkey_kanji_mode + "] to cancel.";
     else
-        head.innerText = "Currently in individual kanji mode. Disable in options to go back to dictionary.";
+        head.innerText = "Currently in individual kanji mode. Tap 漢to cancel.";
+    
+    // Create Kanji toggle button and close button if on Android or in sticky mode
+    if (platform == "android" || is_sticky())
+    {
+        let buttons = document.createElement("div");
+        let kanji_button = document.createElement("img");
+        kanji_button.src = browser.extension.getURL("img/kanjibutton24.png");
+        kanji_button.onclick = toggle_kanji_mode;
+        let close_button = document.createElement("img");
+        close_button.src = browser.extension.getURL("img/closebutton24.png");
+        close_button.onclick = manual_close;
+
+        let button_array = [kanji_button, close_button];
+        button_array.forEach(function(button) {
+            button.style.marginTop = "-3px";
+            button.style.display = "inline";
+            button.style.padding = "initial";
+            buttons.appendChild(button);
+        });
+        buttons.style.float = "right";
+        head.appendChild(buttons);
+    }
     
     let char = document.createElement("div");
     char.className = "nazeka_main_keb";
     char.textContent = text;
-    head.appendChild(char);
-    
+    info.appendChild(char);
+
     info.className = "kanji_info";
     
     let grade = document.createElement("div");
@@ -1559,6 +1562,14 @@ function lookup_cancel_force()
 
 let japanesePunctuation = "、。「」｛｝（）【】『』〈〉《》：・／…︙‥︰＋＝－÷？！．～―";
 let japaneseSeparators = "。？！";
+
+function toggle_kanji_mode()
+{
+    settings.kanji_mode = !settings.kanji_mode;
+    browser.storage.local.set({"kanji_mode":settings.kanji_mode});
+    if(exists_div())
+        send_lookup(last_lookup, performance.now());
+}
 
 function lookup_left()
 {
@@ -2462,10 +2473,7 @@ function keytest(event)
     }
     if(event.key == settings.hotkey_kanji_mode)
     {
-        settings.kanji_mode = !settings.kanji_mode;
-        browser.storage.local.set({"kanji_mode":settings.kanji_mode});
-        if(exists_div())
-            send_lookup(last_lookup, performance.now());
+        toggle_kanji_mode();
     }
     if(event.key == settings.hotkey_sticky)
     {
