@@ -665,11 +665,10 @@ function build_div_inner(text, result, moreText, index, first_of_many = false)
             let left_arrow = document.createElement("img");
             left_arrow.src = browser.extension.getURL("img/leftarrow24.png");
             left_arrow.onclick = lookup_left;
-            button_array.concat(left_arrow);
             let right_arrow = document.createElement("img");
             right_arrow.src = browser.extension.getURL("img/rightarrow24.png");
             right_arrow.onclick = lookup_right;
-            button_array.concat(right_arrow);
+            button_array = [left_arrow, right_arrow].concat(button_array);
         }
 
         button_array.forEach(function(button) {
