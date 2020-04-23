@@ -1195,7 +1195,7 @@ function build_div_kanji(text, kanjidata, moreText, index)
         kanji_button.onclick = toggle_kanji_mode;
         let close_button = document.createElement("img");
         close_button.src = browser.extension.getURL("img/closebutton24.png");
-        close_button.onclick = manual_close;
+        close_button.onclick = platform == "android" ? manual_close : manual_disable_sticky;
 
         let button_array = [kanji_button, close_button];
         button_array.forEach(function(button) {
