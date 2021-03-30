@@ -1,5 +1,5 @@
 #!sh
-curl http://ftp.monash.edu/pub/nihongo/JMdict.gz | gunzip > JMdict
-./process.py
-rm JMdict
+curl http://ftp.edrdg.org/pub/Nihongo/JMdict.gz | gunzip > JMdict &&
+./process.py &&
+rm JMdict &&
 mv JMdict*.json ../dict
