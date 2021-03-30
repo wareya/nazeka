@@ -2135,11 +2135,14 @@ function update_touch(event)
     }
 }
 
-function errormessage(text)
+function errormessage(text, soft = false)
 {
     if(!text) return;
     let mydiv = document.createElement("div");
-    mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double red; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
+    if(!soft)
+        mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double red; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
+    else
+        mydiv.style = "background-color: #111; color: #CCC; font-family: Arial, sans-serif; font-size: 13px; width: 300px; border: 3px double orange; position: fixed; right: 25px; top: 25px; z-index: 1000000000000000000000; padding: 5px; border-radius: 3px;"
     mydiv.textContent = text;
     get_doc().body.appendChild(mydiv);
     
@@ -2197,6 +2200,7 @@ async function try_to_play_audio(index = 0)
         else
             url = "http://";
         url += "assets.languagepod101.com/dictionary/japanese/audiomp3.php?kana=" + fields[0] + "&kanji=" + fields[1];
+        console.log("Trying to play audio " + url);
         browser.runtime.sendMessage({type:"play_audio", host:url, volume:settings.volume});
     }
 }
@@ -2279,8 +2283,17 @@ async function mine_to_ankiconnect_with_base64_audio(object, audiofname, audioda
 
 async function get_url_blob_base64(url)
 {
-    let data = await browser.runtime.sendMessage({type:"get_audio_base64", url:url});
-    return data;
+    try
+    {
+        let data = await browser.runtime.sendMessage({type:"get_audio_base64", url:url});
+        return data;
+    }
+    catch(e)
+    {
+        console.log("errored");
+        console.log(e);
+        errormessage("Getting audio failed: " + e);
+    }
 }
 
 async function mine_to_ankiconnect(object)
@@ -2308,7 +2321,7 @@ async function mine_to_ankiconnect(object)
             else
             {
                 console.log("errored");
-                errormessage("AnkiConnect mining partially failed: Failed to connect to languagepod101 to grab audio (going to try mining without audio)");
+                errormessage("AnkiConnect mining partially failed: Failed to connect to languagepod101 to grab audio (going to try mining without audio)", true);
                 mine_to_ankiconnect_with_base64_audio(object, "", "");
             }
         }
